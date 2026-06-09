@@ -15,6 +15,7 @@ export default defineNuxtConfig({
   ],
   css: ["~/src/styles.css"],
   app: {
+    baseURL: '/taneie/',
     head: {
       htmlAttrs: { lang: "ja" },
       title: "TRYANGLE FREELANCE",
@@ -23,5 +24,7 @@ export default defineNuxtConfig({
         { name: "viewport", content: "width=device-width, initial-scale=1" }
       ]
     }
-  }
+  },
+  ssr: false,
+
 });
