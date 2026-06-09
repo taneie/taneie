@@ -17,3 +17,4 @@ logs
 .env.*
 !.env.example
 package-lock.json
+AGENTS.md
