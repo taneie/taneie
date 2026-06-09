@@ -8,13 +8,16 @@
     "build": "node ./scripts/nuxt-short-tmp.mjs build",
     "preview": "node ./scripts/nuxt-short-tmp.mjs preview . --host 127.0.0.1 --port 5173",
     "typecheck": "node ./scripts/nuxt-short-tmp.mjs typecheck",
-    "postinstall": "node ./scripts/nuxt-short-tmp.mjs prepare"
+    "postinstall": "node ./scripts/nuxt-short-tmp.mjs prepare",
+    "generate": "nuxt generate",
+    "deploy": "npm run generate && gh-pages -d .output/public"
   },
   "dependencies": {
     "nuxt": "^3.15.4",
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "typescript": "^5.7.3",
     "vue-tsc": "^2.2.0"
   }
