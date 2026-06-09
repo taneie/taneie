@@ -91,6 +91,7 @@ export interface Application {
 
 export interface Message {
   id: string;
+  freelancerId: string;
   from: string;
   to: string;
   body: string;
@@ -327,8 +328,8 @@ function createSeedState(): TryangleState {
       { id: "app-002", jobId: "job-002", freelancerId: "fr-002", status: "選考中", appliedAt: "2026-06-03" }
     ],
     messages: [
-      { id: "msg-001", from: "営業", to: "山田 太郎", body: "金融SaaS案件について、初回面談候補を確認しました。", at: "2026-06-04 11:20", channel: "sales" },
-      { id: "msg-002", from: "山田 太郎", to: "営業", body: "6月10日午前で調整可能です。職務経歴書も更新しました。", at: "2026-06-04 11:36", channel: "freelancer" }
+      { id: "msg-001", freelancerId: "fr-001", from: "営業", to: "山田 太郎", body: "金融SaaS案件について、初回面談候補を確認しました。", at: "2026-06-04 11:20", channel: "sales" },
+      { id: "msg-002", freelancerId: "fr-001", from: "山田 太郎", to: "営業", body: "6月10日午前で調整可能です。職務経歴書も更新しました。", at: "2026-06-04 11:36", channel: "freelancer" }
     ],
     meetingRequests: [
       { id: "meet-001", freelancerId: "fr-001", candidate: "2026-06-10 10:00", status: "候補" },
@@ -386,7 +387,7 @@ function mergeState(base: TryangleState, saved: Partial<TryangleState>): Tryangl
     freelancers: saved.freelancers || base.freelancers,
     jobs: saved.jobs || base.jobs,
     applications: saved.applications || base.applications,
-    messages: saved.messages || base.messages,
+    messages: saved.messages ? normalizeMessages(saved.messages, base) : base.messages,
     meetingRequests: saved.meetingRequests || base.meetingRequests,
     aliveChecks: saved.aliveChecks || base.aliveChecks,
     previewFreelancerId: saved.previewFreelancerId || ""
@@ -407,6 +408,24 @@ function isLegacySampleProfile(profile: Profile) {
     && profile?.name === "山田 太郎"
     && profile?.email === "taro@example.com"
     && profile?.languages === "Java, TypeScript, Python";
+}
+
+function normalizeMessages(messages: Message[], base: TryangleState): Message[] {
+  return messages.map((message) => ({
+    ...message,
+    freelancerId: message.freelancerId || inferMessageFreelancerId(message, base)
+  }));
+}
+
+function inferMessageFreelancerId(message: Message, base: TryangleState) {
+  const names = [message.from, message.to];
+  const matchedFreelancer = base.freelancers.find((freelancer) => names.includes(freelancer.name));
+  if (matchedFreelancer) return matchedFreelancer.id;
+
+  const profileName = base.profile.name;
+  if (profileName && names.includes(profileName)) return base.profile.id;
+
+  return message.channel === "freelancer" ? base.profile.id : base.freelancers[0]?.id || base.profile.id;
 }
 
 function persist() {
@@ -467,6 +486,41 @@ const selectedFreelancer = computed<Freelancer>(() => {
   return state.value.freelancers[0];
 });
 
+const currentFreelancerId = computed(() => currentUser.value?.freelancerId || state.value.profile.id);
+
+const activeChatFreelancerId = computed(() => {
+  if (currentRole.value === "freelancer") return currentFreelancerId.value;
+  return state.value.selectedFreelancerId || state.value.freelancers[0]?.id || "";
+});
+
+const chatFreelancers = computed(() => {
+  return state.value.freelancers.map((freelancer) => {
+    const lastMessage = [...state.value.messages]
+      .filter((message) => message.freelancerId === freelancer.id)
+      .sort((a, b) => b.at.localeCompare(a.at))[0];
+
+    return {
+      ...freelancer,
+      lastMessage
+    };
+  });
+});
+
+const activeChatMessages = computed(() => {
+  const freelancerId = activeChatFreelancerId.value;
+  if (!freelancerId) return [];
+
+  return state.value.messages
+    .filter((message) => message.freelancerId === freelancerId)
+    .sort((a, b) => a.at.localeCompare(b.at));
+});
+
+const activeMeetingRequests = computed(() => {
+  const freelancerId = activeChatFreelancerId.value;
+  if (!freelancerId) return [];
+  return state.value.meetingRequests.filter((meeting) => meeting.freelancerId === freelancerId);
+});
+
 function canAccess(view: ViewKey) {
   const role = currentRole.value;
   if (!role) return false;
@@ -496,6 +550,33 @@ function setView(view: ViewKey) {
 
   if (state.value.activeView !== view && !confirmDiscardChanges()) return;
   state.value.activeView = view;
+  if (view === "meeting") ensureChatSelection();
+  persist();
+}
+
+function ensureChatSelection() {
+  if (currentRole.value === "freelancer") {
+    state.value.selectedFreelancerId = currentFreelancerId.value;
+    return;
+  }
+
+  const selectedExists = state.value.freelancers.some((freelancer) => freelancer.id === state.value.selectedFreelancerId);
+  if (!selectedExists) {
+    state.value.selectedFreelancerId = state.value.freelancers[0]?.id || "";
+  }
+}
+
+function selectChatFreelancer(freelancerId: string) {
+  if (currentRole.value !== "sales") {
+    state.value.selectedFreelancerId = currentFreelancerId.value;
+    return;
+  }
+
+  const freelancer = getFreelancer(freelancerId);
+  if (!freelancer) return;
+
+  state.value.selectedFreelancerId = freelancer.id;
+  state.value.activeView = "meeting";
   persist();
 }
 
@@ -700,12 +781,14 @@ function sendScout(freelancerId: string) {
 
   state.value.messages.push({
     id: uid("msg"),
+    freelancerId: freelancer.id,
     from: "営業",
     to: freelancer.name,
     body: `${freelancer.role}向けの案件をご紹介したいです。稼働状況の確認をお願いします。`,
     at: nowLabel(),
     channel: "sales"
   });
+  state.value.selectedFreelancerId = freelancer.id;
   persist();
   showToast(`${freelancer.name}さんへスカウトを送信しました。`);
 }
@@ -754,7 +837,7 @@ function addMeeting(candidateValue: string) {
 
   state.value.meetingRequests.push({
     id: uid("meet"),
-    freelancerId: state.value.profile.id,
+    freelancerId: activeChatFreelancerId.value || state.value.profile.id,
     candidate: candidateValue.replace("T", " "),
     status: "候補"
   });
@@ -777,10 +860,19 @@ function sendMessage(body: string) {
   }
 
   const isSales = currentRole.value === "sales";
+  const freelancerId = activeChatFreelancerId.value;
+  const freelancer = isSales ? getFreelancer(freelancerId) : selectedFreelancer.value;
+
+  if (!freelancerId || !freelancer) {
+    showToast("チャット対象の求職者を選択してください。");
+    return false;
+  }
+
   state.value.messages.push({
     id: uid("msg"),
-    from: isSales ? "営業" : state.value.profile.name,
-    to: isSales ? state.value.profile.name : "営業",
+    freelancerId,
+    from: isSales ? "営業" : freelancer.name,
+    to: isSales ? freelancer.name : "営業",
     body: trimmedBody,
     at: nowLabel(),
     channel: isSales ? "sales" : "freelancer"
@@ -977,12 +1069,18 @@ export function useTryangleFreelance() {
     filteredJobs,
     filteredFreelancers,
     selectedFreelancer,
+    currentFreelancerId,
+    activeChatFreelancerId,
+    chatFreelancers,
+    activeChatMessages,
+    activeMeetingRequests,
     init,
     persist,
     canAccess,
     ensureActiveView,
     setAuthMode,
     setView,
+    selectChatFreelancer,
     login,
     loginWithDemo,
     register,

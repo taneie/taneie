@@ -1,5 +1,30 @@
 <template>
-  <div :class="[$style.grid, $style.two]">
+  <div :class="[$style.grid, currentRole === 'sales' ? $style.three : $style.two]">
+    <section v-if="currentRole === 'sales'" :class="$style.panel">
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">チャット対象</h2>
+        <TagBadge tone="blue">{{ chatFreelancers.length }}名</TagBadge>
+      </div>
+      <div :class="$style.panelBody">
+        <div :class="[$style.cardList, $style.chatUserList]">
+          <button
+            v-for="freelancer in chatFreelancers"
+            :key="freelancer.id"
+            type="button"
+            :class="[$style.chatUserCard, freelancer.id === activeChatFreelancerId ? $style.activeChatUser : '']"
+            @click="selectChatFreelancer(freelancer.id)"
+          >
+            <span :class="$style.chatUserHead">
+              <strong>{{ freelancer.name }}</strong>
+              <TagBadge :tone="freelancer.availability === '即稼働可' ? 'teal' : 'amber'">{{ freelancer.availability }}</TagBadge>
+            </span>
+            <span :class="$style.chatUserMeta">{{ freelancer.role }} / {{ freelancer.desiredRate }}万円〜</span>
+            <span :class="$style.chatPreview">{{ freelancer.lastMessage?.body || 'まだメッセージはありません' }}</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <section :class="$style.panel">
       <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">面談候補</h2></div>
       <div :class="$style.panelBody">
@@ -9,7 +34,7 @@
         </form>
 
         <div :class="[$style.cardList, $style.stackSm]">
-          <div v-for="meeting in state.meetingRequests" :key="meeting.id" :class="$style.card">
+          <div v-for="meeting in activeMeetingRequests" :key="meeting.id" :class="$style.card">
             <div :class="$style.cardHead">
               <strong>{{ meeting.candidate }}</strong>
               <TagBadge :tone="meeting.status === '確定' ? 'teal' : 'blue'">{{ meeting.status }}</TagBadge>
@@ -19,6 +44,7 @@
               <BaseButton variant="secondary" @click="updateMeetingStatus(meeting.id, '再調整')">再調整</BaseButton>
             </div>
           </div>
+          <div v-if="!activeMeetingRequests.length" :class="$style.emptyState">この求職者の面談候補はまだありません。</div>
         </div>
       </div>
     </section>
@@ -31,7 +57,7 @@
       <div :class="$style.panelBody">
         <div :class="[$style.messageList, $style.conversation]">
           <div
-            v-for="message in state.messages"
+            v-for="message in activeChatMessages"
             :key="message.id"
             :class="[$style.messageRow, isOwnMessage(message) ? $style.own : $style.other]"
           >
@@ -43,6 +69,7 @@
               <div :class="$style.messageBody">{{ message.body }}</div>
             </div>
           </div>
+          <div v-if="!activeChatMessages.length" :class="$style.emptyState">この相手とのメッセージはまだありません。</div>
         </div>
 
         <form :class="[$style.formGrid, $style.one, $style.stackSm]" @submit.prevent="submitMessage">
@@ -60,9 +87,13 @@ import { ref } from "vue";
 import type { Message } from "~/composables/useTryangleFreelance";
 
 const {
-  state,
   currentRole,
   selectedFreelancer,
+  activeChatFreelancerId,
+  chatFreelancers,
+  activeChatMessages,
+  activeMeetingRequests,
+  selectChatFreelancer,
   addMeeting,
   updateMeetingStatus,
   sendMessage,
@@ -106,6 +137,10 @@ function submitMessage() {
 
 .two {
   grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.4fr);
+}
+
+.three {
+  grid-template-columns: minmax(260px, 0.75fr) minmax(300px, 0.85fr) minmax(0, 1.35fr);
 }
 
 .panel {
@@ -183,6 +218,53 @@ textarea.control {
 .cardList {
   display: grid;
   gap: 10px;
+}
+
+.chatUserList {
+  max-height: 520px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.chatUserCard {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.chatUserCard:hover,
+.activeChatUser {
+  border-color: var(--primary);
+  box-shadow: 0 8px 18px rgba(29, 78, 137, 0.12);
+  transform: translateY(-1px);
+}
+
+.chatUserHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chatUserMeta,
+.chatPreview {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.chatPreview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card {
@@ -299,11 +381,22 @@ textarea.control {
   transform: rotate(-45deg);
 }
 
+.emptyState {
+  border: 1px dashed #c6d5e8;
+  border-radius: 8px;
+  padding: 14px;
+  color: var(--muted);
+  background: #f8fbff;
+  font-size: 13px;
+  text-align: center;
+}
+
 .stackSm {
   margin-top: 14px;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1100px) {
+  .three,
   .two {
     grid-template-columns: 1fr;
   }
