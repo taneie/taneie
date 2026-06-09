@@ -1,0 +1,19 @@
+# Nuxt dev/build outputs
+.output
+.nuxt
+.nitro
+.cache
+dist
+
+# Dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Env
+.env
+.env.*
+!.env.example
+package-lock.json

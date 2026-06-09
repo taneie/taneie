@@ -1,0 +1,201 @@
+<template>
+  <PageHead title="匿名スキルシート" kicker="プロフィールから提案用の匿名Webシートを生成します。">
+    <template #actions>
+      <div :class="$style.actions">
+        <BaseButton icon="send" @click="copyText(shareUrl)">URLコピー</BaseButton>
+        <BaseButton variant="secondary" icon="print" @click="printSheet">PDF出力</BaseButton>
+      </div>
+    </template>
+  </PageHead>
+
+  <div :class="[$style.grid, $style.two]">
+    <section :class="[$style.panel, $style.printable]">
+      <div :class="$style.panelBody">
+        <article id="anonymous-sheet" :class="$style.sheet">
+          <h2>匿名スキルシート / {{ publicId }}</h2>
+          <p>氏名・連絡先・固有社名を伏せた、クライアント提案用プロフィールです。</p>
+          <div :class="$style.sheetGrid">
+            <div>職種</div><div>{{ profile.role }}</div>
+            <div>経験年数</div><div>{{ profile.years }}年</div>
+            <div>主要スキル</div><div>{{ mainSkills }}</div>
+            <div>希望単価</div><div>{{ profile.desiredRate }}万円</div>
+            <div>稼働</div><div>{{ profile.startDate }}開始 / {{ profile.workRate }} / {{ profile.remote }}</div>
+            <div>ステータス</div><div>{{ profile.availability }}</div>
+            <div>人物確認</div><div>TRYANGLE営業による初回面談調整中</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section :class="$style.panel">
+      <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">出力情報</h2></div>
+      <div :class="$style.panelBody">
+        <FormInput label="共有用URL" name="sheetUrl" :model-value="shareUrl" readonly />
+        <div :class="[$style.card, $style.stackSm]">
+          <strong>匿名化対象</strong>
+          <p>氏名: {{ maskName(profile.name) }} / メール: ******** / 電話: ********</p>
+          <p>レジュメ: {{ profile.resumeName || "未登録" }} は営業管理画面で確認できます。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { computed } from "vue";
+const { state, splitCsv, maskName, copyText, printSheet } = useTryangleFreelance();
+
+const profile = computed(() => state.value.profile);
+const publicId = computed(() => `tf-${profile.value.id.slice(-3)}-${splitCsv(profile.value.languages)[0]?.toLowerCase() || "engineer"}`);
+const shareUrl = computed(() => import.meta.client ? `${location.origin}${location.pathname}#sheet/${publicId.value}` : "");
+const mainSkills = computed(() => [profile.value.languages, profile.value.frameworks, profile.value.db].filter(Boolean).join(" / "));
+</script>
+
+<style module>
+.grid {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.grid > * {
+  min-width: 0;
+}
+
+.two {
+  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.4fr);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panelTitle {
+  margin: 0;
+  color: #10294f;
+  font-size: 16px;
+}
+
+.panelBody {
+  padding: 16px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.sheet {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px;
+  line-height: 1.65;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.sheet h2 {
+  margin: 0 0 10px;
+  color: #10294f;
+}
+
+.sheet p,
+.card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.sheetGrid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  margin-top: 14px;
+}
+
+.sheetGrid div {
+  padding: 10px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.sheetGrid div:nth-child(odd) {
+  background: var(--primary-soft);
+  color: #18365f;
+  font-weight: 800;
+}
+
+.card {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  padding: 14px;
+  min-width: 0;
+}
+
+.stackSm {
+  margin-top: 14px;
+}
+
+@media (max-width: 1180px) {
+  .two {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .panelBody,
+  .panelHeader {
+    padding: 12px;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  .sheet {
+    padding: 14px;
+  }
+
+  .sheetGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .actions,
+  .panel:not(.printable) {
+    display: none !important;
+  }
+
+  .panelBody {
+    padding: 0;
+  }
+
+  .sheet {
+    border: 0;
+  }
+}
+</style>
