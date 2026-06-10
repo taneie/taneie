@@ -176,6 +176,8 @@ export interface JobInput {
 }
 
 const STORAGE_KEY = "tryangle-freelance-state-v1";
+const TOKEN_KEY = "tryangle-freelance-token";
+const API_BASE = "http://127.0.0.1:8787/api";
 
 const navItems: NavItem[] = [
   { view: "dashboard", icon: "chart", label: "ダッシュボード", roles: ["sales"] },
@@ -222,6 +224,7 @@ const hasUnsavedChanges = ref(false);
 const toastMessage = ref("");
 const toastVisible = ref(false);
 const initialized = ref(false);
+let accessToken = "";
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 function clone<T>(value: T): T {
@@ -369,6 +372,7 @@ function init() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") as Partial<TryangleState> | null;
     state.value = saved ? normalizeLoadedState(mergeState(createSeedState(), saved)) : createSeedState();
+    accessToken = localStorage.getItem(TOKEN_KEY) || "";
   } catch {
     state.value = createSeedState();
   }
@@ -376,6 +380,7 @@ function init() {
   syncProfileToFreelancer();
   ensureActiveView();
   initialized.value = true;
+  if (accessToken) void restoreSession();
 }
 
 function mergeState(base: TryangleState, saved: Partial<TryangleState>): TryangleState {
@@ -430,7 +435,125 @@ function inferMessageFreelancerId(message: Message, base: TryangleState) {
 
 function persist() {
   if (!import.meta.client) return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    auth: state.value.auth,
+    activeView: state.value.activeView,
+    wizardStep: state.value.wizardStep,
+    selectedFreelancerId: state.value.selectedFreelancerId,
+    previewFreelancerId: state.value.previewFreelancerId
+  }));
+}
+
+async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers);
+  if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.error?.message || "API通信に失敗しました。");
+  }
+  return data as T;
+}
+
+function setAuth(token: string, user: { email: string; role: Role; name: string; freelancerId?: string }) {
+  accessToken = token;
+  localStorage.setItem(TOKEN_KEY, token);
+  state.value.auth = {
+    email: user.email,
+    role: user.role,
+    name: user.name,
+    freelancerId: user.freelancerId,
+    loggedInAt: nowLabel()
+  };
+  state.value.activeView = defaultViewByRole[user.role];
+  persist();
+}
+
+async function restoreSession() {
+  try {
+    const user = await apiRequest<{ email: string; role: Role; name: string; freelancerId?: string }>("/auth/me");
+    state.value.auth = { ...user, loggedInAt: nowLabel() };
+    ensureActiveView();
+    await loadWorkspace();
+  } catch {
+    accessToken = "";
+    localStorage.removeItem(TOKEN_KEY);
+    state.value.auth = null;
+    persist();
+  }
+}
+
+async function loadWorkspace() {
+  if (!state.value.auth) return;
+  const [jobs, applications, meetings, messages] = await Promise.all([
+    apiRequest<Job[]>("/jobs"),
+    apiRequest<Application[]>("/applications"),
+    apiRequest<MeetingRequest[]>("/meeting-requests"),
+    apiRequest<Message[]>("/messages")
+  ]);
+
+  state.value.jobs = jobs;
+  state.value.applications = applications;
+  state.value.meetingRequests = meetings;
+  state.value.messages = messages;
+
+  if (state.value.auth.role === "sales") {
+    state.value.freelancers = await apiRequest<Freelancer[]>("/freelancers");
+  } else {
+    const profile = await apiRequest<Freelancer & {
+      email?: string;
+      phone?: string;
+      yearsExperience?: number;
+      startDate?: string;
+    }>("/profile/me");
+    state.value.profile = freelancerToProfile(profile);
+    state.value.freelancers = [profile];
+  }
+
+  ensureChatSelection();
+  persist();
+}
+
+function freelancerToProfile(freelancer: Freelancer & {
+  email?: string;
+  phone?: string | null;
+  yearsExperience?: number;
+  startDate?: string;
+}): Profile {
+  return {
+    ...blankProfile(freelancer.id),
+    name: freelancer.name || "",
+    email: freelancer.email || state.value.auth?.email || "",
+    phone: freelancer.phone || "",
+    role: freelancer.role || "",
+    languages: freelancer.skills?.join(", ") || "",
+    years: freelancer.yearsExperience ? String(freelancer.yearsExperience) : "",
+    desiredRate: freelancer.desiredRate ? String(freelancer.desiredRate) : "",
+    startDate: freelancer.startDate || "",
+    workRate: freelancer.workRate || "",
+    remote: freelancer.remote || "",
+    availability: freelancer.availability || "",
+    resumeName: freelancer.resumeName || "",
+    lastUpdated: freelancer.lastUpdated || ""
+  };
+}
+
+function profileToApi(profile: Profile) {
+  return {
+    name: profile.name,
+    phone: profile.phone,
+    roleTitle: profile.role,
+    yearsExperience: Number(profile.years || 0),
+    desiredRate: Number(profile.desiredRate || 0),
+    startDate: profile.startDate || undefined,
+    workRate: profile.workRate,
+    remoteType: profile.remote,
+    availabilityStatus: profile.availability,
+    availabilityNote: profile.availability,
+    skills: [...splitCsv(profile.languages), ...splitCsv(profile.frameworks), ...splitCsv(profile.db)]
+  };
 }
 
 const authAccounts = computed(() => [...demoAccounts, ...(state.value.accounts || [])]);
@@ -580,19 +703,25 @@ function selectChatFreelancer(freelancerId: string) {
   persist();
 }
 
-function login(email: string, password: string) {
-  const account = authAccounts.value.find((item) => item.email === email.trim() && item.password === password);
-  if (!account) {
-    showToast("メールアドレスまたはパスワードが違います。");
-    return;
+async function login(email: string, password: string) {
+  try {
+    const result = await apiRequest<{ token: string; user: { email: string; role: Role; name: string; freelancerId?: string } }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: email.trim(), password })
+    });
+    clearUnsavedChanges();
+    setAuth(result.token, result.user);
+    await loadWorkspace();
+    showToast(`${roleLabel(result.user.role)}としてログインしました。`);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "メールアドレスまたはパスワードが違います。");
   }
-  loginWithAccount(account);
 }
 
 function loginWithDemo(role: Role) {
   if (!confirmDiscardChanges()) return;
   const account = demoAccounts.find((item) => item.role === role);
-  if (account) loginWithAccount(account);
+  if (account) void login(account.email, account.password);
 }
 
 function loginWithAccount(account: Account) {
@@ -609,7 +738,7 @@ function loginWithAccount(account: Account) {
   showToast(`${roleLabel(account.role)}としてログインしました。`);
 }
 
-function register(values: RegisterInput) {
+async function register(values: RegisterInput) {
   const email = values.email.trim();
   if (!values.name || !email || !values.password) {
     showToast("氏名、メールアドレス、パスワードを入力してください。");
@@ -619,62 +748,53 @@ function register(values: RegisterInput) {
     showToast("確認用パスワードが一致しません。");
     return;
   }
-  if (authAccounts.value.some((account) => account.email === email)) {
-    showToast("このメールアドレスは登録済みです。");
-    return;
+  try {
+    const result = await apiRequest<{ token: string; user: { email: string; role: Role; name: string; freelancerId?: string } }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name: values.name,
+        email,
+        phone: values.phone,
+        password: values.password,
+        roleTitle: values.role,
+        privacyPolicyAccepted: true
+      })
+    });
+    clearUnsavedChanges();
+    setAuth(result.token, result.user);
+    state.value.activeView = "profile";
+    state.value.wizardStep = 2;
+    await loadWorkspace();
+    showToast("会員登録が完了しました。続けてプロフィールを入力してください。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "会員登録に失敗しました。");
   }
-
-  const freelancerId = uid("fr");
-  const account: Account = {
-    email,
-    password: values.password,
-    role: "freelancer",
-    name: values.name,
-    startView: "profile",
-    freelancerId
-  };
-
-  state.value.accounts = [...(state.value.accounts || []), account];
-  state.value.profile = {
-    ...blankProfile(freelancerId),
-    name: values.name,
-    email,
-    phone: values.phone || "",
-    role: values.role || "",
-    lastUpdated: today()
-  };
-  state.value.wizardStep = 2;
-  state.value.selectedFreelancerId = freelancerId;
-  syncProfileToFreelancer();
-  clearUnsavedChanges();
-  loginWithAccount(account);
-  showToast("会員登録が完了しました。続けてプロフィールを入力してください。");
 }
 
 function logout() {
   if (!confirmDiscardChanges()) return;
   const previousRole = currentRole.value;
+  accessToken = "";
+  localStorage.removeItem(TOKEN_KEY);
   state.value.auth = null;
   state.value.activeView = previousRole ? defaultViewByRole[previousRole] : "jobs";
   persist();
   showToast("ログアウトしました。");
 }
 
-function saveProfileBasic(values: Pick<Profile, "name" | "email" | "phone" | "role">) {
+async function saveProfileBasic(values: Pick<Profile, "name" | "email" | "phone" | "role">) {
   Object.assign(state.value.profile, values, { lastUpdated: today() });
   state.value.wizardStep = 2;
-  syncProfileToFreelancer();
-  saveAndNotify("簡易プロフィールを保存しました。");
+  await saveProfileToApi("簡易プロフィールを保存しました。");
 }
 
-function saveProfileSkills(values: Pick<Profile, "languages" | "db" | "frameworks" | "years">) {
+async function saveProfileSkills(values: Pick<Profile, "languages" | "db" | "frameworks" | "years">) {
   Object.assign(state.value.profile, values, { lastUpdated: today() });
   state.value.wizardStep = 3;
-  syncProfileToFreelancer();
-  saveAndNotify("スキル情報を保存しました。");
+  await saveProfileToApi("スキル情報を保存しました。");
 }
 
-function saveProfileTerms(values: ProfileTermsInput) {
+async function saveProfileTerms(values: ProfileTermsInput) {
   Object.assign(state.value.profile, {
     desiredRate: values.desiredRate,
     startDate: values.startDate,
@@ -688,28 +808,38 @@ function saveProfileTerms(values: ProfileTermsInput) {
     state.value.profile.resumeName = values.resume.name;
     state.value.profile.resumeType = values.resume.type || "application/octet-stream";
     state.value.profile.resumeSize = `${Math.ceil(values.resume.size / 1024)}KB`;
+    await apiRequest("/resumes", {
+      method: "POST",
+      body: JSON.stringify({
+        originalFilename: values.resume.name,
+        mimeType: values.resume.type || "application/octet-stream",
+        fileSizeBytes: values.resume.size,
+        storageKey: `local/${Date.now()}-${values.resume.name}`
+      })
+    }).catch((error) => showToast(error instanceof Error ? error.message : "レジュメ保存に失敗しました。"));
   }
 
   state.value.wizardStep = 4;
-  syncProfileToFreelancer();
-  saveAndNotify("稼働条件とレジュメを保存しました。");
+  await saveProfileToApi("稼働条件とレジュメを保存しました。");
 }
 
-function saveProfileMeeting(meetingCandidatesText: string) {
+async function saveProfileMeeting(meetingCandidatesText: string) {
   const candidates = meetingCandidatesText.split("\n").map((candidate) => candidate.trim()).filter(Boolean);
   state.value.profile.meetingCandidates = candidates;
   state.value.profile.lastUpdated = today();
-  state.value.meetingRequests = candidates.map((candidate, index) => ({
-    id: state.value.meetingRequests[index]?.id || uid("meet"),
-    freelancerId: state.value.profile.id,
-    candidate,
-    status: state.value.meetingRequests[index]?.status || "候補"
-  }));
-  syncProfileToFreelancer();
-  clearUnsavedChanges();
-  persist();
-  setView("jobs");
-  showToast("登録が完了しました。");
+  try {
+    await saveProfileToApi("");
+    await Promise.all(candidates.map((candidate) => apiRequest("/meeting-requests", {
+      method: "POST",
+      body: JSON.stringify({ candidateAt: toApiDateTime(candidate) })
+    })));
+    await loadWorkspace();
+    clearUnsavedChanges();
+    setView("jobs");
+    showToast("登録が完了しました。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "面談候補の保存に失敗しました。");
+  }
 }
 
 function resetProfile() {
@@ -725,23 +855,29 @@ function resetProfile() {
   showToast("プロフィールを初期状態に戻しました。");
 }
 
-function createJob(values: JobInput) {
-  state.value.jobs.unshift({
-    id: uid("job"),
-    title: values.title || "新規案件",
-    client: values.client || "未設定",
-    summary: values.summary || "",
-    required: splitCsv(values.required),
-    nice: splitCsv(values.nice),
-    rateMin: Number(values.rateMin || 0),
-    rateMax: Number(values.rateMax || 0),
-    marginRate: Number(values.marginRate || 0),
-    stream: values.stream,
-    remote: values.remote,
-    sortFlag: values.sortFlag,
-    active: true
-  });
-  saveAndNotify("案件を登録しました。");
+async function createJob(values: JobInput) {
+  try {
+    const job = await apiRequest<Job>("/jobs", {
+      method: "POST",
+      body: JSON.stringify({
+        title: values.title || "新規案件",
+        client: values.client || "未設定",
+        summary: values.summary || "",
+        required: splitCsv(values.required),
+        nice: splitCsv(values.nice),
+        rateMin: Number(values.rateMin || 0),
+        rateMax: Number(values.rateMax || 0),
+        marginRate: Number(values.marginRate || 0),
+        streamType: values.stream,
+        remoteType: values.remote,
+        isPinned: values.sortFlag
+      })
+    });
+    state.value.jobs.unshift(job);
+    saveAndNotify("案件を登録しました。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "案件登録に失敗しました。");
+  }
 }
 
 function clearJobFilter() {
@@ -752,25 +888,27 @@ function clearScoutFilter() {
   scoutFilters.value = { skill: "", availability: "", remote: "" };
 }
 
-function applyJob(jobId: string) {
+async function applyJob(jobId: string) {
   if (currentRole.value !== "freelancer") {
     showToast("応募は求職者アカウントで利用できます。");
     return;
   }
   if (hasApplied(jobId)) return;
 
-  state.value.applications.unshift({
-    id: uid("app"),
-    jobId,
-    freelancerId: state.value.profile.id,
-    status: "選考中",
-    appliedAt: today()
-  });
-  persist();
-  showToast("応募しました。営業管理に反映されています。");
+  try {
+    const application = await apiRequest<Application>("/applications", {
+      method: "POST",
+      body: JSON.stringify({ jobId })
+    });
+    state.value.applications.unshift(application);
+    persist();
+    showToast("応募しました。営業管理に反映されています。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "応募に失敗しました。");
+  }
 }
 
-function sendScout(freelancerId: string) {
+async function sendScout(freelancerId: string) {
   if (currentRole.value !== "sales") {
     showToast("スカウトは営業アカウントで利用できます。");
     return;
@@ -779,18 +917,22 @@ function sendScout(freelancerId: string) {
   const freelancer = getFreelancer(freelancerId);
   if (!freelancer) return;
 
-  state.value.messages.push({
-    id: uid("msg"),
-    freelancerId: freelancer.id,
-    from: "営業",
-    to: freelancer.name,
-    body: `${freelancer.role}向けの案件をご紹介したいです。稼働状況の確認をお願いします。`,
-    at: nowLabel(),
-    channel: "sales"
-  });
-  state.value.selectedFreelancerId = freelancer.id;
-  persist();
-  showToast(`${freelancer.name}さんへスカウトを送信しました。`);
+  try {
+    const message = await apiRequest<Message>("/messages", {
+      method: "POST",
+      body: JSON.stringify({
+        freelancerProfileId: freelancer.id,
+        body: `${freelancer.role}向けの案件をご紹介したいです。稼働状況の確認をお願いします。`,
+        messageType: "scout"
+      })
+    });
+    state.value.messages.push(message);
+    state.value.selectedFreelancerId = freelancer.id;
+    persist();
+    showToast(`${freelancer.name}さんへスカウトを送信しました。`);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "スカウト送信に失敗しました。");
+  }
 }
 
 function selectPreview(freelancerId: string) {
@@ -800,23 +942,39 @@ function selectPreview(freelancerId: string) {
   showToast(`${freelancer?.resumeName || "レジュメ未登録"} を管理プレビューで確認中です。`);
 }
 
-function toggleJobSort(jobId: string) {
+async function toggleJobSort(jobId: string) {
   const job = getJob(jobId);
   if (!job) return;
-  job.sortFlag = !job.sortFlag;
-  persist();
-  showToast("並び替えフラグを更新しました。");
+  try {
+    const updated = await apiRequest<Job>(`/jobs/${jobId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ isPinned: !job.sortFlag })
+    });
+    Object.assign(job, updated);
+    persist();
+    showToast("並び替えフラグを更新しました。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "更新に失敗しました。");
+  }
 }
 
-function toggleJobActive(jobId: string) {
+async function toggleJobActive(jobId: string) {
   const job = getJob(jobId);
   if (!job) return;
-  job.active = !job.active;
-  persist();
-  showToast("公開ステータスを更新しました。");
+  try {
+    const updated = await apiRequest<Job>(`/jobs/${jobId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ isActive: !job.active })
+    });
+    Object.assign(job, updated);
+    persist();
+    showToast("公開ステータスを更新しました。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "更新に失敗しました。");
+  }
 }
 
-function changeApplicationStatus(applicationId: string, status: string) {
+async function changeApplicationStatus(applicationId: string, status: string) {
   if (currentRole.value !== "sales") {
     showToast("選考ステータスの更新は営業アカウントで利用できます。");
     return;
@@ -824,35 +982,62 @@ function changeApplicationStatus(applicationId: string, status: string) {
 
   const item = state.value.applications.find((application) => application.id === applicationId);
   if (!item || !statuses.includes(status as ApplicationStatus)) return;
-  item.status = status as ApplicationStatus;
-  persist();
-  showToast("選考ステータスを更新しました。");
+  try {
+    const updated = await apiRequest<Application>(`/applications/${applicationId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status })
+    });
+    Object.assign(item, updated);
+    persist();
+    showToast("選考ステータスを更新しました。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "更新に失敗しました。");
+  }
 }
 
-function addMeeting(candidateValue: string) {
+async function addMeeting(candidateValue: string) {
   if (!candidateValue) {
     showToast("候補日時を入力してください。");
     return;
   }
 
-  state.value.meetingRequests.push({
-    id: uid("meet"),
-    freelancerId: activeChatFreelancerId.value || state.value.profile.id,
-    candidate: candidateValue.replace("T", " "),
-    status: "候補"
-  });
-  saveAndNotify("面談候補を追加しました。");
+  try {
+    const meeting = await apiRequest<{ id: string; freelancerProfileId: string; candidateAt: string; status: string }>("/meeting-requests", {
+      method: "POST",
+      body: JSON.stringify({
+        freelancerProfileId: currentRole.value === "sales" ? activeChatFreelancerId.value : undefined,
+        candidateAt: toApiDateTime(candidateValue)
+      })
+    });
+    state.value.meetingRequests.push({
+      id: meeting.id,
+      freelancerId: meeting.freelancerProfileId,
+      candidate: meeting.candidateAt.replace("T", " ").slice(0, 16),
+      status: "候補"
+    });
+    saveAndNotify("面談候補を追加しました。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "面談候補の追加に失敗しました。");
+  }
 }
 
-function updateMeetingStatus(meetingId: string, status: "確定" | "再調整") {
+async function updateMeetingStatus(meetingId: string, status: "確定" | "再調整") {
   const item = state.value.meetingRequests.find((meeting) => meeting.id === meetingId);
   if (!item) return;
-  item.status = status;
-  persist();
-  showToast("面談ステータスを更新しました。");
+  try {
+    await apiRequest(`/meeting-requests/${meetingId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status })
+    });
+    item.status = status;
+    persist();
+    showToast("面談ステータスを更新しました。");
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "更新に失敗しました。");
+  }
 }
 
-function sendMessage(body: string) {
+async function sendMessage(body: string) {
   const trimmedBody = body.trim();
   if (!trimmedBody) {
     showToast("送信内容を入力してください。");
@@ -868,33 +1053,39 @@ function sendMessage(body: string) {
     return false;
   }
 
-  state.value.messages.push({
-    id: uid("msg"),
-    freelancerId,
-    from: isSales ? "営業" : freelancer.name,
-    to: isSales ? freelancer.name : "営業",
-    body: trimmedBody,
-    at: nowLabel(),
-    channel: isSales ? "sales" : "freelancer"
-  });
-  persist();
-  showToast("メッセージを送信しました。");
-  return true;
+  try {
+    const message = await apiRequest<Message>("/messages", {
+      method: "POST",
+      body: JSON.stringify({
+        freelancerProfileId: isSales ? freelancerId : undefined,
+        body: trimmedBody,
+        messageType: "chat"
+      })
+    });
+    state.value.messages.push(message);
+    persist();
+    showToast("メッセージを送信しました。");
+    return true;
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "送信に失敗しました。");
+    return false;
+  }
 }
 
-function aliveCheck() {
+async function aliveCheck() {
   if (currentRole.value !== "sales") {
     showToast("生存確認は営業アカウントで利用できます。");
     return;
   }
 
-  const targets = state.value.freelancers.filter((freelancer) => {
-    const daysOld = Math.floor((new Date(today()).getTime() - new Date(freelancer.lastUpdated).getTime()) / 86400000);
-    return daysOld >= 14 || freelancer.availability !== "即稼働可";
-  });
-  state.value.aliveChecks.push({ id: uid("alive"), count: targets.length, at: nowLabel() });
-  persist();
-  showToast(`${targets.length}名に生存確認メールを送信しました。`);
+  try {
+    const batch = await apiRequest<{ id: string; targetCount: number; executedAt: string }>("/alive-checks", { method: "POST" });
+    state.value.aliveChecks.push({ id: batch.id, count: batch.targetCount, at: batch.executedAt });
+    persist();
+    showToast(`${batch.targetCount}名に生存確認メールを送信しました。`);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "生存確認に失敗しました。");
+  }
 }
 
 function copyText(text: string) {
@@ -926,6 +1117,27 @@ function syncProfileToFreelancer() {
   const index = state.value.freelancers.findIndex((freelancer) => freelancer.id === profile.id);
   if (index >= 0) state.value.freelancers[index] = item;
   else state.value.freelancers.unshift(item);
+}
+
+async function saveProfileToApi(message: string) {
+  try {
+    const profile = await apiRequest<Freelancer & {
+      email?: string;
+      phone?: string | null;
+      yearsExperience?: number;
+      startDate?: string;
+    }>("/profile/me", {
+      method: "PUT",
+      body: JSON.stringify(profileToApi(state.value.profile))
+    });
+    state.value.profile = { ...freelancerToProfile(profile), resumeName: state.value.profile.resumeName };
+    syncProfileToFreelancer();
+    clearUnsavedChanges();
+    persist();
+    if (message) showToast(message);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "プロフィール保存に失敗しました。");
+  }
 }
 
 function hasProfileContent(profile: Profile) {
@@ -1011,6 +1223,12 @@ function nowLabel() {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toApiDateTime(value: string) {
+  const normalized = value.trim().replace(" ", "T");
+  if (/Z$|[+-]\d\d:\d\d$/.test(normalized)) return normalized;
+  return normalized.length === 16 ? `${normalized}:00+09:00` : `${normalized}+09:00`;
 }
 
 function uid(prefix: string) {

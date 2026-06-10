@@ -8,16 +8,41 @@
     "build": "node ./scripts/nuxt-short-tmp.mjs build",
     "preview": "node ./scripts/nuxt-short-tmp.mjs preview . --host 127.0.0.1 --port 5173",
     "typecheck": "node ./scripts/nuxt-short-tmp.mjs typecheck",
+    "api:dev": "tsx backend/src/interfaces/http/server.ts",
+    "api:build": "tsc -p backend/tsconfig.json",
+    "api:start": "node backend/dist/interfaces/http/server.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
     "postinstall": "node ./scripts/nuxt-short-tmp.mjs prepare",
     "generate": "nuxt generate",
     "deploy": "npm run generate && gh-pages -d .output/public"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "nuxt": "^3.15.4",
-    "vue": "^3.5.13"
+    "pg": "^8.21.0",
+    "vue": "^3.5.13",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.20.0",
     "gh-pages": "^6.3.0",
+    "prisma": "^7.8.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.7.3",
     "vue-tsc": "^2.2.0"
   }

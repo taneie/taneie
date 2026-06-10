@@ -1,0 +1,348 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  freelancer
+  sales
+
+  @@map("user_role")
+}
+
+enum RemoteType {
+  full_remote @map("full_remote")
+  hybrid
+  onsite
+
+  @@map("remote_type")
+}
+
+enum AvailabilityStatus {
+  ready
+  scheduled
+  paused
+
+  @@map("availability_status")
+}
+
+enum SkillCategory {
+  language
+  database
+  framework
+  cloud
+  tool
+  other
+
+  @@map("skill_category")
+}
+
+enum StreamType {
+  end_direct @map("end_direct")
+  prime
+  secondary
+  other
+
+  @@map("stream_type")
+}
+
+enum JobSkillRequirementType {
+  required
+  nice
+
+  @@map("job_skill_requirement_type")
+}
+
+enum ApplicationStatus {
+  screening
+  meeting_pending
+  contracted
+  rejected
+
+  @@map("application_status")
+}
+
+enum MeetingStatus {
+  candidate
+  confirmed
+  reschedule
+
+  @@map("meeting_status")
+}
+
+enum MessageType {
+  chat
+  scout
+  alive_check
+  system
+
+  @@map("message_type")
+}
+
+model User {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role            UserRole
+  name            String    @db.VarChar(255)
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  phone           String?   @db.VarChar(50)
+  isActive        Boolean   @default(true) @map("is_active")
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  freelancerProfile FreelancerProfile?
+  jobsCreated       Job[]                  @relation("JobCreatedBy")
+  changedStatuses   ApplicationStatusHistory[]
+  createdMeetings   MeetingRequest[]       @relation("MeetingCreatedBy")
+  sentMessages      Message[]              @relation("MessageSender")
+  receivedMessages  Message[]              @relation("MessageReceiver")
+  aliveCheckBatches AliveCheckBatch[]
+  privacyConsents   PrivacyPolicyConsent[]
+
+  @@map("users")
+}
+
+model FreelancerProfile {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String              @unique @map("user_id") @db.Uuid
+  publicCode         String              @unique @map("public_code") @db.VarChar(100)
+  roleTitle          String?             @map("role_title") @db.VarChar(255)
+  yearsExperience    Decimal?            @map("years_experience") @db.Decimal(4, 1)
+  desiredRate        Int?                @map("desired_rate")
+  startDate          DateTime?           @map("start_date") @db.Date
+  workRate           String?             @map("work_rate") @db.VarChar(50)
+  remoteType         RemoteType?         @map("remote_type")
+  availabilityStatus AvailabilityStatus? @map("availability_status")
+  availabilityNote   String?             @map("availability_note") @db.VarChar(255)
+  lastUpdatedOn      DateTime?           @map("last_updated_on") @db.Date
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills            FreelancerSkill[]
+  resumes           Resume[]
+  applications      Application[]
+  meetingRequests   MeetingRequest[]
+  messages          Message[]
+  aliveCheckTargets AliveCheckTarget[]
+
+  @@index([availabilityStatus])
+  @@index([remoteType])
+  @@map("freelancer_profiles")
+}
+
+model Skill {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String        @db.VarChar(100)
+  category  SkillCategory @default(other)
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  freelancerSkills FreelancerSkill[]
+  jobSkills        JobSkill[]
+
+  @@unique([name, category])
+  @@map("skills")
+}
+
+model FreelancerSkill {
+  freelancerProfileId String   @map("freelancer_profile_id") @db.Uuid
+  skillId             String   @map("skill_id") @db.Uuid
+  yearsExperience     Decimal? @map("years_experience") @db.Decimal(4, 1)
+  level               String?  @db.VarChar(50)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+  skill             Skill             @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([freelancerProfileId, skillId])
+  @@map("freelancer_skills")
+}
+
+model Resume {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  freelancerProfileId String   @map("freelancer_profile_id") @db.Uuid
+  originalFilename    String   @map("original_filename") @db.VarChar(255)
+  mimeType            String?  @map("mime_type") @db.VarChar(100)
+  fileSizeBytes       Int?     @map("file_size_bytes")
+  storageKey          String   @map("storage_key") @db.VarChar(500)
+  isLatest            Boolean  @default(true) @map("is_latest")
+  uploadedAt          DateTime @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([freelancerProfileId, isLatest])
+  @@map("resumes")
+}
+
+model Client {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  jobs Job[]
+
+  @@unique([name])
+  @@map("clients")
+}
+
+model Job {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId   String?    @map("client_id") @db.Uuid
+  title      String     @db.VarChar(255)
+  summary    String?
+  rateMin    Int        @default(0) @map("rate_min")
+  rateMax    Int        @default(0) @map("rate_max")
+  marginRate Decimal    @default(0) @map("margin_rate") @db.Decimal(5, 2)
+  streamType StreamType @map("stream_type")
+  remoteType RemoteType @map("remote_type")
+  isPinned   Boolean    @default(false) @map("is_pinned")
+  isActive   Boolean    @default(true) @map("is_active")
+  createdBy  String?    @map("created_by") @db.Uuid
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime   @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  creator      User?         @relation("JobCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  skills       JobSkill[]
+  applications Application[]
+  messages     Message[]
+
+  @@index([isActive, isPinned])
+  @@index([remoteType])
+  @@index([streamType])
+  @@map("jobs")
+}
+
+model JobSkill {
+  jobId           String                  @map("job_id") @db.Uuid
+  skillId         String                  @map("skill_id") @db.Uuid
+  requirementType JobSkillRequirementType @map("requirement_type")
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  job   Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([jobId, skillId, requirementType])
+  @@map("job_skills")
+}
+
+model Application {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobId               String            @map("job_id") @db.Uuid
+  freelancerProfileId String            @map("freelancer_profile_id") @db.Uuid
+  status              ApplicationStatus @default(screening)
+  appliedAt           DateTime          @default(now()) @map("applied_at") @db.Timestamptz(6)
+  updatedAt           DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  job               Job                        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancerProfile FreelancerProfile          @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+  histories         ApplicationStatusHistory[]
+  meetingRequests   MeetingRequest[]
+
+  @@unique([jobId, freelancerProfileId])
+  @@index([status])
+  @@map("applications")
+}
+
+model ApplicationStatusHistory {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId String             @map("application_id") @db.Uuid
+  fromStatus    ApplicationStatus? @map("from_status")
+  toStatus      ApplicationStatus  @map("to_status")
+  changedBy     String?            @map("changed_by") @db.Uuid
+  changedAt     DateTime           @default(now()) @map("changed_at") @db.Timestamptz(6)
+  note          String?
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedByUser User?     @relation(fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@index([applicationId, changedAt])
+  @@map("application_status_histories")
+}
+
+model MeetingRequest {
+  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  freelancerProfileId String        @map("freelancer_profile_id") @db.Uuid
+  applicationId       String?       @map("application_id") @db.Uuid
+  candidateAt         DateTime      @map("candidate_at") @db.Timestamptz(6)
+  status              MeetingStatus @default(candidate)
+  createdBy           String?       @map("created_by") @db.Uuid
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+  application       Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  creator           User?             @relation("MeetingCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([freelancerProfileId, candidateAt])
+  @@map("meeting_requests")
+}
+
+model Message {
+  id                  String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  senderUserId        String      @map("sender_user_id") @db.Uuid
+  receiverUserId      String?     @map("receiver_user_id") @db.Uuid
+  freelancerProfileId String?     @map("freelancer_profile_id") @db.Uuid
+  jobId               String?     @map("job_id") @db.Uuid
+  messageType         MessageType @default(chat) @map("message_type")
+  body                String
+  sentAt              DateTime    @default(now()) @map("sent_at") @db.Timestamptz(6)
+  readAt              DateTime?   @map("read_at") @db.Timestamptz(6)
+
+  sender            User               @relation("MessageSender", fields: [senderUserId], references: [id], onDelete: Cascade)
+  receiver          User?              @relation("MessageReceiver", fields: [receiverUserId], references: [id], onDelete: SetNull)
+  freelancerProfile FreelancerProfile? @relation(fields: [freelancerProfileId], references: [id], onDelete: SetNull)
+  job               Job?               @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([freelancerProfileId, sentAt])
+  @@index([senderUserId, sentAt])
+  @@map("messages")
+}
+
+model AliveCheckBatch {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  executedBy  String?  @map("executed_by") @db.Uuid
+  targetCount Int      @default(0) @map("target_count")
+  executedAt  DateTime @default(now()) @map("executed_at") @db.Timestamptz(6)
+
+  executor User?              @relation(fields: [executedBy], references: [id], onDelete: SetNull)
+  targets  AliveCheckTarget[]
+
+  @@map("alive_check_batches")
+}
+
+model AliveCheckTarget {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  batchId             String    @map("batch_id") @db.Uuid
+  freelancerProfileId String    @map("freelancer_profile_id") @db.Uuid
+  status              String    @default("sent") @db.VarChar(50)
+  sentAt              DateTime  @default(now()) @map("sent_at") @db.Timestamptz(6)
+  respondedAt         DateTime? @map("responded_at") @db.Timestamptz(6)
+
+  batch             AliveCheckBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([freelancerProfileId])
+  @@map("alive_check_targets")
+}
+
+model PrivacyPolicyConsent {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  policyVersion  String   @map("policy_version") @db.VarChar(50)
+  acceptedAt     DateTime @default(now()) @map("accepted_at") @db.Timestamptz(6)
+  ipAddress      String?  @map("ip_address") @db.VarChar(64)
+  userAgent      String?  @map("user_agent") @db.VarChar(500)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, policyVersion])
+  @@index([userId, acceptedAt])
+  @@map("privacy_policy_consents")
+}

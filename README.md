@@ -17,6 +17,28 @@ http://127.0.0.1:5173/
 
 5173番ポートが使用中の場合、Nuxt が別ポートを表示します。
 
+## バックエンド / DB
+
+PostgreSQL を Docker で起動し、Prisma のマイグレーションと初期データ投入を行います。
+
+```bash
+docker compose up -d postgres
+npm run db:migrate
+npm run db:seed
+npm run api:dev
+```
+
+API は以下で起動します。
+
+```txt
+http://127.0.0.1:8787/api/health
+```
+
+主な API は `/api/auth/register`, `/api/auth/login`, `/api/jobs`, `/api/profile/me`, `/api/applications`, `/api/meeting-requests`, `/api/messages`, `/api/alive-checks` です。
+営業専用の操作は JWT の role が `sales` の場合だけ許可され、求職者専用の操作は `freelancer` の場合だけ許可されます。
+
+接続情報を変更する場合は `.env.example` を参考に `DATABASE_URL`, `API_PORT`, `JWT_SECRET`, `CORS_ORIGIN` を設定してください。
+
 ## macOSで `connect EINVAL ... nuxt-vite-node-*.sock` が出る場合
 
 macOS の標準一時ディレクトリ `/var/folders/...` のパスが長く、Nuxt/Vite が作る socket パスが長すぎると起きることがあります。
@@ -36,6 +58,8 @@ npm run dev
 ```bash
 npm run typecheck
 npm run build
+npm run api:build
+npm run db:generate
 ```
 
 ## デモログイン

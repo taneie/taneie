@@ -82,8 +82,8 @@ const jobForm = reactive<JobInput>(initialJobForm());
 const closedApplications = computed(() => state.value.applications.filter((application) => application.status === "成約").length);
 const rejectedApplications = computed(() => state.value.applications.filter((application) => application.status === "見送り").length);
 
-function submitJob() {
-  createJob(jobForm);
+async function submitJob() {
+  await createJob(jobForm);
   Object.assign(jobForm, initialJobForm());
   clearUnsavedChanges();
 }

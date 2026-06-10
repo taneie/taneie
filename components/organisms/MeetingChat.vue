@@ -109,13 +109,13 @@ function isOwnMessage(message: Message) {
   return message.channel === "freelancer";
 }
 
-function submitMeeting() {
-  addMeeting(candidate.value);
+async function submitMeeting() {
+  await addMeeting(candidate.value);
   candidate.value = "";
 }
 
-function submitMessage() {
-  if (sendMessage(body.value)) {
+async function submitMessage() {
+  if (await sendMessage(body.value)) {
     body.value = "";
     clearUnsavedChanges();
   }
