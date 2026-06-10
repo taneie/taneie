@@ -79,6 +79,7 @@ export const updateProfileSchema = z.object({
   remoteType: remoteType.optional(),
   availabilityStatus: availabilityStatus.optional(),
   availabilityNote: z.string().trim().max(255).optional(),
+  pledgeAccepted: z.boolean().optional(),
   skills: z.array(z.string().trim().min(1)).optional()
 });
 

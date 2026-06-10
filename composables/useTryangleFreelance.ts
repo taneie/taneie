@@ -49,6 +49,8 @@ export interface Profile {
   resumeType: string;
   resumeSize: string;
   meetingCandidates: string[];
+  pledgeAccepted: boolean;
+  pledgedAt: string;
   lastUpdated: string;
 }
 
@@ -63,6 +65,7 @@ export interface Freelancer {
   availability: string;
   lastUpdated: string;
   resumeName: string;
+  pledgedAt?: string;
 }
 
 export interface Job {
@@ -362,6 +365,8 @@ function blankProfile(id = "fr-current"): Profile {
     resumeType: "",
     resumeSize: "",
     meetingCandidates: [],
+    pledgeAccepted: false,
+    pledgedAt: "",
     lastUpdated: ""
   };
 }
@@ -488,7 +493,7 @@ async function restoreSession() {
 async function loadWorkspace() {
   if (!state.value.auth) return;
   const [jobs, applications, meetings, messages] = await Promise.all([
-    apiRequest<Job[]>("/jobs"),
+    apiRequest<Job[]>("/jobs").catch(() => []),
     apiRequest<Application[]>("/applications"),
     apiRequest<MeetingRequest[]>("/meeting-requests"),
     apiRequest<Message[]>("/messages")
@@ -521,6 +526,7 @@ function freelancerToProfile(freelancer: Freelancer & {
   phone?: string | null;
   yearsExperience?: number;
   startDate?: string;
+  pledgedAt?: string;
 }): Profile {
   return {
     ...blankProfile(freelancer.id),
@@ -536,6 +542,8 @@ function freelancerToProfile(freelancer: Freelancer & {
     remote: freelancer.remote || "",
     availability: freelancer.availability || "",
     resumeName: freelancer.resumeName || "",
+    pledgeAccepted: Boolean(freelancer.pledgedAt),
+    pledgedAt: freelancer.pledgedAt || "",
     lastUpdated: freelancer.lastUpdated || ""
   };
 }
@@ -552,6 +560,7 @@ function profileToApi(profile: Profile) {
     remoteType: profile.remote,
     availabilityStatus: profile.availability,
     availabilityNote: profile.availability,
+    pledgeAccepted: profile.pledgeAccepted || undefined,
     skills: [...splitCsv(profile.languages), ...splitCsv(profile.frameworks), ...splitCsv(profile.db)]
   };
 }
@@ -565,6 +574,7 @@ const availableNavItems = computed(() => {
 });
 
 const filteredJobs = computed(() => {
+  if (currentRole.value === "freelancer" && !canViewJobs.value) return [];
   const keyword = filters.value.keyword.toLowerCase();
   const skill = filters.value.skill.toLowerCase();
 
@@ -577,6 +587,20 @@ const filteredJobs = computed(() => {
     .filter((job) => !filters.value.stream || job.stream === filters.value.stream)
     .sort((a, b) => Number(b.sortFlag) - Number(a.sortFlag));
 });
+
+const profileRequirementItems = computed(() => {
+  const p = state.value.profile;
+  return [
+    { label: "基本情報", done: Boolean(p.name && p.email && p.phone && p.role) },
+    { label: "スキル詳細", done: Boolean(p.languages && p.db && p.frameworks && p.years) },
+    { label: "稼働条件", done: Boolean(p.desiredRate && p.startDate && p.workRate && p.remote && p.availability) },
+    { label: "レジュメ", done: Boolean(p.resumeName) },
+    { label: "面談候補", done: state.value.meetingRequests.some((meeting) => meeting.freelancerId === p.id) || Boolean(p.meetingCandidates.length) },
+    { label: "誓約同意", done: Boolean(p.pledgeAccepted || p.pledgedAt) }
+  ];
+});
+
+const canViewJobs = computed(() => currentRole.value !== "freelancer" || profileRequirementItems.value.every((item) => item.done));
 
 const filteredFreelancers = computed(() => {
   return state.value.freelancers
@@ -668,6 +692,12 @@ function setAuthMode(mode: AuthMode) {
 function setView(view: ViewKey) {
   if (!canAccess(view)) {
     showToast("この画面は現在の権限では表示できません。");
+    return;
+  }
+  if (view === "jobs" && currentRole.value === "freelancer" && !canViewJobs.value) {
+    state.value.activeView = "jobs";
+    showToast("案件閲覧にはプロフィール詳細の入力と誓約同意が必要です。");
+    persist();
     return;
   }
 
@@ -823,9 +853,18 @@ async function saveProfileTerms(values: ProfileTermsInput) {
   await saveProfileToApi("稼働条件とレジュメを保存しました。");
 }
 
-async function saveProfileMeeting(meetingCandidatesText: string) {
+async function saveProfileMeeting(meetingCandidatesText: string, pledgeAccepted = false) {
+  if (!pledgeAccepted) {
+    showToast("案件閲覧には誓約条件への同意が必要です。");
+    return;
+  }
   const candidates = meetingCandidatesText.split("\n").map((candidate) => candidate.trim()).filter(Boolean);
+  if (!candidates.length) {
+    showToast("初回面談の候補日を1つ以上入力してください。");
+    return;
+  }
   state.value.profile.meetingCandidates = candidates;
+  state.value.profile.pledgeAccepted = true;
   state.value.profile.lastUpdated = today();
   try {
     await saveProfileToApi("");
@@ -835,6 +874,8 @@ async function saveProfileMeeting(meetingCandidatesText: string) {
     })));
     await loadWorkspace();
     clearUnsavedChanges();
+    state.value.profile.pledgeAccepted = true;
+    if (!state.value.profile.pledgedAt) state.value.profile.pledgedAt = new Date().toISOString();
     setView("jobs");
     showToast("登録が完了しました。");
   } catch (error) {
@@ -1126,6 +1167,7 @@ async function saveProfileToApi(message: string) {
       phone?: string | null;
       yearsExperience?: number;
       startDate?: string;
+      pledgedAt?: string;
     }>("/profile/me", {
       method: "PUT",
       body: JSON.stringify(profileToApi(state.value.profile))
@@ -1285,6 +1327,8 @@ export function useTryangleFreelance() {
     currentRole,
     availableNavItems,
     filteredJobs,
+    profileRequirementItems,
+    canViewJobs,
     filteredFreelancers,
     selectedFreelancer,
     currentFreelancerId,

@@ -43,6 +43,7 @@ create table freelancer_profiles (
   remote_type remote_type,
   availability_status availability_status,
   availability_note varchar(255),
+  pledged_at timestamptz,
   last_updated_on date,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),

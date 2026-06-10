@@ -72,6 +72,19 @@
           <label :class="$style.field">初回面談の候補日
             <textarea :class="$style.control" v-model="meetingCandidates" @input="markDirty"></textarea>
           </label>
+          <div :class="$style.pledgeBox">
+            <h3>案件閲覧前の誓約条件</h3>
+            <ul>
+              <li>案件情報、クライアント情報、個人情報、営業上知り得た情報を第三者へ開示・漏えいしません。</li>
+              <li>職務経歴、スキル、稼働条件、連絡先など登録情報に虚偽がないことを誓約します。</li>
+              <li>参画後は連絡、勤怠、成果物提出、報告相談を滞りなく行い、業務遂行に支障が出る場合は速やかに連絡します。</li>
+              <li>契約、秘密保持、情報セキュリティ、個人情報保護に関する指示を遵守します。</li>
+            </ul>
+            <label :class="$style.checkLine">
+              <input v-model="pledgeAccepted" type="checkbox" @change="markDirty" />
+              <span>上記の誓約条件を確認し、同意します。</span>
+            </label>
+          </div>
           <div :class="$style.actions">
             <BaseButton type="submit" icon="calendar">登録完了</BaseButton>
             <BaseButton variant="ghost" icon="search" @click="setView('jobs')">案件検索へ</BaseButton>
@@ -110,6 +123,7 @@ const basic = reactive({ name: "", email: "", phone: "", role: "" });
 const skills = reactive({ languages: "", db: "", frameworks: "", years: "" });
 const terms = reactive<ProfileTermsInput>({ desiredRate: "", startDate: "", workRate: "", remote: "", availability: "", resume: null });
 const meetingCandidates = ref("");
+const pledgeAccepted = ref(false);
 
 const visibleProfileSkills = computed(() => {
   return splitCsv(profile.value.languages).concat(splitCsv(profile.value.frameworks)).slice(0, 7);
@@ -134,6 +148,7 @@ function hydrateForms() {
     resume: null
   });
   meetingCandidates.value = (p.meetingCandidates || []).join("\n");
+  pledgeAccepted.value = Boolean(p.pledgeAccepted || p.pledgedAt);
 }
 
 function moveStep(step: number) {
@@ -161,7 +176,7 @@ function saveTerms() {
 }
 
 function saveMeeting() {
-  saveProfileMeeting(meetingCandidates.value);
+  saveProfileMeeting(meetingCandidates.value, pledgeAccepted.value);
 }
 </script>
 
@@ -251,6 +266,38 @@ textarea.control {
   flex-wrap: wrap;
   gap: 9px;
   margin-top: 14px;
+}
+
+.pledgeBox {
+  border: 1px solid #b9cae2;
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 14px;
+  color: #263f63;
+  line-height: 1.7;
+}
+
+.pledgeBox h3 {
+  margin: 0 0 8px;
+  color: #10294f;
+  font-size: 15px;
+}
+
+.pledgeBox ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.checkLine {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-top: 12px;
+  font-weight: 800;
+}
+
+.checkLine input {
+  margin-top: 5px;
 }
 
 .stepper {

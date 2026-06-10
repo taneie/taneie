@@ -118,6 +118,9 @@ export class JobService {
   constructor(private readonly db: PrismaClient) {}
 
   async list(context?: AuthContext) {
+    if (context?.role === "freelancer") {
+      await assertFreelancerCanViewJobs(this.db, context.userId);
+    }
     const jobs = await this.db.job.findMany({
       where: context?.role === "sales" ? {} : { isActive: true },
       include: jobInclude,
@@ -201,6 +204,7 @@ export class ProfileService {
         remoteType: input.remoteType,
         availabilityStatus: input.availabilityStatus,
         availabilityNote: input.availabilityNote,
+        pledgedAt: input.pledgeAccepted ? new Date() : undefined,
         lastUpdatedOn: new Date()
       },
       create: {
@@ -214,6 +218,7 @@ export class ProfileService {
         remoteType: input.remoteType,
         availabilityStatus: input.availabilityStatus,
         availabilityNote: input.availabilityNote,
+        pledgedAt: input.pledgeAccepted ? new Date() : undefined,
         lastUpdatedOn: new Date()
       }
     });
@@ -257,6 +262,7 @@ export class ApplicationService {
   }
 
   async apply(jobId: string, userId: string) {
+    await assertFreelancerCanViewJobs(this.db, userId);
     const profile = await this.db.freelancerProfile.findUniqueOrThrow({ where: { userId } });
     const application = await this.db.application.create({
       data: {
@@ -436,5 +442,40 @@ export interface ProfileInput {
   remoteType?: "full_remote" | "hybrid" | "onsite";
   availabilityStatus?: "ready" | "scheduled" | "paused";
   availabilityNote?: string;
+  pledgeAccepted?: boolean;
   skills?: string[];
+}
+
+async function assertFreelancerCanViewJobs(db: PrismaClient, userId: string) {
+  const profile = await db.freelancerProfile.findUnique({
+    where: { userId },
+    include: {
+      skills: true,
+      resumes: { where: { isLatest: true } },
+      meetingRequests: true,
+      user: true
+    }
+  });
+
+  const complete = Boolean(
+    profile
+    && profile.user.name
+    && profile.user.email
+    && profile.user.phone
+    && profile.roleTitle
+    && profile.yearsExperience
+    && profile.desiredRate
+    && profile.startDate
+    && profile.workRate
+    && profile.remoteType
+    && profile.availabilityStatus
+    && profile.skills.length
+    && profile.resumes.length
+    && profile.meetingRequests.length
+    && profile.pledgedAt
+  );
+
+  if (!complete) {
+    throw new AppError(403, "案件閲覧にはプロフィール詳細の入力、レジュメ登録、面談候補登録、誓約同意が必要です。", "PROFILE_REQUIREMENTS_INCOMPLETE");
+  }
 }

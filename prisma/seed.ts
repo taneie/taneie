@@ -63,6 +63,7 @@ async function main() {
       remoteType: "full_remote",
       availabilityStatus: "scheduled",
       availabilityNote: "2026年7月から空き予定",
+      pledgedAt: new Date("2026-06-04T09:00:00+09:00"),
       lastUpdatedOn: new Date("2026-06-04")
     },
     create: {
@@ -75,6 +76,7 @@ async function main() {
       remoteType: "full_remote",
       availabilityStatus: "scheduled",
       availabilityNote: "2026年7月から空き予定",
+      pledgedAt: new Date("2026-06-04T09:00:00+09:00"),
       lastUpdatedOn: new Date("2026-06-04")
     }
   });

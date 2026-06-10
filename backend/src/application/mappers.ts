@@ -90,6 +90,7 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
     workRate: profile.workRate || "",
     remote: toRemoteLabel(profile.remoteType),
     availability: toAvailabilityLabel(profile.availabilityStatus, profile.availabilityNote),
+    pledgedAt: profile.pledgedAt?.toISOString() || "",
     lastUpdated: profile.lastUpdatedOn?.toISOString().slice(0, 10) || "",
     resumeName: latestResume?.originalFilename || "",
     publicCode: profile.publicCode
