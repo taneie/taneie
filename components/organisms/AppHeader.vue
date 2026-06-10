@@ -47,10 +47,9 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
   display: flex;
   align-items: center;
   gap: 18px;
-  max-width: 1440px;
   width: 100%;
-  margin: 0 auto;
-  padding: 13px 20px;
+  margin: 0;
+  padding: 13px clamp(14px, 1.4vw, 24px);
 }
 
 .brand {

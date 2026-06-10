@@ -39,6 +39,14 @@ http://127.0.0.1:8787/api/health
 
 接続情報を変更する場合は `.env.example` を参考に `DATABASE_URL`, `API_PORT`, `JWT_SECRET`, `CORS_ORIGIN` を設定してください。
 
+閉じているブラウザへチャット通知を送る場合は Web Push 用の VAPID 鍵も設定します。
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+生成された値を `.env` の `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` に設定してください。
+
 ## macOSで `connect EINVAL ... nuxt-vite-node-*.sock` が出る場合
 
 macOS の標準一時ディレクトリ `/var/folders/...` のパスが長く、Nuxt/Vite が作る socket パスが長すぎると起きることがあります。

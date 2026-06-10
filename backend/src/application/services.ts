@@ -1,6 +1,7 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { hashPassword, signToken, verifyPassword } from "../infrastructure/security.js";
+import { notifyUser } from "../infrastructure/push.js";
 import {
   AppError,
   labelToApplicationStatus,
@@ -374,7 +375,14 @@ export class CommunicationService {
       },
       include: { sender: true, receiver: true }
     });
-    return mapMessage(message);
+    const mapped = mapMessage(message);
+    await notifyUser(this.db, receiverUserId, {
+      title: "TRYANGLE FREELANCE",
+      body: `${message.sender.name}: ${input.body}`,
+      url: "/",
+      tag: `tryangle-chat-${message.id}`
+    });
+    return mapped;
   }
 
   async createAliveCheck(executedBy: string) {

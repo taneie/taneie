@@ -15,6 +15,7 @@
         </div>
       </section>
     </main>
+    <ChatNotificationBanner />
     <ToastMessage />
   </div>
 </template>
@@ -39,11 +40,10 @@ watch(
 }
 
 .workspace {
-  max-width: 1440px;
   width: 100%;
   min-width: 0;
-  margin: 0 auto;
-  padding: 22px clamp(14px, 2vw, 20px) 42px;
+  margin: 0;
+  padding: 22px clamp(14px, 1.4vw, 24px) 42px;
 }
 
 .panel {

@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import { config } from "../../infrastructure/config.js";
 import { prisma } from "../../infrastructure/prisma.js";
+import { getWebPushPublicKey } from "../../infrastructure/push.js";
 import {
   ApplicationService,
   AuthService,
@@ -25,6 +26,7 @@ import {
   createJobSchema,
   createMeetingSchema,
   loginSchema,
+  pushSubscriptionSchema,
   registerSchema,
   resumeMetadataSchema,
   sendMessageSchema,
@@ -61,6 +63,10 @@ export function createApp() {
 
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", service: "TRYANGLE FREELANCE API" });
+  });
+
+  app.get("/api/push/public-key", (_req, res) => {
+    res.json({ publicKey: getWebPushPublicKey() });
   });
 
   app.post("/api/auth/register", validateBody(registerSchema), asyncHandler(async (req, res) => {
@@ -169,6 +175,33 @@ export function createApp() {
 
   app.post("/api/messages", requireAuth, validateBody(sendMessageSchema), asyncHandler<AuthedRequest>(async (req, res) => {
     res.status(201).json(await communicationService.sendMessage(req.auth!, req.body));
+  }));
+
+  app.post("/api/push/subscriptions", requireAuth, validateBody(pushSubscriptionSchema), asyncHandler<AuthedRequest>(async (req, res) => {
+    const subscription = await prisma.pushSubscription.upsert({
+      where: { endpoint: req.body.endpoint },
+      update: {
+        userId: req.auth!.userId,
+        p256dh: req.body.keys.p256dh,
+        auth: req.body.keys.auth,
+        userAgent: req.headers["user-agent"]?.toString()
+      },
+      create: {
+        userId: req.auth!.userId,
+        endpoint: req.body.endpoint,
+        p256dh: req.body.keys.p256dh,
+        auth: req.body.keys.auth,
+        userAgent: req.headers["user-agent"]?.toString()
+      }
+    });
+    res.status(201).json({ id: subscription.id });
+  }));
+
+  app.delete("/api/push/subscriptions", requireAuth, validateBody(pushSubscriptionSchema), asyncHandler<AuthedRequest>(async (req, res) => {
+    await prisma.pushSubscription.deleteMany({
+      where: { userId: req.auth!.userId, endpoint: req.body.endpoint }
+    });
+    res.status(204).send();
   }));
 
   app.post("/api/alive-checks", requireAuth, requireRole("sales"), asyncHandler<AuthedRequest>(async (req, res) => {

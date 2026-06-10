@@ -226,9 +226,17 @@ const scoutFilters = ref<ScoutFilters>({ skill: "", availability: "", remote: ""
 const hasUnsavedChanges = ref(false);
 const toastMessage = ref("");
 const toastVisible = ref(false);
+const chatBannerVisible = ref(false);
+const chatBannerTitle = ref("");
+const chatBannerBody = ref("");
+const chatBannerFreelancerId = ref("");
 const initialized = ref(false);
 let accessToken = "";
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
+let chatBannerTimer: ReturnType<typeof setTimeout> | undefined;
+let chatPollingTimer: ReturnType<typeof setInterval> | undefined;
+let knownMessageIds = new Set<string>();
+let pushRegistrationStarted = false;
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -482,10 +490,12 @@ async function restoreSession() {
     state.value.auth = { ...user, loggedInAt: nowLabel() };
     ensureActiveView();
     await loadWorkspace();
+    startChatPolling();
   } catch {
     accessToken = "";
     localStorage.removeItem(TOKEN_KEY);
     state.value.auth = null;
+    stopChatPolling();
     persist();
   }
 }
@@ -503,6 +513,7 @@ async function loadWorkspace() {
   state.value.applications = applications;
   state.value.meetingRequests = meetings;
   state.value.messages = messages;
+  knownMessageIds = new Set(messages.map((message) => message.id));
 
   if (state.value.auth.role === "sales") {
     state.value.freelancers = await apiRequest<Freelancer[]>("/freelancers");
@@ -519,6 +530,115 @@ async function loadWorkspace() {
 
   ensureChatSelection();
   persist();
+}
+
+async function refreshMessagesWithNotification() {
+  if (!state.value.auth || !accessToken) return;
+  try {
+    const messages = await apiRequest<Message[]>("/messages");
+    const incoming = messages.filter((message) => !knownMessageIds.has(message.id) && isIncomingMessage(message));
+    state.value.messages = messages;
+    knownMessageIds = new Set(messages.map((message) => message.id));
+    if (incoming.length) showChatBanner(incoming.at(-1)!);
+  } catch {
+    stopChatPolling();
+  }
+}
+
+function startChatPolling() {
+  if (!import.meta.client || chatPollingTimer) return;
+  chatPollingTimer = setInterval(() => {
+    void refreshMessagesWithNotification();
+  }, 10000);
+}
+
+function stopChatPolling() {
+  if (!chatPollingTimer) return;
+  clearInterval(chatPollingTimer);
+  chatPollingTimer = undefined;
+}
+
+function isIncomingMessage(message: Message) {
+  return currentRole.value === "sales" ? message.channel === "freelancer" : message.channel === "sales";
+}
+
+function showChatBanner(message: Message) {
+  const freelancer = getFreelancer(message.freelancerId || "") || selectedFreelancer.value;
+  chatBannerTitle.value = `${message.from || "相手"}さんから新着メッセージ`;
+  chatBannerBody.value = message.body;
+  chatBannerFreelancerId.value = message.freelancerId || freelancer?.id || "";
+  chatBannerVisible.value = true;
+
+  if (chatBannerTimer) clearTimeout(chatBannerTimer);
+  chatBannerTimer = setTimeout(() => {
+    chatBannerVisible.value = false;
+  }, 7000);
+
+  showBrowserChatNotification(message);
+}
+
+function openChatBanner() {
+  if (chatBannerFreelancerId.value && currentRole.value === "sales") {
+    selectChatFreelancer(chatBannerFreelancerId.value);
+  } else {
+    setView("meeting");
+  }
+  chatBannerVisible.value = false;
+}
+
+function dismissChatBanner() {
+  chatBannerVisible.value = false;
+}
+
+async function requestBrowserNotificationPermission() {
+  if (!import.meta.client || !("Notification" in window)) return;
+  if (Notification.permission === "default") {
+    await Notification.requestPermission().catch(() => undefined);
+  }
+  if (Notification.permission === "granted") {
+    await registerPushSubscription();
+  }
+}
+
+function showBrowserChatNotification(message: Message) {
+  if (!import.meta.client || !("Notification" in window) || Notification.permission !== "granted") return;
+  const notification = new Notification("TRYANGLE FREELANCE", {
+    body: `${message.from || "相手"}: ${message.body}`,
+    tag: `tryangle-chat-${message.id}`
+  });
+  notification.onclick = () => {
+    window.focus();
+    openChatBanner();
+    notification.close();
+  };
+}
+
+async function registerPushSubscription() {
+  if (pushRegistrationStarted || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  pushRegistrationStarted = true;
+  try {
+    const { publicKey } = await apiRequest<{ publicKey: string }>("/push/public-key");
+    if (!publicKey) return;
+    const registration = await navigator.serviceWorker.register("/push-sw.js");
+    const existing = await registration.pushManager.getSubscription();
+    const subscription = existing || await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey)
+    });
+    await apiRequest("/push/subscriptions", {
+      method: "POST",
+      body: JSON.stringify(subscription.toJSON())
+    });
+  } catch {
+    pushRegistrationStarted = false;
+  }
+}
+
+function urlBase64ToUint8Array(value: string) {
+  const padding = "=".repeat((4 - value.length % 4) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
 
 function freelancerToProfile(freelancer: Freelancer & {
@@ -742,6 +862,8 @@ async function login(email: string, password: string) {
     clearUnsavedChanges();
     setAuth(result.token, result.user);
     await loadWorkspace();
+    startChatPolling();
+    void requestBrowserNotificationPermission();
     showToast(`${roleLabel(result.user.role)}としてログインしました。`);
   } catch (error) {
     showToast(error instanceof Error ? error.message : "メールアドレスまたはパスワードが違います。");
@@ -795,6 +917,8 @@ async function register(values: RegisterInput) {
     state.value.activeView = "profile";
     state.value.wizardStep = 2;
     await loadWorkspace();
+    startChatPolling();
+    void requestBrowserNotificationPermission();
     showToast("会員登録が完了しました。続けてプロフィールを入力してください。");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "会員登録に失敗しました。");
@@ -806,6 +930,7 @@ function logout() {
   const previousRole = currentRole.value;
   accessToken = "";
   localStorage.removeItem(TOKEN_KEY);
+  stopChatPolling();
   state.value.auth = null;
   state.value.activeView = previousRole ? defaultViewByRole[previousRole] : "jobs";
   persist();
@@ -968,6 +1093,7 @@ async function sendScout(freelancerId: string) {
       })
     });
     state.value.messages.push(message);
+    knownMessageIds.add(message.id);
     state.value.selectedFreelancerId = freelancer.id;
     persist();
     showToast(`${freelancer.name}さんへスカウトを送信しました。`);
@@ -1104,6 +1230,7 @@ async function sendMessage(body: string) {
       })
     });
     state.value.messages.push(message);
+    knownMessageIds.add(message.id);
     persist();
     showToast("メッセージを送信しました。");
     return true;
@@ -1316,6 +1443,9 @@ export function useTryangleFreelance() {
     hasUnsavedChanges,
     toastMessage,
     toastVisible,
+    chatBannerVisible,
+    chatBannerTitle,
+    chatBannerBody,
     navItems,
     demoAccounts,
     statuses,
@@ -1382,6 +1512,9 @@ export function useTryangleFreelance() {
     clearUnsavedChanges,
     confirmDiscardChanges,
     showToast,
+    openChatBanner,
+    dismissChatBanner,
+    requestBrowserNotificationPermission,
     today
   };
 }

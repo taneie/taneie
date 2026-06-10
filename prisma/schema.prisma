@@ -102,6 +102,7 @@ model User {
   receivedMessages  Message[]              @relation("MessageReceiver")
   aliveCheckBatches AliveCheckBatch[]
   privacyConsents   PrivacyPolicyConsent[]
+  pushSubscriptions  PushSubscription[]
 
   @@map("users")
 }
@@ -346,4 +347,20 @@ model PrivacyPolicyConsent {
   @@unique([userId, policyVersion])
   @@index([userId, acceptedAt])
   @@map("privacy_policy_consents")
+}
+
+model PushSubscription {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  endpoint  String   @unique @db.VarChar(500)
+  p256dh    String   @db.VarChar(255)
+  auth      String   @db.VarChar(255)
+  userAgent String?  @map("user_agent") @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

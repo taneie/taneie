@@ -116,3 +116,11 @@ export const resumeMetadataSchema = z.object({
   fileSizeBytes: z.coerce.number().int().min(0).optional(),
   storageKey: z.string().trim().min(1).max(500)
 });
+
+export const pushSubscriptionSchema = z.object({
+  endpoint: z.string().url().max(500),
+  keys: z.object({
+    p256dh: z.string().min(1).max(255),
+    auth: z.string().min(1).max(255)
+  })
+});
