@@ -36,7 +36,7 @@
         <div :class="[$style.cardList, $style.stackSm]">
           <div v-for="meeting in activeMeetingRequests" :key="meeting.id" :class="$style.card">
             <div :class="$style.cardHead">
-              <strong>{{ meeting.candidate }}</strong>
+              <strong>{{ displayDateTime(meeting.candidate) }}</strong>
               <TagBadge :tone="meeting.status === '確定' ? 'teal' : 'blue'">{{ meeting.status }}</TagBadge>
             </div>
             <div v-if="currentRole === 'sales'" :class="$style.actions">
@@ -63,7 +63,7 @@
           >
             <div :class="$style.messageMeta">
               <span :class="$style.messageAuthor">{{ isOwnMessage(message) ? 'あなた' : message.from }}</span>
-              <span :class="$style.messageTime">{{ message.at }}</span>
+              <span :class="$style.messageTime">{{ displayDateTime(message.at) }}</span>
             </div>
             <div :class="$style.messageBubble">
               <div :class="$style.messageBody">{{ message.body }}</div>
@@ -109,6 +109,12 @@ function isOwnMessage(message: Message) {
   return message.channel === "freelancer";
 }
 
+function displayDateTime(value = "") {
+  if (!value) return "";
+  const normalized = value.replace("T", " ");
+  return normalized.slice(0, 16);
+}
+
 async function submitMeeting() {
   await addMeeting(candidate.value);
   candidate.value = "";
@@ -127,20 +133,22 @@ async function submitMessage() {
   display: grid;
   gap: 16px;
   min-width: 0;
+  align-items: start;
 }
 
 .grid > *,
 .formGrid > *,
-.cardList > * {
+.cardList > *,
+.panelBody > * {
   min-width: 0;
 }
 
 .two {
-  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.4fr);
 }
 
 .three {
-  grid-template-columns: minmax(260px, 0.75fr) minmax(300px, 0.85fr) minmax(0, 1.35fr);
+  grid-template-columns: minmax(240px, 0.75fr) minmax(280px, 0.85fr) minmax(0, 1.4fr);
 }
 
 .panel {
@@ -149,6 +157,7 @@ async function submitMessage() {
   border-radius: 8px;
   box-shadow: var(--shadow);
   min-width: 0;
+  overflow: hidden;
 }
 
 .panelHeader {
@@ -158,21 +167,24 @@ async function submitMessage() {
   gap: 10px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--line);
+  min-width: 0;
 }
 
 .panelTitle {
   margin: 0;
   color: #10294f;
   font-size: 16px;
+  min-width: 0;
 }
 
 .panelBody {
   padding: 16px;
+  min-width: 0;
 }
 
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -212,7 +224,7 @@ textarea.control {
   display: flex;
   flex-wrap: wrap;
   gap: 9px;
-  margin-top: 14px;
+  margin-top: 4px;
 }
 
 .cardList {
@@ -252,6 +264,13 @@ textarea.control {
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.chatUserHead strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .chatUserMeta,
@@ -280,25 +299,37 @@ textarea.control {
   align-items: start;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.cardHead strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .messageList {
   display: grid;
   gap: 12px;
-  max-height: 320px;
+  min-height: 340px;
+  max-height: min(54vh, 560px);
   overflow: auto;
-  padding-right: 4px;
+  padding: 8px 10px;
+  border: 1px solid #dbe6f4;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
 }
 
 .conversation {
-  padding: 6px 2px 6px 0;
+  align-content: start;
 }
 
 .messageRow {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-width: min(82%, 560px);
+  max-width: min(78%, 620px);
+  min-width: 0;
 }
 
 .other {
@@ -318,6 +349,7 @@ textarea.control {
   align-items: center;
   color: var(--muted);
   font-size: 11px;
+  max-width: 100%;
 }
 
 .messageAuthor {
@@ -326,9 +358,11 @@ textarea.control {
 
 .messageTime {
   opacity: 0.9;
+  overflow-wrap: anywhere;
 }
 
 .messageBubble {
+  box-sizing: border-box;
   width: 100%;
   padding: 10px 14px;
   border-radius: 18px;
@@ -426,7 +460,13 @@ textarea.control {
   }
 
   .messageRow {
-    max-width: 100%;
+    max-width: 94%;
+  }
+
+  .messageList {
+    min-height: 300px;
+    max-height: 48vh;
+    padding: 8px;
   }
 }
 </style>
