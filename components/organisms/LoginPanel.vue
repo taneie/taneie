@@ -24,13 +24,29 @@
         <div v-if="showLogin" :class="$style.loginPopover">
           <div :class="$style.popoverHead">
             <strong>ログイン</strong>
-            <button type="button" aria-label="ログインを閉じる" @click="showLogin = false">×</button>
+            <button type="button" aria-label="ログインを閉じる" @click="showLogin = false">
+              ×
+            </button>
           </div>
+
           <form :class="[$style.formGrid, $style.one]" @submit.prevent="submitLogin">
-            <FormInput v-model="loginForm.email" label="メールアドレス" name="email" type="email" autocomplete="email" />
-            <FormInput v-model="loginForm.password" label="パスワード" name="password" type="password" autocomplete="current-password" />
+            <FormInput
+              v-model="loginForm.email"
+              label="メールアドレス"
+              name="email"
+              type="email"
+              autocomplete="email"
+            />
+            <FormInput
+              v-model="loginForm.password"
+              label="パスワード"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+            />
             <BaseButton type="submit" icon="user">ログイン</BaseButton>
           </form>
+
           <div :class="$style.demoList">
             <button type="button" @click="loginWithDemo('freelancer')">
               <strong>求職者デモ</strong>
@@ -57,7 +73,9 @@
               </p>
 
               <div :class="$style.heroActions">
-                <button type="button" :class="$style.primaryCta" @click="scrollToRegister">無料で登録する</button>
+                <button type="button" :class="$style.primaryCta" @click="scrollToRegister">
+                  無料で登録する
+                </button>
                 <a href="#projects" :class="$style.secondaryCta">案件例を見る</a>
               </div>
 
@@ -78,7 +96,10 @@
             </div>
 
             <figure :class="$style.heroVisual">
-              <img src="/images/lp-hero-engineer.png" alt="案件提案とチャットを管理するフリーランス向け画面のイメージ" />
+              <img
+                src="/images/lp-hero-engineer.png"
+                alt="案件提案とチャットを管理するフリーランス向け画面のイメージ"
+              />
               <figcaption>
                 <span>Profile</span>
                 <span>Job matching</span>
@@ -92,6 +113,7 @@
               <span>FEATURES</span>
               <h2>案件探しの手間を減らす、TRYANGLEの仕組み</h2>
             </div>
+
             <div :class="$style.featureGrid">
               <article>
                 <strong>条件に合う案件を探しやすい</strong>
@@ -109,7 +131,10 @@
           </section>
 
           <section :class="$style.visualSection">
-            <img src="/images/lp-flow-visual.png" alt="プロフィール登録、案件推薦、オンライン面談へ進む流れのイメージ" />
+            <img
+              src="/images/lp-flow-visual.png"
+              alt="プロフィール登録、案件推薦、オンライン面談へ進む流れのイメージ"
+            />
             <div :class="$style.visualText">
               <span>ONE PLATFORM</span>
               <h2>登録から面談調整まで、情報が散らばらない。</h2>
@@ -124,6 +149,7 @@
               <span>PROJECTS</span>
               <h2>案件のご紹介例</h2>
             </div>
+
             <div :class="$style.projectGrid">
               <article v-for="project in projects" :key="project.title">
                 <div :class="$style.projectMeta">
@@ -145,6 +171,7 @@
               <span>FLOW</span>
               <h2>登録から案件参画までの流れ</h2>
             </div>
+
             <ol :class="$style.flowList">
               <li>
                 <strong>プロフィール登録</strong>
@@ -170,27 +197,90 @@
               <p>デモ環境では、登録後すぐに案件検索や応募機能を確認できます。</p>
             </div>
 
-            <AuthTabs v-model="activeTab" />
+            <AuthTabs
+              :mode="activeTab"
+              @change="activeTab = $event"
+            />
 
             <form v-if="activeTab === 'register'" :class="$style.formStack" @submit.prevent="submitRegister">
-              <FormInput v-model="registerForm.name" label="氏名" name="register-name" autocomplete="name" />
-              <FormInput v-model="registerForm.email" label="メールアドレス" name="register-email" type="email" autocomplete="email" />
-              <FormInput v-model="registerForm.password" label="パスワード" name="register-password" type="password" autocomplete="new-password" />
-              <FormSelect v-model="registerForm.role" label="利用区分" name="register-role" :options="roleOptions" />
+              <FormInput
+                v-model="registerForm.name"
+                label="氏名"
+                name="register-name"
+                autocomplete="name"
+              />
+
+              <FormInput
+                v-model="registerForm.email"
+                label="メールアドレス"
+                name="register-email"
+                type="email"
+                autocomplete="email"
+              />
+
+              <FormInput
+                v-model="registerForm.phone"
+                label="電話番号"
+                name="register-phone"
+                type="tel"
+                autocomplete="tel"
+              />
+
+              <FormSelect
+                v-model="registerForm.role"
+                label="利用区分"
+                name="register-role"
+                :options="roleOptions"
+              />
+
+              <FormInput
+                v-model="registerForm.password"
+                label="パスワード"
+                name="register-password"
+                type="password"
+                autocomplete="new-password"
+              />
+
+              <FormInput
+                v-model="registerForm.passwordConfirm"
+                label="パスワード確認"
+                name="register-password-confirm"
+                type="password"
+                autocomplete="new-password"
+              />
+
               <label :class="$style.checkbox">
                 <input v-model="registerForm.privacyAccepted" type="checkbox" />
                 <span>
-                  <button type="button" :class="$style.policyButton" @click="showPolicy = true">個人情報の取り扱い</button>
+                  <button type="button" :class="$style.policyButton" @click="showPolicy = true">
+                    個人情報の取り扱い
+                  </button>
                   に同意する
                 </span>
               </label>
+
               <BaseButton type="submit" icon="user">登録して始める</BaseButton>
             </form>
 
             <form v-else :class="$style.formStack" @submit.prevent="submitLogin">
-              <FormInput v-model="loginForm.email" label="メールアドレス" name="aside-login-email" type="email" autocomplete="email" />
-              <FormInput v-model="loginForm.password" label="パスワード" name="aside-login-password" type="password" autocomplete="current-password" />
+              <FormInput
+                v-model="loginForm.email"
+                label="メールアドレス"
+                name="aside-login-email"
+                type="email"
+                autocomplete="email"
+              />
+
+              <FormInput
+                v-model="loginForm.password"
+                label="パスワード"
+                name="aside-login-password"
+                type="password"
+                autocomplete="current-password"
+              />
+
               <BaseButton type="submit" icon="user">ログイン</BaseButton>
+
               <div :class="$style.demoList">
                 <button type="button" @click="loginWithDemo('freelancer')">
                   <strong>求職者デモ</strong>
@@ -212,20 +302,25 @@
       <button type="button" @click="showPolicy = true">個人情報の取り扱い</button>
     </footer>
 
-    <PrivacyPolicyModal v-if="showPolicy" @close="showPolicy = false" />
+    <PrivacyPolicyModal
+      :open="showPolicy"
+      @close="showPolicy = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
-import type { UserRole } from "~/types";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import type { AuthMode, RegisterInput } from "~/composables/useTryangleFreelance";
+
+type UserRole = "freelancer" | "sales";
 
 const { login, register } = useTryangleFreelance();
 
 const showLogin = ref(false);
 const showPolicy = ref(false);
-const activeTab = ref<"register" | "login">("register");
+const activeTab = ref<AuthMode>("register");
 const registerCardRef = ref<HTMLElement | null>(null);
 
 const loginForm = reactive({
@@ -233,18 +328,17 @@ const loginForm = reactive({
   password: ""
 });
 
-const registerForm = reactive({
+const registerForm = reactive<RegisterInput & { privacyAccepted: boolean }>({
   name: "",
   email: "",
+  phone: "",
+  role: "freelancer",
   password: "",
-  role: "freelancer" as UserRole,
+  passwordConfirm: "",
   privacyAccepted: false
 });
 
-const roleOptions = [
-  { label: "求職者", value: "freelancer" },
-  { label: "営業担当", value: "sales" }
-];
+const roleOptions = ["freelancer", "sales"];
 
 const projects = [
   {
@@ -286,8 +380,10 @@ const submitRegister = async () => {
   await register({
     name: registerForm.name,
     email: registerForm.email,
+    phone: registerForm.phone,
+    role: registerForm.role,
     password: registerForm.password,
-    role: registerForm.role
+    passwordConfirm: registerForm.passwordConfirm
   });
 };
 

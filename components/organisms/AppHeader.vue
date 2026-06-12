@@ -21,7 +21,13 @@
       <div :class="$style.accountBar">
         <span :class="$style.accountPill">{{ roleLabel(state.auth?.role) }}</span>
         <span :class="$style.accountName">{{ state.auth?.name }}</span>
-        <BaseButton variant="secondary" @click="logout">ログアウト</BaseButton>
+        <BaseButton
+          variant="secondary"
+          :class="$style.logoutButton"
+          @click="logout"
+        >
+          ログアウト
+        </BaseButton>
       </div>
     </div>
   </header>
@@ -29,6 +35,7 @@
 
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+
 const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFreelance();
 </script>
 
@@ -139,6 +146,10 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
   text-overflow: ellipsis;
 }
 
+.logoutButton {
+  flex: 0 0 auto;
+}
+
 @media (max-width: 1180px) {
   .topbarInner {
     flex-wrap: wrap;
@@ -207,19 +218,57 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 
   .accountBar {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
     width: 100%;
-    white-space: normal;
+    gap: 8px;
+    white-space: nowrap;
   }
 
-  .accountBar button {
-    grid-column: 1 / -1;
-    width: 100%;
+  .accountPill {
+    grid-column: 1;
+    min-height: 24px;
+    padding: 0 8px;
+    font-size: 11px;
   }
 
   .accountName {
-    overflow-wrap: anywhere;
-    white-space: normal;
+    grid-column: 2;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .logoutButton {
+    grid-column: 3;
+    width: auto;
+    min-width: 0;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  .accountBar {
+    gap: 6px;
+  }
+
+  .accountPill {
+    padding: 0 7px;
+  }
+
+  .accountName {
+    font-size: 12px;
+  }
+
+  .logoutButton {
+    padding: 0 8px;
+    font-size: 11px;
   }
 }
 </style>
