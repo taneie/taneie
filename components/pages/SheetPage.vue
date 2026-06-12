@@ -49,7 +49,13 @@ const { state, splitCsv, maskName, copyText, printSheet } = useTryangleFreelance
 const profile = computed(() => state.value.profile);
 const publicId = computed(() => `tf-${profile.value.id.slice(-3)}-${splitCsv(profile.value.languages)[0]?.toLowerCase() || "engineer"}`);
 const shareUrl = computed(() => import.meta.client ? `${location.origin}${location.pathname}#sheet/${publicId.value}` : "");
-const mainSkills = computed(() => [profile.value.languages, profile.value.frameworks, profile.value.db].filter(Boolean).join(" / "));
+const mainSkills = computed(() => [
+  profile.value.languages,
+  profile.value.frameworks,
+  profile.value.db,
+  profile.value.cloud,
+  profile.value.otherSkills
+].filter(Boolean).join(" / "));
 </script>
 
 <style module>

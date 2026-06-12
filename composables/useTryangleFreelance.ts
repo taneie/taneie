@@ -39,6 +39,8 @@ export interface Profile {
   languages: string;
   db: string;
   frameworks: string;
+  cloud: string;
+  otherSkills: string;
   years: string;
   desiredRate: string;
   startDate: string;
@@ -219,6 +221,10 @@ const statuses: ApplicationStatus[] = ["選考中", "面談待ち", "成約", "�
 const flowOptions = ["エンド直", "1次請け", "2次請け", "その他"];
 const remoteOptions = ["フルリモート", "一部リモート", "常駐"];
 const availabilityOptions = ["即稼働可", "2026年7月から空き予定", "現在は案件停止中"];
+const languageSkillOptions = ["Java", "TypeScript", "JavaScript", "Python", "PHP", "Ruby", "Go", "C#", "Kotlin", "Swift"];
+const dbSkillOptions = ["PostgreSQL", "MySQL", "Oracle", "SQL Server", "MongoDB", "Redis", "DynamoDB"];
+const frameworkSkillOptions = ["Spring Boot", "React", "Vue.js", "Nuxt.js", "Next.js", "Laravel", "Ruby on Rails", "Django", "Express"];
+const cloudSkillOptions = ["AWS", "GCP", "Azure", "Firebase", "Cloudflare", "Vercel", "Heroku"];
 
 const state = ref<TryangleState>(createSeedState());
 const filters = ref<JobFilters>({ keyword: "", skill: "", rate: "", remote: "", stream: "" });
@@ -365,6 +371,8 @@ function blankProfile(id = "fr-current"): Profile {
     languages: "",
     db: "",
     frameworks: "",
+    cloud: "",
+    otherSkills: "",
     years: "",
     desiredRate: "",
     startDate: "",
@@ -526,7 +534,10 @@ async function loadWorkspace() {
       yearsExperience?: number;
       startDate?: string;
     }>("/profile/me");
-    state.value.profile = freelancerToProfile(profile);
+    state.value.profile = {
+      ...freelancerToProfile(profile),
+      meetingCandidates: meetingCandidatesForProfile(profile.id)
+    };
     state.value.freelancers = [profile];
   }
 
@@ -650,13 +661,18 @@ function freelancerToProfile(freelancer: Freelancer & {
   startDate?: string;
   pledgedAt?: string;
 }): Profile {
+  const categorizedSkills = categorizeSkills(freelancer.skills || []);
   return {
     ...blankProfile(freelancer.id),
     name: freelancer.name || "",
     email: freelancer.email || state.value.auth?.email || "",
     phone: freelancer.phone || "",
     role: freelancer.role || "",
-    languages: freelancer.skills?.join(", ") || "",
+    languages: categorizedSkills.languages.join(", "),
+    db: categorizedSkills.db.join(", "),
+    frameworks: categorizedSkills.frameworks.join(", "),
+    cloud: categorizedSkills.cloud.join(", "),
+    otherSkills: categorizedSkills.other.join(", "),
     years: freelancer.yearsExperience ? String(freelancer.yearsExperience) : "",
     desiredRate: freelancer.desiredRate ? String(freelancer.desiredRate) : "",
     startDate: freelancer.startDate || "",
@@ -682,8 +698,8 @@ function profileToApi(profile: Profile) {
     remoteType: profile.remote,
     availabilityStatus: profile.availability,
     availabilityNote: profile.availability,
-    pledgeAccepted: profile.pledgeAccepted || undefined,
-    skills: [...splitCsv(profile.languages), ...splitCsv(profile.frameworks), ...splitCsv(profile.db)]
+    pledgeAccepted: profile.pledgeAccepted || Boolean(profile.pledgedAt) || undefined,
+    skills: profileSkillList(profile)
   };
 }
 
@@ -742,7 +758,7 @@ const selectedFreelancer = computed<Freelancer>(() => {
       id: profile.id,
       name: profile.name || "未登録プロフィール",
       role: profile.role || "",
-      skills: [...splitCsv(profile.languages), ...splitCsv(profile.frameworks), ...splitCsv(profile.db)],
+      skills: profileSkillList(profile),
       desiredRate: Number(profile.desiredRate || 0),
       workRate: profile.workRate,
       remote: profile.remote,
@@ -816,6 +832,9 @@ async function setView(view: ViewKey) {
     showToast("この画面は現在の権限では表示できません。");
     return;
   }
+
+  if (state.value.activeView !== view && !(await confirmDiscardChanges())) return;
+
   if (view === "jobs" && currentRole.value === "freelancer" && !canViewJobs.value) {
     state.value.activeView = "jobs";
     showToast("案件閲覧にはプロフィール詳細の入力と誓約同意が必要です。");
@@ -823,7 +842,6 @@ async function setView(view: ViewKey) {
     return;
   }
 
-  if (state.value.activeView !== view && !(await confirmDiscardChanges())) return;
   state.value.activeView = view;
   if (view === "meeting") ensureChatSelection();
   persist();
@@ -851,7 +869,7 @@ function selectChatFreelancer(freelancerId: string) {
   if (!freelancer) return;
 
   state.value.selectedFreelancerId = freelancer.id;
-  state.value.activeView = "meeting";
+  void setView("meeting");
   persist();
 }
 
@@ -945,7 +963,7 @@ async function saveProfileBasic(values: Pick<Profile, "name" | "email" | "phone"
   await saveProfileToApi("簡易プロフィールを保存しました。");
 }
 
-async function saveProfileSkills(values: Pick<Profile, "languages" | "db" | "frameworks" | "years">) {
+async function saveProfileSkills(values: Pick<Profile, "languages" | "db" | "frameworks" | "cloud" | "otherSkills" | "years">) {
   Object.assign(state.value.profile, values, { lastUpdated: today() });
   state.value.wizardStep = 3;
   await saveProfileToApi("スキル情報を保存しました。");
@@ -980,18 +998,22 @@ async function saveProfileTerms(values: ProfileTermsInput) {
   await saveProfileToApi("稼働条件とレジュメを保存しました。");
 }
 
-async function saveProfileMeeting(meetingCandidatesText: string, pledgeAccepted = false) {
+async function saveProfileMeeting(meetingCandidateValues: string[] | string, pledgeAccepted = false) {
   if (!pledgeAccepted) {
     showToast("案件閲覧には誓約条件への同意が必要です。");
     return;
   }
-  const candidates = meetingCandidatesText.split("\n").map((candidate) => candidate.trim()).filter(Boolean);
+  const candidates = (Array.isArray(meetingCandidateValues)
+    ? meetingCandidateValues
+    : meetingCandidateValues.split("\n")
+  ).map((candidate) => candidate.trim()).filter(Boolean);
   if (!candidates.length) {
     showToast("初回面談の候補日を1つ以上入力してください。");
     return;
   }
   state.value.profile.meetingCandidates = candidates;
   state.value.profile.pledgeAccepted = true;
+  if (!state.value.profile.pledgedAt) state.value.profile.pledgedAt = new Date().toISOString();
   state.value.profile.lastUpdated = today();
   try {
     await saveProfileToApi("");
@@ -1178,12 +1200,16 @@ async function addMeeting(candidateValue: string) {
         candidateAt: toApiDateTime(candidateValue)
       })
     });
+    const candidateLabel = meeting.candidateAt.replace("T", " ").slice(0, 16);
     state.value.meetingRequests.push({
       id: meeting.id,
       freelancerId: meeting.freelancerProfileId,
-      candidate: meeting.candidateAt.replace("T", " ").slice(0, 16),
+      candidate: candidateLabel,
       status: "候補"
     });
+    if (meeting.freelancerProfileId === state.value.profile.id && !state.value.profile.meetingCandidates.includes(candidateLabel)) {
+      state.value.profile.meetingCandidates.push(candidateLabel);
+    }
     saveAndNotify("面談候補を追加しました。");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "面談候補の追加に失敗しました。");
@@ -1275,7 +1301,7 @@ function syncProfileToFreelancer() {
     id: profile.id,
     name: profile.name,
     role: profile.role,
-    skills: [...splitCsv(profile.languages), ...splitCsv(profile.frameworks), ...splitCsv(profile.db)],
+    skills: profileSkillList(profile),
     desiredRate: Number(profile.desiredRate || 0),
     workRate: profile.workRate,
     remote: profile.remote,
@@ -1301,7 +1327,15 @@ async function saveProfileToApi(message: string) {
       method: "PUT",
       body: JSON.stringify(profileToApi(state.value.profile))
     });
-    state.value.profile = { ...freelancerToProfile(profile), resumeName: state.value.profile.resumeName };
+    const previousProfile = state.value.profile;
+    const nextProfile = freelancerToProfile(profile);
+    state.value.profile = {
+      ...nextProfile,
+      resumeName: previousProfile.resumeName,
+      meetingCandidates: previousProfile.meetingCandidates,
+      pledgeAccepted: nextProfile.pledgeAccepted || previousProfile.pledgeAccepted,
+      pledgedAt: nextProfile.pledgedAt || previousProfile.pledgedAt
+    };
     syncProfileToFreelancer();
     clearUnsavedChanges();
     persist();
@@ -1320,6 +1354,8 @@ function hasProfileContent(profile: Profile) {
     || profile?.languages
     || profile?.db
     || profile?.frameworks
+    || profile?.cloud
+    || profile?.otherSkills
     || profile?.years
     || profile?.desiredRate
     || profile?.startDate
@@ -1340,13 +1376,26 @@ function getJob(id = "") {
   return state.value.jobs.find((job) => job.id === id);
 }
 
+function meetingCandidatesForProfile(profileId: string) {
+  return state.value.meetingRequests
+    .filter((meeting) => meeting.freelancerId === profileId)
+    .map((meeting) => meeting.candidate)
+    .filter(Boolean);
+}
+
 function currentPreviewFreelancer() {
   return getFreelancer(state.value.previewFreelancerId) || getFreelancer(state.value.profile.id);
 }
 
 function estimateRate() {
   const years = Number(state.value.profile.years || 0);
-  const skills = [state.value.profile.languages, state.value.profile.frameworks, state.value.profile.db].join(" ");
+  const skills = [
+    state.value.profile.languages,
+    state.value.profile.frameworks,
+    state.value.profile.db,
+    state.value.profile.cloud,
+    state.value.profile.otherSkills
+  ].join(" ");
   const premium = ["AWS", "Kubernetes", "Go", "Spring Boot", "React"].filter((skill) => skills.includes(skill)).length * 4;
   const base = 48 + years * 5 + premium;
   return { min: Math.max(45, base - 8), max: base + 12 };
@@ -1379,6 +1428,28 @@ function splitCsv(value: string | number | null | undefined) {
     .split(/[,、\n]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function profileSkillList(profile: Pick<Profile, "languages" | "db" | "frameworks" | "cloud" | "otherSkills">) {
+  return [
+    ...splitCsv(profile.languages),
+    ...splitCsv(profile.frameworks),
+    ...splitCsv(profile.db),
+    ...splitCsv(profile.cloud),
+    ...splitCsv(profile.otherSkills)
+  ];
+}
+
+function categorizeSkills(skills: string[]) {
+  const result = { languages: [] as string[], db: [] as string[], frameworks: [] as string[], cloud: [] as string[], other: [] as string[] };
+  skills.forEach((skill) => {
+    if (languageSkillOptions.includes(skill)) result.languages.push(skill);
+    else if (dbSkillOptions.includes(skill)) result.db.push(skill);
+    else if (frameworkSkillOptions.includes(skill)) result.frameworks.push(skill);
+    else if (cloudSkillOptions.includes(skill)) result.cloud.push(skill);
+    else result.other.push(skill);
+  });
+  return result;
 }
 
 function maskName(name: string) {
@@ -1463,6 +1534,10 @@ export function useTryangleFreelance() {
     flowOptions,
     remoteOptions,
     availabilityOptions,
+    languageSkillOptions,
+    dbSkillOptions,
+    frameworkSkillOptions,
+    cloudSkillOptions,
     authAccounts,
     currentUser,
     currentRole,

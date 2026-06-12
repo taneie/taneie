@@ -45,9 +45,42 @@
         </form>
 
         <form v-else-if="state.wizardStep === 2" :class="$style.formGrid" @submit.prevent="saveSkills">
-          <FormInput v-model="skills.languages" label="開発言語" name="languages" @update:model-value="markDirty" />
-          <FormInput v-model="skills.db" label="DB" name="db" @update:model-value="markDirty" />
-          <FormInput v-model="skills.frameworks" label="フレームワーク" name="frameworks" @update:model-value="markDirty" />
+          <fieldset :class="$style.skillGroup">
+            <legend>開発言語</legend>
+            <label v-for="option in languageOptions" :key="option" :class="$style.checkboxPill">
+              <input v-model="skills.languages" type="checkbox" :value="option" @change="markDirty" />
+              <span>{{ option }}</span>
+            </label>
+          </fieldset>
+          <fieldset :class="$style.skillGroup">
+            <legend>DB</legend>
+            <label v-for="option in dbOptions" :key="option" :class="$style.checkboxPill">
+              <input v-model="skills.db" type="checkbox" :value="option" @change="markDirty" />
+              <span>{{ option }}</span>
+            </label>
+          </fieldset>
+          <fieldset :class="$style.skillGroup">
+            <legend>フレームワーク</legend>
+            <label v-for="option in frameworkOptions" :key="option" :class="$style.checkboxPill">
+              <input v-model="skills.frameworks" type="checkbox" :value="option" @change="markDirty" />
+              <span>{{ option }}</span>
+            </label>
+          </fieldset>
+          <fieldset :class="$style.skillGroup">
+            <legend>クラウド</legend>
+            <label v-for="option in cloudOptions" :key="option" :class="$style.checkboxPill">
+              <input v-model="skills.cloud" type="checkbox" :value="option" @change="markDirty" />
+              <span>{{ option }}</span>
+            </label>
+          </fieldset>
+          <label :class="[$style.field, $style.full]">その他
+            <textarea
+              v-model="skills.other"
+              :class="$style.control"
+              placeholder="Docker, Kubernetes, GitHub Actions など"
+              @input="markDirty"
+            ></textarea>
+          </label>
           <FormInput v-model="skills.years" label="経験年数" name="years" type="number" @update:model-value="markDirty" />
           <div :class="$style.actions"><BaseButton type="submit" icon="user">保存して次へ</BaseButton></div>
         </form>
@@ -69,9 +102,27 @@
         </form>
 
         <form v-else :class="[$style.formGrid, $style.one]" @submit.prevent="saveMeeting">
-          <label :class="$style.field">初回面談の候補日
-            <textarea :class="$style.control" v-model="meetingCandidates" @input="markDirty"></textarea>
-          </label>
+          <div :class="$style.field">
+            <span>初回面談の候補日</span>
+            <div :class="$style.dateRows">
+              <div v-for="(_, index) in meetingCandidates" :key="index" :class="$style.dateRow">
+                <input
+                  v-model="meetingCandidates[index]"
+                  :class="$style.control"
+                  type="datetime-local"
+                  @input="markDirty"
+                />
+                <BaseButton
+                  v-if="meetingCandidates.length > 1"
+                  variant="ghost"
+                  @click="removeMeetingCandidate(index)"
+                >
+                  削除
+                </BaseButton>
+              </div>
+            </div>
+            <BaseButton variant="secondary" icon="plus" @click="addMeetingCandidate">候補日を追加</BaseButton>
+          </div>
           <div :class="$style.pledgeBox">
             <h3>案件閲覧前の誓約条件</h3>
             <ul>
@@ -113,20 +164,30 @@ const {
   confirmDiscardChanges,
   persist,
   splitCsv,
-  markDirty
+  markDirty,
+  languageSkillOptions,
+  dbSkillOptions,
+  frameworkSkillOptions,
+  cloudSkillOptions
 } = useTryangleFreelance();
 
 const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候補"];
 const profile = computed(() => state.value.profile);
 
 const basic = reactive({ name: "", email: "", phone: "", role: "" });
-const skills = reactive({ languages: "", db: "", frameworks: "", years: "" });
+const skills = reactive({ languages: [] as string[], db: [] as string[], frameworks: [] as string[], cloud: [] as string[], other: "", years: "" });
 const terms = reactive<ProfileTermsInput>({ desiredRate: "", startDate: "", workRate: "", remote: "", availability: "", resume: null });
-const meetingCandidates = ref("");
+const meetingCandidates = ref<string[]>([""]);
 const pledgeAccepted = ref(false);
+const languageOptions = languageSkillOptions;
+const dbOptions = dbSkillOptions;
+const frameworkOptions = frameworkSkillOptions;
+const cloudOptions = cloudSkillOptions;
 
 const visibleProfileSkills = computed(() => {
-  return splitCsv(profile.value.languages).concat(splitCsv(profile.value.frameworks)).slice(0, 7);
+  return splitCsv(profile.value.languages)
+    .concat(splitCsv(profile.value.frameworks), splitCsv(profile.value.db), splitCsv(profile.value.cloud), splitCsv(profile.value.otherSkills))
+    .slice(0, 7);
 });
 
 watch(
@@ -138,7 +199,25 @@ watch(
 function hydrateForms() {
   const p = state.value.profile;
   Object.assign(basic, { name: p.name, email: p.email, phone: p.phone, role: p.role });
-  Object.assign(skills, { languages: p.languages, db: p.db, frameworks: p.frameworks, years: p.years });
+  const savedLanguages = splitCsv(p.languages);
+  const savedDb = splitCsv(p.db);
+  const savedFrameworks = splitCsv(p.frameworks);
+  const savedCloud = splitCsv(p.cloud);
+  const savedOther = splitCsv(p.otherSkills);
+  Object.assign(skills, {
+    languages: savedLanguages.filter((skill) => languageOptions.includes(skill)),
+    db: savedDb.filter((skill) => dbOptions.includes(skill)),
+    frameworks: savedFrameworks.filter((skill) => frameworkOptions.includes(skill)),
+    cloud: savedCloud.filter((skill) => cloudOptions.includes(skill)),
+    other: [
+      ...savedLanguages.filter((skill) => !languageOptions.includes(skill)),
+      ...savedDb.filter((skill) => !dbOptions.includes(skill)),
+      ...savedFrameworks.filter((skill) => !frameworkOptions.includes(skill)),
+      ...savedCloud.filter((skill) => !cloudOptions.includes(skill)),
+      ...savedOther
+    ].join(", "),
+    years: p.years
+  });
   Object.assign(terms, {
     desiredRate: p.desiredRate,
     startDate: p.startDate,
@@ -147,7 +226,8 @@ function hydrateForms() {
     availability: p.availability,
     resume: null
   });
-  meetingCandidates.value = (p.meetingCandidates || []).join("\n");
+  const candidates = (p.meetingCandidates || []).map(toDateTimeLocal).filter(Boolean);
+  meetingCandidates.value = candidates.length ? candidates : [""];
   pledgeAccepted.value = Boolean(p.pledgeAccepted || p.pledgedAt);
 }
 
@@ -163,12 +243,31 @@ function onResumeChange(event: Event) {
   markDirty();
 }
 
+function addMeetingCandidate() {
+  meetingCandidates.value.push("");
+  markDirty();
+}
+
+function removeMeetingCandidate(index: number) {
+  meetingCandidates.value.splice(index, 1);
+  if (!meetingCandidates.value.length) meetingCandidates.value.push("");
+  markDirty();
+}
+
 function saveBasic() {
   saveProfileBasic(basic);
 }
 
 function saveSkills() {
-  saveProfileSkills(skills);
+  const otherSkills = splitCsv(skills.other);
+  saveProfileSkills({
+    languages: skills.languages.join(", "),
+    db: skills.db.join(", "),
+    frameworks: skills.frameworks.join(", "),
+    cloud: skills.cloud.join(", "),
+    otherSkills: otherSkills.join(", "),
+    years: skills.years
+  });
 }
 
 function saveTerms() {
@@ -177,6 +276,11 @@ function saveTerms() {
 
 function saveMeeting() {
   saveProfileMeeting(meetingCandidates.value, pledgeAccepted.value);
+}
+
+function toDateTimeLocal(value = "") {
+  if (!value) return "";
+  return value.trim().replace(" ", "T").slice(0, 16);
 }
 </script>
 
@@ -259,6 +363,59 @@ textarea.control {
 .control:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
+}
+
+.dateRows {
+  display: grid;
+  gap: 8px;
+}
+
+.dateRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.skillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #c6d5e8;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.skillGroup legend {
+  padding: 0 4px;
+  color: #263f63;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.checkboxPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #bfd0e6;
+  border-radius: 999px;
+  background: #fff;
+  color: #263f63;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkboxPill input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary);
 }
 
 .actions {
@@ -403,6 +560,10 @@ textarea.control {
 
   .actions button {
     width: 100%;
+  }
+
+  .dateRow {
+    grid-template-columns: 1fr;
   }
 
   .cardHead {

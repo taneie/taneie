@@ -29,8 +29,19 @@
       <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">面談候補</h2></div>
       <div :class="$style.panelBody">
         <form :class="$style.formGrid" @submit.prevent="submitMeeting">
-          <label :class="$style.field">候補日時<input :class="$style.control" v-model="candidate" type="datetime-local" /></label>
-          <div :class="$style.actions"><BaseButton type="submit" icon="calendar">候補を追加</BaseButton></div>
+          <div :class="$style.field">
+            <span>候補日時</span>
+            <div :class="$style.dateRows">
+              <div v-for="(_, index) in candidates" :key="index" :class="$style.dateRow">
+                <input :class="$style.control" v-model="candidates[index]" type="datetime-local" />
+                <BaseButton v-if="candidates.length > 1" variant="ghost" @click="removeCandidate(index)">削除</BaseButton>
+              </div>
+            </div>
+          </div>
+          <div :class="$style.actions">
+            <BaseButton variant="secondary" icon="plus" @click="addCandidate">候補日を追加</BaseButton>
+            <BaseButton type="submit" icon="calendar">候補を登録</BaseButton>
+          </div>
         </form>
 
         <div :class="[$style.cardList, $style.stackSm]">
@@ -101,7 +112,7 @@ const {
   clearUnsavedChanges
 } = useTryangleFreelance();
 
-const candidate = ref("");
+const candidates = ref<string[]>([""]);
 const body = ref("");
 
 function isOwnMessage(message: Message) {
@@ -116,8 +127,22 @@ function displayDateTime(value = "") {
 }
 
 async function submitMeeting() {
-  await addMeeting(candidate.value);
-  candidate.value = "";
+  const values = candidates.value.map((candidate) => candidate.trim()).filter(Boolean);
+  if (!values.length) {
+    await addMeeting("");
+    return;
+  }
+  await Promise.all(values.map((candidate) => addMeeting(candidate)));
+  candidates.value = [""];
+}
+
+function addCandidate() {
+  candidates.value.push("");
+}
+
+function removeCandidate(index: number) {
+  candidates.value.splice(index, 1);
+  if (!candidates.value.length) candidates.value.push("");
 }
 
 async function submitMessage() {
@@ -218,6 +243,18 @@ textarea.control {
 .control:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
+}
+
+.dateRows {
+  display: grid;
+  gap: 8px;
+}
+
+.dateRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
 }
 
 .actions {
@@ -453,6 +490,10 @@ textarea.control {
 
   .actions button {
     width: 100%;
+  }
+
+  .dateRow {
+    grid-template-columns: 1fr;
   }
 
   .cardHead {
