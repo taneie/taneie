@@ -27,12 +27,14 @@ defineProps<{
 
 .card p {
   margin: 8px 0;
+  overflow-wrap: anywhere;
   color: var(--muted);
   line-height: 1.6;
 }
 
 .tags {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
   gap: 6px;
 }

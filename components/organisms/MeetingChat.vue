@@ -169,11 +169,11 @@ async function submitMessage() {
 }
 
 .two {
-  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
 }
 
 .three {
-  grid-template-columns: minmax(240px, 0.75fr) minmax(280px, 0.85fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 0.85fr) minmax(0, 1.4fr);
 }
 
 .panel {
@@ -189,7 +189,9 @@ async function submitMessage() {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
   padding: 14px 16px;
   border-bottom: 1px solid var(--line);
   min-width: 0;
@@ -477,6 +479,14 @@ textarea.control {
   .panelBody,
   .panelHeader {
     padding: 12px;
+  }
+
+  .panelHeader {
+    align-items: stretch;
+  }
+
+  .panelHeader button {
+    width: 100%;
   }
 
   .formGrid {

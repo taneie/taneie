@@ -6,7 +6,7 @@
     @click="$emit('click', $event)"
   >
     <AppIcon v-if="icon" :name="icon" />
-    <slot />
+    <span :class="$style.label"><slot /></span>
   </button>
 </template>
 
@@ -45,12 +45,15 @@ const variantClass = computed(() => ({
   align-items: center;
   justify-content: center;
   gap: 8px;
+  max-width: 100%;
+  min-width: 0;
   min-height: 38px;
-  padding: 0 14px;
+  padding: 8px 14px;
   border-radius: 6px;
   background: linear-gradient(180deg, var(--primary), var(--primary-strong));
   color: white;
   font-weight: 800;
+  line-height: 1.35;
   text-align: center;
   box-shadow: 0 8px 18px rgba(29, 95, 211, 0.18);
 }
@@ -58,6 +61,12 @@ const variantClass = computed(() => ({
 .button svg {
   width: 18px;
   height: 18px;
+  flex: 0 0 auto;
+}
+
+.label {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .secondary {

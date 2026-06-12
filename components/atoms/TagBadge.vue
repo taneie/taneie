@@ -19,13 +19,18 @@ const toneClass = computed(() => props.tone ? css[props.tone] : "");
 .tag {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
+  min-width: 0;
   min-height: 25px;
-  padding: 0 8px;
+  padding: 4px 8px;
   border-radius: 999px;
   background: #edf3fa;
   color: #38506f;
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .teal {

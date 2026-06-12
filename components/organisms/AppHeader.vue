@@ -37,6 +37,9 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
   position: sticky;
   top: 0;
   z-index: 10;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
   background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(14px);
@@ -47,6 +50,8 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
   align-items: center;
   gap: 18px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
   padding: 13px clamp(14px, 1.4vw, 24px);
 }
@@ -54,16 +59,20 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 .brand {
   display: flex;
   align-items: center;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   min-width: 0;
+  max-width: 100%;
   line-height: 0;
 }
 
 .nav {
   display: flex;
   flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
   gap: 6px;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -75,6 +84,7 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 .navButton {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 7px;
   height: 38px;
   padding: 0 12px;
@@ -87,6 +97,7 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 .navButton svg {
   width: 18px;
   height: 18px;
+  flex: 0 0 auto;
 }
 
 .active {
@@ -98,6 +109,9 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 .accountBar {
   display: flex;
   align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   gap: 8px;
   margin-left: auto;
   white-space: nowrap;
@@ -106,6 +120,7 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 .accountPill {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   min-height: 26px;
   padding: 0 9px;
   border-radius: 999px;
@@ -116,9 +131,12 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 }
 
 .accountName {
+  min-width: 0;
+  overflow: hidden;
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 1180px) {
@@ -128,7 +146,6 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
   }
 
   .brand {
-    min-width: 0;
     flex: 1 1 auto;
   }
 
@@ -149,6 +166,10 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
     flex-direction: column;
   }
 
+  .brand {
+    width: 100%;
+  }
+
   .accountBar {
     flex-wrap: wrap;
   }
@@ -167,9 +188,12 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: max-content;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     gap: 5px;
-    margin-inline: -12px;
-    padding-inline: 12px;
+    margin-inline: 0;
+    padding-inline: 0;
   }
 
   .navButton {
@@ -183,7 +207,7 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 
   .accountBar {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
     width: 100%;
     white-space: normal;
   }
@@ -195,6 +219,7 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 
   .accountName {
     overflow-wrap: anywhere;
+    white-space: normal;
   }
 }
 </style>

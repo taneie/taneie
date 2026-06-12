@@ -89,12 +89,18 @@ const { state, streamTone, toggleJobSort, toggleJobActive } = useTryangleFreelan
 
   .table td {
     display: grid;
-    grid-template-columns: minmax(86px, 34%) 1fr;
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
     align-items: start;
+    min-width: 0;
     border-bottom: 1px solid #edf2f7;
-    padding: 9px 4px;
+    padding: 10px 4px;
     overflow-wrap: anywhere;
+  }
+
+  .table td > * {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .table td:last-child {

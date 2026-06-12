@@ -60,7 +60,7 @@ const {
 }
 
 .two {
-  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
 }
 
 .panel {
@@ -69,24 +69,31 @@ const {
   border-radius: 8px;
   box-shadow: var(--shadow);
   min-width: 0;
+  max-width: 100%;
 }
 
 .panelHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
   padding: 14px 16px;
   border-bottom: 1px solid var(--line);
 }
 
 .panelTitle {
+  min-width: 0;
   margin: 0;
   color: #10294f;
   font-size: 16px;
+  overflow-wrap: anywhere;
 }
 
 .panelBody {
+  min-width: 0;
+  max-width: 100%;
   padding: 16px;
 }
 
@@ -126,6 +133,14 @@ const {
   .panelBody,
   .panelHeader {
     padding: 12px;
+  }
+
+  .panelHeader {
+    align-items: stretch;
+  }
+
+  .panelHeader button {
+    width: 100%;
   }
 
   .actions {

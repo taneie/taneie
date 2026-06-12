@@ -37,10 +37,15 @@ watch(
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .workspace {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   margin: 0;
   padding: 22px clamp(14px, 1.4vw, 24px) 42px;
@@ -60,7 +65,7 @@ watch(
 
 @media (max-width: 620px) {
   .workspace {
-    padding: 16px 12px 30px;
+    padding: 14px 10px 28px;
   }
 
   .panelBody {

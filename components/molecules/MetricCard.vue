@@ -15,6 +15,8 @@ defineProps<{
 
 <style module>
 .metric {
+  min-width: 0;
+  max-width: 100%;
   background: linear-gradient(180deg, #ffffff, #f7fbff);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -24,13 +26,18 @@ defineProps<{
 
 .metric strong {
   display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--primary-strong);
   font-size: 24px;
   line-height: 1.1;
 }
 
 .metric span {
+  display: block;
+  min-width: 0;
   color: var(--muted);
+  overflow-wrap: anywhere;
   font-size: 12px;
 }
 

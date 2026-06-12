@@ -54,12 +54,15 @@ const daysOld = computed(() => {
 
 .cardHead {
   display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
   align-items: start;
   justify-content: space-between;
   gap: 12px;
 }
 
 .card h3 {
+  min-width: 0;
   margin: 0;
   color: #10294f;
   font-size: 17px;
@@ -67,12 +70,14 @@ const daysOld = computed(() => {
 
 .card p {
   margin: 8px 0;
+  overflow-wrap: anywhere;
   color: var(--muted);
   line-height: 1.6;
 }
 
 .tags {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
   gap: 6px;
 }

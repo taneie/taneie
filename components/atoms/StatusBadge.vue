@@ -16,12 +16,19 @@ const toneClass = computed(() => css[availabilityClass(props.value)] || css.paus
 
 <style module>
 .status {
-  min-width: 112px;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-width: 0;
   border-radius: 999px;
   padding: 6px 9px;
   font-size: 12px;
   font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .ready {
