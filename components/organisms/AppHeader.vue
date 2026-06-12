@@ -3,7 +3,6 @@
     <div :class="$style.topbarInner">
       <div :class="$style.brand">
         <BrandMark />
-        <span>TRYANGLE FREELANCE</span>
       </div>
 
       <nav :class="$style.nav" aria-label="メイン">
@@ -55,11 +54,9 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 230px;
-  color: var(--ink);
-  font-weight: 800;
-  letter-spacing: 0;
+  flex: 0 0 auto;
+  min-width: 0;
+  line-height: 0;
 }
 
 .nav {
@@ -164,10 +161,6 @@ const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFree
 
   .topbarInner {
     padding: 11px 12px;
-  }
-
-  .brand span {
-    font-size: 14px;
   }
 
   .nav {

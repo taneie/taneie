@@ -3,9 +3,8 @@
     <header :class="$style.landingHeader">
       <div :class="$style.headerInner">
         <div :class="$style.brand">
-          <BrandMark />
-          <span>TRYANGLE FREELANCE</span>
-        </div>
+        <BrandMark />
+      </div>
 
         <nav :class="$style.headerNav" aria-label="トップページ">
           <a href="#features">特徴</a>
@@ -305,10 +304,9 @@ function scrollToRegister() {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  color: #0d2749;
-  font-weight: 900;
-  white-space: nowrap;
+  flex: 0 0 auto;
+  min-width: 0;
+  line-height: 0;
 }
 
 .headerNav {
@@ -889,6 +887,7 @@ function scrollToRegister() {
 
   .brand {
     width: 100%;
+    justify-content: flex-start;
   }
 
   .headerActions {

@@ -15,16 +15,20 @@ export default defineNuxtConfig({
   ],
   css: ["~/src/styles.css"],
   app: {
-    baseURL: '/taneie/',
+    baseURL: "/taneie/",
     head: {
       htmlAttrs: { lang: "ja" },
       title: "TRYANGLE FREELANCE",
       meta: [
         { charset: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" }
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { name: "theme-color", content: "#1d5fd3" }
+      ],
+      link: [
+        { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+        { rel: "apple-touch-icon", href: "/brand/tryangle-mark.svg" }
       ]
     }
   },
-  ssr: true,
-
+  ssr: true
 });
