@@ -226,6 +226,7 @@ const scoutFilters = ref<ScoutFilters>({ skill: "", availability: "", remote: ""
 const hasUnsavedChanges = ref(false);
 const toastMessage = ref("");
 const toastVisible = ref(false);
+const unsavedConfirmVisible = ref(false);
 const chatBannerVisible = ref(false);
 const chatBannerTitle = ref("");
 const chatBannerBody = ref("");
@@ -237,6 +238,7 @@ let chatBannerTimer: ReturnType<typeof setTimeout> | undefined;
 let chatPollingTimer: ReturnType<typeof setInterval> | undefined;
 let knownMessageIds = new Set<string>();
 let pushRegistrationStarted = false;
+let unsavedConfirmResolver: ((value: boolean) => void) | undefined;
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -581,7 +583,7 @@ function openChatBanner() {
   if (chatBannerFreelancerId.value && currentRole.value === "sales") {
     selectChatFreelancer(chatBannerFreelancerId.value);
   } else {
-    setView("meeting");
+    void setView("meeting");
   }
   chatBannerVisible.value = false;
 }
@@ -803,13 +805,13 @@ function ensureActiveView() {
   }
 }
 
-function setAuthMode(mode: AuthMode) {
-  if (state.value.authMode !== mode && !confirmDiscardChanges()) return;
+async function setAuthMode(mode: AuthMode) {
+  if (state.value.authMode !== mode && !(await confirmDiscardChanges())) return;
   state.value.authMode = mode;
   persist();
 }
 
-function setView(view: ViewKey) {
+async function setView(view: ViewKey) {
   if (!canAccess(view)) {
     showToast("この画面は現在の権限では表示できません。");
     return;
@@ -821,7 +823,7 @@ function setView(view: ViewKey) {
     return;
   }
 
-  if (state.value.activeView !== view && !confirmDiscardChanges()) return;
+  if (state.value.activeView !== view && !(await confirmDiscardChanges())) return;
   state.value.activeView = view;
   if (view === "meeting") ensureChatSelection();
   persist();
@@ -870,8 +872,8 @@ async function login(email: string, password: string) {
   }
 }
 
-function loginWithDemo(role: Role) {
-  if (!confirmDiscardChanges()) return;
+async function loginWithDemo(role: Role) {
+  if (!(await confirmDiscardChanges())) return;
   const account = demoAccounts.find((item) => item.role === role);
   if (account) void login(account.email, account.password);
 }
@@ -925,8 +927,8 @@ async function register(values: RegisterInput) {
   }
 }
 
-function logout() {
-  if (!confirmDiscardChanges()) return;
+async function logout() {
+  if (!(await confirmDiscardChanges())) return;
   const previousRole = currentRole.value;
   accessToken = "";
   localStorage.removeItem(TOKEN_KEY);
@@ -1001,15 +1003,15 @@ async function saveProfileMeeting(meetingCandidatesText: string, pledgeAccepted 
     clearUnsavedChanges();
     state.value.profile.pledgeAccepted = true;
     if (!state.value.profile.pledgedAt) state.value.profile.pledgedAt = new Date().toISOString();
-    setView("jobs");
+    await setView("jobs");
     showToast("登録が完了しました。");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "面談候補の保存に失敗しました。");
   }
 }
 
-function resetProfile() {
-  if (!confirmDiscardChanges()) return;
+async function resetProfile() {
+  if (!(await confirmDiscardChanges())) return;
   const profileId = currentUser.value?.freelancerId || state.value.profile.id || "fr-current";
   state.value.profile = blankProfile(profileId);
   state.value.selectedFreelancerId = profileId;
@@ -1414,10 +1416,18 @@ function clearUnsavedChanges() {
 }
 
 function confirmDiscardChanges() {
-  if (!hasUnsavedChanges.value) return true;
-  const shouldDiscard = window.confirm("保存していない入力内容があります。保存せずに移動すると入力内容が失われます。移動しますか？");
-  if (shouldDiscard) clearUnsavedChanges();
-  return shouldDiscard;
+  if (!hasUnsavedChanges.value) return Promise.resolve(true);
+  unsavedConfirmVisible.value = true;
+  return new Promise<boolean>((resolve) => {
+    unsavedConfirmResolver = resolve;
+  });
+}
+
+function resolveUnsavedConfirm(discard: boolean) {
+  unsavedConfirmVisible.value = false;
+  if (discard) clearUnsavedChanges();
+  unsavedConfirmResolver?.(discard);
+  unsavedConfirmResolver = undefined;
 }
 
 function showToast(message: string) {
@@ -1443,6 +1453,7 @@ export function useTryangleFreelance() {
     hasUnsavedChanges,
     toastMessage,
     toastVisible,
+    unsavedConfirmVisible,
     chatBannerVisible,
     chatBannerTitle,
     chatBannerBody,
@@ -1511,6 +1522,7 @@ export function useTryangleFreelance() {
     markDirty,
     clearUnsavedChanges,
     confirmDiscardChanges,
+    resolveUnsavedConfirm,
     showToast,
     openChatBanner,
     dismissChatBanner,

@@ -2,6 +2,7 @@
   <ClientOnly>
     <LoginPanel v-if="!state.auth" />
     <AppShell v-else />
+    <UnsavedChangesModal />
 
     <template #fallback>
       <div :class="$style.loginShell">
@@ -21,23 +22,12 @@
 
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import { onMounted, onBeforeUnmount } from "vue";
-const { state, init, hasUnsavedChanges } = useTryangleFreelance();
+import { onMounted } from "vue";
+const { state, init } = useTryangleFreelance();
 
 onMounted(() => {
   init();
-  window.addEventListener("beforeunload", handleBeforeUnload);
 });
-
-onBeforeUnmount(() => {
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-});
-
-function handleBeforeUnload(event: BeforeUnloadEvent) {
-  if (!hasUnsavedChanges.value) return;
-  event.preventDefault();
-  event.returnValue = "";
-}
 </script>
 
 <style module>

@@ -151,8 +151,8 @@ function hydrateForms() {
   pledgeAccepted.value = Boolean(p.pledgeAccepted || p.pledgedAt);
 }
 
-function moveStep(step: number) {
-  if (state.value.wizardStep !== step && !confirmDiscardChanges()) return;
+async function moveStep(step: number) {
+  if (state.value.wizardStep !== step && !(await confirmDiscardChanges())) return;
   state.value.wizardStep = step;
   persist();
 }

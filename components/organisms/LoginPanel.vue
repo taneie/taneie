@@ -256,8 +256,8 @@ const projects = [
   }
 ];
 
-function submitLogin() {
-  if (!confirmDiscardChanges()) return;
+async function submitLogin() {
+  if (!(await confirmDiscardChanges())) return;
   login(loginForm.email, loginForm.password);
 }
 
