@@ -21,10 +21,11 @@ $$ language plpgsql;
 create table users (
   id uuid primary key default gen_random_uuid(),
   role user_role not null,
-  name varchar(255) not null,
-  email varchar(255) not null unique,
+  name varchar(1000) not null,
+  email varchar(1000) not null,
+  email_hash varchar(128) unique,
   password_hash varchar(255) not null,
-  phone varchar(50),
+  phone varchar(1000),
   is_active boolean not null default true,
   last_login_at timestamptz,
   created_at timestamptz not null default now(),
@@ -72,7 +73,7 @@ create table freelancer_skills (
 create table resumes (
   id uuid primary key default gen_random_uuid(),
   freelancer_profile_id uuid not null references freelancer_profiles(id) on delete cascade,
-  original_filename varchar(255) not null,
+  original_filename varchar(1000) not null,
   mime_type varchar(100),
   file_size_bytes integer,
   storage_key varchar(500) not null,
@@ -181,12 +182,13 @@ create table privacy_policy_consents (
   user_id uuid not null references users(id) on delete cascade,
   policy_version varchar(50) not null,
   accepted_at timestamptz not null default now(),
-  ip_address varchar(64),
-  user_agent varchar(500),
+  ip_address varchar(1000),
+  user_agent varchar(1000),
   unique (user_id, policy_version)
 );
 
 create index idx_users_role_active on users(role, is_active);
+create index idx_users_email_hash on users(email_hash);
 create index idx_freelancer_profiles_availability on freelancer_profiles(availability_status);
 create index idx_freelancer_profiles_remote on freelancer_profiles(remote_type);
 create index idx_resumes_latest on resumes(freelancer_profile_id, is_latest);

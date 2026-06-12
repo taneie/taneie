@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { decryptText, encryptText, piiHash } from "../backend/src/infrastructure/crypto.js";
 
 const databaseUrl = process.env.DATABASE_URL || "postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public";
 const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
@@ -13,35 +14,51 @@ async function upsertSkill(name: string, category: "language" | "database" | "fr
   });
 }
 
+async function upsertSeedUser(input: { email: string; passwordHash: string; role: "freelancer" | "sales"; name: string; phone?: string }) {
+  const emailHash = piiHash(input.email);
+  const encryptedData = {
+    email: encryptText(input.email),
+    emailHash,
+    passwordHash: input.passwordHash,
+    role: input.role,
+    name: encryptText(input.name),
+    phone: input.phone ? encryptText(input.phone) : null,
+    isActive: true
+  };
+  const user = await prisma.user.findUnique({ where: { emailHash } });
+  if (user) {
+    return prisma.user.update({ where: { id: user.id }, data: encryptedData });
+  }
+
+  const normalized = input.email.trim().toLowerCase();
+  const legacyUsers = await prisma.user.findMany({ where: { emailHash: null } });
+  const legacyUser = legacyUsers.find((candidate) => decryptText(candidate.email).trim().toLowerCase() === normalized);
+  if (legacyUser) {
+    return prisma.user.update({ where: { id: legacyUser.id }, data: encryptedData });
+  }
+
+  return prisma.user.create({ data: encryptedData });
+}
+
 async function main() {
   const [freelancerPassword, salesPassword] = await Promise.all([
     bcrypt.hash("freelance123", 12),
     bcrypt.hash("sales123", 12)
   ]);
 
-  const sales = await prisma.user.upsert({
-    where: { email: "sales@tryangle.jp" },
-    update: { passwordHash: salesPassword, role: "sales", name: "TRYANGLE 営業", isActive: true },
-    create: {
-      email: "sales@tryangle.jp",
-      passwordHash: salesPassword,
-      role: "sales",
-      name: "TRYANGLE 営業",
-      isActive: true
-    }
+  const sales = await upsertSeedUser({
+    email: "sales@tryangle.jp",
+    passwordHash: salesPassword,
+    role: "sales",
+    name: "TRYANGLE 営業"
   });
 
-  const freelancer = await prisma.user.upsert({
-    where: { email: "freelancer@example.com" },
-    update: { passwordHash: freelancerPassword, role: "freelancer", name: "山田 太郎", phone: "090-0000-0000", isActive: true },
-    create: {
-      email: "freelancer@example.com",
-      passwordHash: freelancerPassword,
-      role: "freelancer",
-      name: "山田 太郎",
-      phone: "090-0000-0000",
-      isActive: true
-    }
+  const freelancer = await upsertSeedUser({
+    email: "freelancer@example.com",
+    passwordHash: freelancerPassword,
+    role: "freelancer",
+    name: "山田 太郎",
+    phone: "090-0000-0000"
   });
 
   await prisma.privacyPolicyConsent.createMany({
@@ -106,14 +123,14 @@ async function main() {
   await prisma.resume.upsert({
     where: { id: (await prisma.resume.findFirst({ where: { storageKey: "resumes/demo/yamada.pdf" }, select: { id: true } }))?.id || "00000000-0000-0000-0000-000000000000" },
     update: {
-      originalFilename: "職務経歴書_山田太郎.pdf",
+      originalFilename: encryptText("職務経歴書_山田太郎.pdf"),
       mimeType: "application/pdf",
       fileSizeBytes: 384000,
       isLatest: true
     },
     create: {
       freelancerProfileId: profile.id,
-      originalFilename: "職務経歴書_山田太郎.pdf",
+      originalFilename: encryptText("職務経歴書_山田太郎.pdf"),
       mimeType: "application/pdf",
       fileSizeBytes: 384000,
       storageKey: "resumes/demo/yamada.pdf",
@@ -211,7 +228,7 @@ async function main() {
         freelancerProfileId: profile.id,
         jobId: job.id,
         messageType: "chat",
-        body: "金融SaaS案件について、初回面談候補を確認しました。",
+        body: encryptText("金融SaaS案件について、初回面談候補を確認しました。"),
         sentAt: new Date("2026-06-04T11:20:00+09:00")
       },
       {
@@ -220,7 +237,7 @@ async function main() {
         freelancerProfileId: profile.id,
         jobId: job.id,
         messageType: "chat",
-        body: "6月10日午前で調整可能です。職務経歴書も更新しました。",
+        body: encryptText("6月10日午前で調整可能です。職務経歴書も更新しました。"),
         sentAt: new Date("2026-06-04T11:36:00+09:00")
       }
     ]

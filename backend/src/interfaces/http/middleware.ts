@@ -4,6 +4,7 @@ import { ZodError, type ZodSchema } from "zod";
 import { AppError, type AuthContext } from "../../domain/types.js";
 import { prisma } from "../../infrastructure/prisma.js";
 import { verifyToken } from "../../infrastructure/security.js";
+import { decryptText } from "../../infrastructure/crypto.js";
 
 export interface AuthedRequest extends Request {
   auth?: AuthContext;
@@ -38,7 +39,7 @@ export async function requireAuth(req: AuthedRequest, _res: Response, next: Next
     const user = await prisma.user.findUnique({ where: { id: payload.userId } });
     if (!user || !user.isActive) throw new AppError(401, "ログインが必要です。", "AUTH_REQUIRED");
 
-    req.auth = { userId: user.id, role: user.role, email: user.email };
+    req.auth = { userId: user.id, role: user.role, email: decryptText(user.email) };
     next();
   } catch (error) {
     next(error instanceof AppError ? error : new AppError(401, "ログインが必要です。", "AUTH_REQUIRED"));

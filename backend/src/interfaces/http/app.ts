@@ -3,6 +3,7 @@ import express from "express";
 import { config } from "../../infrastructure/config.js";
 import { prisma } from "../../infrastructure/prisma.js";
 import { getWebPushPublicKey } from "../../infrastructure/push.js";
+import { decryptText, encryptText, piiHash } from "../../infrastructure/crypto.js";
 import {
   ApplicationService,
   AuthService,
@@ -92,9 +93,9 @@ export function createApp() {
     });
     res.json({
       id: user.id,
-      email: user.email,
+      email: decryptText(user.email),
       role: user.role,
-      name: user.name,
+      name: decryptText(user.name),
       freelancerId: user.freelancerProfile?.id
     });
   }));
@@ -133,7 +134,7 @@ export function createApp() {
     const profile = await prisma.freelancerProfile.findUniqueOrThrow({ where: { userId: req.auth!.userId } });
     await prisma.resume.updateMany({ where: { freelancerProfileId: profile.id }, data: { isLatest: false } });
     const resume = await prisma.resume.create({
-      data: { ...req.body, freelancerProfileId: profile.id, isLatest: true }
+      data: { ...req.body, originalFilename: encryptText(req.body.originalFilename), freelancerProfileId: profile.id, isLatest: true }
     });
     res.status(201).json(resume);
   }));
@@ -178,28 +179,43 @@ export function createApp() {
   }));
 
   app.post("/api/push/subscriptions", requireAuth, validateBody(pushSubscriptionSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    const subscription = await prisma.pushSubscription.upsert({
-      where: { endpoint: req.body.endpoint },
-      update: {
-        userId: req.auth!.userId,
-        p256dh: req.body.keys.p256dh,
-        auth: req.body.keys.auth,
-        userAgent: req.headers["user-agent"]?.toString()
-      },
-      create: {
-        userId: req.auth!.userId,
-        endpoint: req.body.endpoint,
-        p256dh: req.body.keys.p256dh,
-        auth: req.body.keys.auth,
-        userAgent: req.headers["user-agent"]?.toString()
+    const endpointHash = piiHash(req.body.endpoint);
+    const data = {
+      userId: req.auth!.userId,
+      endpoint: encryptText(req.body.endpoint),
+      endpointHash,
+      p256dh: encryptText(req.body.keys.p256dh),
+      auth: encryptText(req.body.keys.auth),
+      userAgent: req.headers["user-agent"] ? encryptText(req.headers["user-agent"].toString()) : null
+    };
+    const existing = await prisma.pushSubscription.findFirst({
+      where: {
+        OR: [
+          { endpointHash },
+          { endpoint: req.body.endpoint }
+        ]
       }
     });
+    const subscription = existing
+      ? await prisma.pushSubscription.update({
+        where: { id: existing.id },
+        data
+      })
+      : await prisma.pushSubscription.create({
+        data
+      });
     res.status(201).json({ id: subscription.id });
   }));
 
   app.delete("/api/push/subscriptions", requireAuth, validateBody(pushSubscriptionSchema), asyncHandler<AuthedRequest>(async (req, res) => {
     await prisma.pushSubscription.deleteMany({
-      where: { userId: req.auth!.userId, endpoint: req.body.endpoint }
+      where: {
+        userId: req.auth!.userId,
+        OR: [
+          { endpointHash: piiHash(req.body.endpoint) },
+          { endpoint: req.body.endpoint }
+        ]
+      }
     });
     res.status(204).send();
   }));

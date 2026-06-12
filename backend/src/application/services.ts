@@ -2,6 +2,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { hashPassword, signToken, verifyPassword } from "../infrastructure/security.js";
 import { notifyUser } from "../infrastructure/push.js";
+import { decryptText, encryptText, piiHash } from "../infrastructure/crypto.js";
 import {
   AppError,
   labelToApplicationStatus,
@@ -42,14 +43,20 @@ export class AuthService {
     ipAddress?: string;
     userAgent?: string;
   }) {
+    const existingUser = await findUserByEmailForAuth(this.db, input.email);
+    if (existingUser) {
+      throw new AppError(409, "このメールアドレスはすでに登録されています。", "EMAIL_ALREADY_EXISTS");
+    }
+
     const passwordHash = await hashPassword(input.password);
     const user = await this.db.user.create({
       data: {
         role: "freelancer",
-        name: input.name,
-        email: input.email,
+        name: encryptText(input.name),
+        email: encryptText(input.email),
+        emailHash: piiHash(input.email),
         passwordHash,
-        phone: input.phone || null,
+        phone: input.phone ? encryptText(input.phone) : null,
         freelancerProfile: {
           create: {
             publicCode: `tf-${randomUUID().slice(0, 8)}`,
@@ -60,23 +67,20 @@ export class AuthService {
         privacyConsents: {
           create: {
             policyVersion: input.policyVersion,
-            ipAddress: input.ipAddress,
-            userAgent: input.userAgent
+            ipAddress: input.ipAddress ? encryptText(input.ipAddress) : null,
+            userAgent: input.userAgent ? encryptText(input.userAgent) : null
           }
         }
       },
       include: { freelancerProfile: true }
     });
 
-    const token = signToken({ userId: user.id, role: user.role, email: user.email });
+    const token = signToken({ userId: user.id, role: user.role, email: input.email });
     return { token, user: toAuthUser(user) };
   }
 
   async login(email: string, password: string) {
-    const user = await this.db.user.findUnique({
-      where: { email },
-      include: { freelancerProfile: true }
-    });
+    const user = await findUserByEmailForAuth(this.db, email);
     if (!user || !user.isActive) return null;
 
     const valid = await verifyPassword(password, user.passwordHash);
@@ -87,7 +91,7 @@ export class AuthService {
       data: { lastLoginAt: new Date() }
     });
 
-    const token = signToken({ userId: user.id, role: user.role, email: user.email });
+    const token = signToken({ userId: user.id, role: user.role, email });
     return { token, user: toAuthUser(user) };
   }
 }
@@ -227,7 +231,10 @@ export class ProfileService {
     if (input.name || input.phone) {
       await this.db.user.update({
         where: { id: userId },
-        data: { name: input.name, phone: input.phone }
+        data: {
+          name: input.name ? encryptText(input.name) : undefined,
+          phone: input.phone ? encryptText(input.phone) : undefined
+        }
       });
     }
 
@@ -370,7 +377,7 @@ export class CommunicationService {
         receiverUserId,
         freelancerProfileId: profile.id,
         jobId: input.jobId,
-        body: input.body,
+        body: encryptText(input.body),
         messageType: input.messageType || "chat"
       },
       include: { sender: true, receiver: true }
@@ -378,7 +385,7 @@ export class CommunicationService {
     const mapped = mapMessage(message);
     await notifyUser(this.db, receiverUserId, {
       title: "TRYANGLE FREELANCE",
-      body: `${message.sender.name}: ${input.body}`,
+      body: `${decryptText(message.sender.name)}: ${input.body}`,
       url: "/",
       tag: `tryangle-chat-${message.id}`
     });
@@ -418,11 +425,39 @@ async function upsertSkills(db: PrismaClient, names: string[], category: "langua
 function toAuthUser(user: { id: string; role: "freelancer" | "sales"; email: string; name: string; freelancerProfile?: { id: string } | null }) {
   return {
     id: user.id,
-    email: user.email,
+    email: decryptText(user.email),
     role: user.role,
-    name: user.name,
+    name: decryptText(user.name),
     freelancerId: user.freelancerProfile?.id
   };
+}
+
+async function findUserByEmailForAuth(db: PrismaClient, email: string) {
+  const emailHash = piiHash(email);
+  const user = await db.user.findUnique({
+    where: { emailHash },
+    include: { freelancerProfile: true }
+  });
+  if (user) return user;
+
+  const normalized = email.trim().toLowerCase();
+  const legacyUsers = await db.user.findMany({
+    where: { emailHash: null },
+    include: { freelancerProfile: true }
+  });
+  const legacyUser = legacyUsers.find((candidate) => decryptText(candidate.email).trim().toLowerCase() === normalized);
+  if (!legacyUser) return null;
+
+  return db.user.update({
+    where: { id: legacyUser.id },
+    data: {
+      email: encryptText(decryptText(legacyUser.email)),
+      emailHash,
+      name: encryptText(decryptText(legacyUser.name)),
+      phone: legacyUser.phone ? encryptText(decryptText(legacyUser.phone)) : null
+    },
+    include: { freelancerProfile: true }
+  });
 }
 
 export interface JobInput {
@@ -467,9 +502,9 @@ async function assertFreelancerCanViewJobs(db: PrismaClient, userId: string) {
 
   const complete = Boolean(
     profile
-    && profile.user.name
-    && profile.user.email
-    && profile.user.phone
+    && decryptText(profile.user.name)
+    && decryptText(profile.user.email)
+    && decryptText(profile.user.phone)
     && profile.roleTitle
     && profile.yearsExperience
     && profile.desiredRate

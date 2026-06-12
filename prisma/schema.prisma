@@ -85,10 +85,11 @@ enum MessageType {
 model User {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   role            UserRole
-  name            String    @db.VarChar(255)
-  email           String    @unique @db.VarChar(255)
+  name            String    @db.VarChar(1000)
+  email           String    @db.VarChar(1000)
+  emailHash       String?   @unique @map("email_hash") @db.VarChar(128)
   passwordHash    String    @map("password_hash") @db.VarChar(255)
-  phone           String?   @db.VarChar(50)
+  phone           String?   @db.VarChar(1000)
   isActive        Boolean   @default(true) @map("is_active")
   lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz(6)
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -167,7 +168,7 @@ model FreelancerSkill {
 model Resume {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   freelancerProfileId String   @map("freelancer_profile_id") @db.Uuid
-  originalFilename    String   @map("original_filename") @db.VarChar(255)
+  originalFilename    String   @map("original_filename") @db.VarChar(1000)
   mimeType            String?  @map("mime_type") @db.VarChar(100)
   fileSizeBytes       Int?     @map("file_size_bytes")
   storageKey          String   @map("storage_key") @db.VarChar(500)
@@ -339,8 +340,8 @@ model PrivacyPolicyConsent {
   userId         String   @map("user_id") @db.Uuid
   policyVersion  String   @map("policy_version") @db.VarChar(50)
   acceptedAt     DateTime @default(now()) @map("accepted_at") @db.Timestamptz(6)
-  ipAddress      String?  @map("ip_address") @db.VarChar(64)
-  userAgent      String?  @map("user_agent") @db.VarChar(500)
+  ipAddress      String?  @map("ip_address") @db.VarChar(1000)
+  userAgent      String?  @map("user_agent") @db.VarChar(1000)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -352,10 +353,11 @@ model PrivacyPolicyConsent {
 model PushSubscription {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
-  endpoint  String   @unique @db.VarChar(500)
-  p256dh    String   @db.VarChar(255)
-  auth      String   @db.VarChar(255)
-  userAgent String?  @map("user_agent") @db.VarChar(500)
+  endpoint  String   @db.VarChar(1000)
+  endpointHash String? @unique @map("endpoint_hash") @db.VarChar(128)
+  p256dh    String   @db.VarChar(1000)
+  auth      String   @db.VarChar(1000)
+  userAgent String?  @map("user_agent") @db.VarChar(1000)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
 

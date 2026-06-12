@@ -39,6 +39,15 @@ http://127.0.0.1:8787/api/health
 
 接続情報を変更する場合は `.env.example` を参考に `DATABASE_URL`, `API_PORT`, `JWT_SECRET`, `CORS_ORIGIN` を設定してください。
 
+個人情報を含むカラムはアプリケーション側で AES-256-GCM 暗号化して保存します。
+本番環境では必ず `DATA_ENCRYPTION_KEY` を設定してください。
+
+```bash
+openssl rand -base64 32
+```
+
+生成した値を `.env` の `DATA_ENCRYPTION_KEY` に設定します。この値を変更すると既存の暗号化データを復号できなくなるため、環境ごとに固定して安全に保管してください。
+
 閉じているブラウザへチャット通知を送る場合は Web Push 用の VAPID 鍵も設定します。
 
 ```bash

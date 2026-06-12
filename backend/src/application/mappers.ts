@@ -17,6 +17,7 @@ import {
   labelToRemoteType,
   labelToStreamType
 } from "../domain/types.js";
+import { decryptText } from "../infrastructure/crypto.js";
 
 type JobWithRelations = Job & {
   client: Client | null;
@@ -79,9 +80,9 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
   return {
     id: profile.id,
     userId: profile.userId,
-    name: profile.user.name,
-    email: profile.user.email,
-    phone: profile.user.phone,
+    name: decryptText(profile.user.name),
+    email: decryptText(profile.user.email),
+    phone: decryptText(profile.user.phone),
     role: profile.roleTitle || "",
     skills: profile.skills.map((item) => item.skill.name),
     desiredRate: profile.desiredRate || 0,
@@ -92,7 +93,7 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
     availability: toAvailabilityLabel(profile.availabilityStatus, profile.availabilityNote),
     pledgedAt: profile.pledgedAt?.toISOString() || "",
     lastUpdated: profile.lastUpdatedOn?.toISOString().slice(0, 10) || "",
-    resumeName: latestResume?.originalFilename || "",
+    resumeName: decryptText(latestResume?.originalFilename) || "",
     publicCode: profile.publicCode
   };
 }
@@ -113,9 +114,9 @@ export function mapMessage(message: Message & { sender: User; receiver: User | n
   return {
     id: message.id,
     freelancerId: message.freelancerProfileId,
-    from: message.sender.name,
-    to: message.receiver?.name || "",
-    body: message.body,
+    from: decryptText(message.sender.name),
+    to: decryptText(message.receiver?.name),
+    body: decryptText(message.body),
     at: message.sentAt.toISOString(),
     channel: message.sender.role === "sales" ? "sales" : "freelancer",
     messageType: message.messageType

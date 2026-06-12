@@ -1,6 +1,7 @@
 import webPush from "web-push";
 import type { PrismaClient } from "@prisma/client";
 import { config } from "./config.js";
+import { decryptText } from "./crypto.js";
 
 const pushEnabled = Boolean(config.webPushPublicKey && config.webPushPrivateKey);
 
@@ -23,10 +24,10 @@ export async function notifyUser(
   await Promise.all(subscriptions.map(async (subscription) => {
     try {
       await webPush.sendNotification({
-        endpoint: subscription.endpoint,
+        endpoint: decryptText(subscription.endpoint),
         keys: {
-          p256dh: subscription.p256dh,
-          auth: subscription.auth
+          p256dh: decryptText(subscription.p256dh),
+          auth: decryptText(subscription.auth)
         }
       }, JSON.stringify(payload));
     } catch (error: unknown) {
@@ -34,7 +35,7 @@ export async function notifyUser(
         ? Number((error as { statusCode?: number }).statusCode)
         : 0;
       if (statusCode === 404 || statusCode === 410) {
-        await db.pushSubscription.deleteMany({ where: { endpoint: subscription.endpoint } });
+        await db.pushSubscription.deleteMany({ where: { id: subscription.id } });
       }
     }
   }));

@@ -17,5 +17,6 @@ export const config = {
   privacyPolicyVersion: readEnv("PRIVACY_POLICY_VERSION", "2026-06-10"),
   webPushPublicKey: readEnv("WEB_PUSH_PUBLIC_KEY", ""),
   webPushPrivateKey: readEnv("WEB_PUSH_PRIVATE_KEY", ""),
-  webPushSubject: readEnv("WEB_PUSH_SUBJECT", "mailto:admin@example.com")
+  webPushSubject: readEnv("WEB_PUSH_SUBJECT", "mailto:admin@example.com"),
+  dataEncryptionKey: readEnv("DATA_ENCRYPTION_KEY", "")
 };
