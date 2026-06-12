@@ -3,20 +3,37 @@
     <div :class="$style.cardHead">
       <div>
         <h3>{{ freelancer.name }}</h3>
-        <p>{{ freelancer.role }} / {{ freelancer.desiredRate }}万円 / {{ freelancer.workRate }} / {{ freelancer.remote }}</p>
+        <p>
+          {{ freelancer.role }} / {{ freelancer.desiredRate }}万円 /
+          {{ freelancer.workRate }} / {{ freelancer.remote }}
+        </p>
       </div>
       <StatusBadge :value="freelancer.availability" />
     </div>
 
     <div :class="$style.tags">
-      <TagBadge v-for="skill in freelancer.skills" :key="`${freelancer.id}-${skill}`">{{ skill }}</TagBadge>
+      <TagBadge
+        v-for="skill in freelancer.skills"
+        :key="`${freelancer.id}-${skill}`"
+        >{{ skill }}</TagBadge
+      >
     </div>
 
-    <p>最終更新 {{ freelancer.lastUpdated }}{{ daysOld >= 14 ? " / 更新確認対象" : "" }}</p>
+    <p>
+      最終更新 {{ freelancer.lastUpdated
+      }}{{ daysOld >= 14 ? " / 更新確認対象" : "" }}
+    </p>
 
     <div :class="$style.actions">
-      <BaseButton icon="send" @click="$emit('scout', freelancer.id)">スカウト</BaseButton>
-      <BaseButton variant="secondary" icon="search" @click="$emit('preview', freelancer.id)">レジュメ</BaseButton>
+      <BaseButton icon="send" @click="$emit('scout', freelancer.id)"
+        >スカウト</BaseButton
+      >
+      <BaseButton
+        variant="secondary"
+        icon="search"
+        @click="$emit('preview', freelancer.id)"
+        >レジュメ</BaseButton
+      >
     </div>
   </article>
 </template>
@@ -38,7 +55,11 @@ defineEmits<{
 const { today } = useTryangleFreelance();
 
 const daysOld = computed(() => {
-  return Math.floor((new Date(today()).getTime() - new Date(props.freelancer.lastUpdated).getTime()) / 86400000);
+  return Math.floor(
+    (new Date(today()).getTime() -
+      new Date(props.freelancer.lastUpdated).getTime()) /
+      86400000,
+  );
 });
 </script>
 

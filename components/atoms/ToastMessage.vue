@@ -1,5 +1,9 @@
 <template>
-  <div :class="[$style.toast, { [$style.show]: toastVisible }]" role="status" aria-live="polite">
+  <div
+    :class="[$style.toast, { [$style.show]: toastVisible }]"
+    role="status"
+    aria-live="polite"
+  >
     {{ toastMessage }}
   </div>
 </template>

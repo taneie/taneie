@@ -1,24 +1,45 @@
 <template>
-  <PageHead title="簡易スカウト" kicker="スキル・稼働状況・リモート条件で人材を検索し、サイト内メッセージで直接アプローチします。" />
+  <PageHead
+    title="簡易スカウト"
+    kicker="スキル・稼働状況・リモート条件で人材を検索し、サイト内メッセージで直接アプローチします。"
+  />
 
   <div :class="[$style.grid, $style.two]">
     <section :class="$style.panel">
-      <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">人材検索</h2></div>
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">人材検索</h2>
+      </div>
       <div :class="$style.panelBody">
         <form :class="[$style.formGrid, $style.one]" @submit.prevent>
           <FormInput v-model="scoutFilters.skill" label="スキル" name="skill" />
-          <FormSelect v-model="scoutFilters.availability" label="提案可能ステータス" name="availability" :options="['', ...availabilityOptions]" />
-          <FormSelect v-model="scoutFilters.remote" label="リモート" name="remote" :options="['', ...remoteOptions]" />
+          <FormSelect
+            v-model="scoutFilters.availability"
+            label="提案可能ステータス"
+            name="availability"
+            :options="['', ...availabilityOptions]"
+          />
+          <FormSelect
+            v-model="scoutFilters.remote"
+            label="リモート"
+            name="remote"
+            :options="['', ...remoteOptions]"
+          />
           <div :class="$style.actions">
             <BaseButton type="submit" icon="search">検索</BaseButton>
-            <BaseButton variant="secondary" @click="clearScoutFilter">クリア</BaseButton>
+            <BaseButton variant="secondary" @click="clearScoutFilter"
+              >クリア</BaseButton
+            >
           </div>
         </form>
       </div>
     </section>
 
     <section :class="$style.panel">
-      <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">候補者 {{ filteredFreelancers.length }}名</h2></div>
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">
+          候補者 {{ filteredFreelancers.length }}名
+        </h2>
+      </div>
       <div :class="[$style.panelBody, $style.cardList]">
         <FreelancerCard
           v-for="freelancer in filteredFreelancers"
@@ -27,7 +48,9 @@
           @scout="sendScout"
           @preview="selectPreview"
         />
-        <div v-if="filteredFreelancers.length === 0" :class="$style.empty">該当する候補者がいません。</div>
+        <div v-if="filteredFreelancers.length === 0" :class="$style.empty">
+          該当する候補者がいません。
+        </div>
       </div>
     </section>
   </div>
@@ -42,7 +65,7 @@ const {
   remoteOptions,
   clearScoutFilter,
   sendScout,
-  selectPreview
+  selectPreview,
 } = useTryangleFreelance();
 </script>
 

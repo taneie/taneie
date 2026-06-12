@@ -3,23 +3,31 @@ import express from "express";
 import { config } from "../../infrastructure/config.js";
 import { prisma } from "../../infrastructure/prisma.js";
 import { getWebPushPublicKey } from "../../infrastructure/push.js";
-import { decryptText, encryptText, piiHash } from "../../infrastructure/crypto.js";
+import {
+  decryptText,
+  encryptText,
+  piiHash,
+} from "../../infrastructure/crypto.js";
 import {
   ApplicationService,
   AuthService,
   CatalogService,
   CommunicationService,
   JobService,
-  ProfileService
+  ProfileService,
 } from "../../application/services.js";
-import { AppError, getKeyByValue, labelToMeetingStatus } from "../../domain/types.js";
+import {
+  AppError,
+  getKeyByValue,
+  labelToMeetingStatus,
+} from "../../domain/types.js";
 import {
   asyncHandler,
   errorHandler,
   requireAuth,
   requireRole,
   validateBody,
-  type AuthedRequest
+  type AuthedRequest,
 } from "./middleware.js";
 import {
   applySchema,
@@ -33,7 +41,7 @@ import {
   sendMessageSchema,
   updateJobFlagsSchema,
   updateMeetingStatusSchema,
-  updateProfileSchema
+  updateProfileSchema,
 } from "./schemas.js";
 
 const authService = new AuthService(prisma);
@@ -50,16 +58,20 @@ function routeParam(value: string | string[] | undefined) {
 export function createApp() {
   const app = express();
 
-  app.use(cors({
-    credentials: true,
-    origin(origin, callback) {
-      if (!origin || config.corsOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new AppError(403, "許可されていないオリジンです。", "CORS_FORBIDDEN"));
-    }
-  }));
+  app.use(
+    cors({
+      credentials: true,
+      origin(origin, callback) {
+        if (!origin || config.corsOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(
+          new AppError(403, "許可されていないオリジンです。", "CORS_FORBIDDEN"),
+        );
+      },
+    }),
+  );
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/api/health", (_req, res) => {
@@ -70,159 +82,319 @@ export function createApp() {
     res.json({ publicKey: getWebPushPublicKey() });
   });
 
-  app.post("/api/auth/register", validateBody(registerSchema), asyncHandler(async (req, res) => {
-    const result = await authService.register({
-      ...req.body,
-      policyVersion: config.privacyPolicyVersion,
-      ipAddress: req.ip,
-      userAgent: req.headers["user-agent"]
-    });
-    res.status(201).json(result);
-  }));
-
-  app.post("/api/auth/login", validateBody(loginSchema), asyncHandler(async (req, res) => {
-    const result = await authService.login(req.body.email, req.body.password);
-    if (!result) throw new AppError(401, "メールアドレスまたはパスワードが違います。", "INVALID_CREDENTIALS");
-    res.json(result);
-  }));
-
-  app.get("/api/auth/me", requireAuth, asyncHandler<AuthedRequest>(async (req, res) => {
-    const user = await prisma.user.findUniqueOrThrow({
-      where: { id: req.auth!.userId },
-      include: { freelancerProfile: true }
-    });
-    res.json({
-      id: user.id,
-      email: decryptText(user.email),
-      role: user.role,
-      name: decryptText(user.name),
-      freelancerId: user.freelancerProfile?.id
-    });
-  }));
-
-  app.get("/api/bootstrap", requireAuth, asyncHandler<AuthedRequest>(async (req, res) => {
-    res.json(await catalogService.bootstrap(req.auth!));
-  }));
-
-  app.get("/api/jobs", requireAuth, asyncHandler<AuthedRequest>(async (req, res) => {
-    res.json(await jobService.list(req.auth));
-  }));
-
-  app.post("/api/jobs", requireAuth, requireRole("sales"), validateBody(createJobSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    res.status(201).json(await jobService.create(req.body, req.auth!.userId));
-  }));
-
-  app.patch("/api/jobs/:id", requireAuth, requireRole("sales"), validateBody(updateJobFlagsSchema), asyncHandler(async (req, res) => {
-    res.json(await jobService.updateFlags(routeParam(req.params.id), req.body));
-  }));
-
-  app.get("/api/freelancers", requireAuth, requireRole("sales"), asyncHandler(async (_req, res) => {
-    res.json(await profileService.listFreelancers());
-  }));
-
-  app.get("/api/profile/me", requireAuth, requireRole("freelancer"), asyncHandler<AuthedRequest>(async (req, res) => {
-    const profile = await profileService.getCurrent(req.auth!.userId);
-    if (!profile) throw new AppError(404, "プロフィールが見つかりません。", "PROFILE_NOT_FOUND");
-    res.json(profile);
-  }));
-
-  app.put("/api/profile/me", requireAuth, requireRole("freelancer"), validateBody(updateProfileSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    res.json(await profileService.updateCurrent(req.auth!.userId, req.body));
-  }));
-
-  app.post("/api/resumes", requireAuth, requireRole("freelancer"), validateBody(resumeMetadataSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    const profile = await prisma.freelancerProfile.findUniqueOrThrow({ where: { userId: req.auth!.userId } });
-    await prisma.resume.updateMany({ where: { freelancerProfileId: profile.id }, data: { isLatest: false } });
-    const resume = await prisma.resume.create({
-      data: { ...req.body, originalFilename: encryptText(req.body.originalFilename), freelancerProfileId: profile.id, isLatest: true }
-    });
-    res.status(201).json(resume);
-  }));
-
-  app.get("/api/applications", requireAuth, asyncHandler<AuthedRequest>(async (req, res) => {
-    res.json(await applicationService.list(req.auth!));
-  }));
-
-  app.post("/api/applications", requireAuth, requireRole("freelancer"), validateBody(applySchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    res.status(201).json(await applicationService.apply(req.body.jobId, req.auth!.userId));
-  }));
-
-  app.patch("/api/applications/:id/status", requireAuth, requireRole("sales"), validateBody(changeApplicationStatusSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    res.json(await applicationService.changeStatus(routeParam(req.params.id), req.body.status, req.auth!.userId, req.body.note));
-  }));
-
-  app.get("/api/meeting-requests", requireAuth, asyncHandler<AuthedRequest>(async (req, res) => {
-    const meetings = await communicationService.listMeetings(req.auth!, req.query.freelancerProfileId?.toString());
-    res.json(meetings.map((meeting) => ({
-      id: meeting.id,
-      freelancerId: meeting.freelancerProfileId,
-      applicationId: meeting.applicationId,
-      candidate: meeting.candidateAt.toISOString(),
-      status: getKeyByValue(labelToMeetingStatus, meeting.status)
-    })));
-  }));
-
-  app.post("/api/meeting-requests", requireAuth, validateBody(createMeetingSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    res.status(201).json(await communicationService.createMeeting(req.auth!, req.body));
-  }));
-
-  app.patch("/api/meeting-requests/:id/status", requireAuth, requireRole("sales"), validateBody(updateMeetingStatusSchema), asyncHandler(async (req, res) => {
-    res.json(await communicationService.updateMeeting(routeParam(req.params.id), req.body.status));
-  }));
-
-  app.get("/api/messages", requireAuth, asyncHandler<AuthedRequest>(async (req, res) => {
-    res.json(await communicationService.listMessages(req.auth!, req.query.freelancerProfileId?.toString()));
-  }));
-
-  app.post("/api/messages", requireAuth, validateBody(sendMessageSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    res.status(201).json(await communicationService.sendMessage(req.auth!, req.body));
-  }));
-
-  app.post("/api/push/subscriptions", requireAuth, validateBody(pushSubscriptionSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    const endpointHash = piiHash(req.body.endpoint);
-    const data = {
-      userId: req.auth!.userId,
-      endpoint: encryptText(req.body.endpoint),
-      endpointHash,
-      p256dh: encryptText(req.body.keys.p256dh),
-      auth: encryptText(req.body.keys.auth),
-      userAgent: req.headers["user-agent"] ? encryptText(req.headers["user-agent"].toString()) : null
-    };
-    const existing = await prisma.pushSubscription.findFirst({
-      where: {
-        OR: [
-          { endpointHash },
-          { endpoint: req.body.endpoint }
-        ]
-      }
-    });
-    const subscription = existing
-      ? await prisma.pushSubscription.update({
-        where: { id: existing.id },
-        data
-      })
-      : await prisma.pushSubscription.create({
-        data
+  app.post(
+    "/api/auth/register",
+    validateBody(registerSchema),
+    asyncHandler(async (req, res) => {
+      const result = await authService.register({
+        ...req.body,
+        policyVersion: config.privacyPolicyVersion,
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
       });
-    res.status(201).json({ id: subscription.id });
-  }));
+      res.status(201).json(result);
+    }),
+  );
 
-  app.delete("/api/push/subscriptions", requireAuth, validateBody(pushSubscriptionSchema), asyncHandler<AuthedRequest>(async (req, res) => {
-    await prisma.pushSubscription.deleteMany({
-      where: {
+  app.post(
+    "/api/auth/login",
+    validateBody(loginSchema),
+    asyncHandler(async (req, res) => {
+      const result = await authService.login(req.body.email, req.body.password);
+      if (!result)
+        throw new AppError(
+          401,
+          "メールアドレスまたはパスワードが違います。",
+          "INVALID_CREDENTIALS",
+        );
+      res.json(result);
+    }),
+  );
+
+  app.get(
+    "/api/auth/me",
+    requireAuth,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: req.auth!.userId },
+        include: { freelancerProfile: true },
+      });
+      res.json({
+        id: user.id,
+        email: decryptText(user.email),
+        role: user.role,
+        name: decryptText(user.name),
+        freelancerId: user.freelancerProfile?.id,
+      });
+    }),
+  );
+
+  app.get(
+    "/api/bootstrap",
+    requireAuth,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(await catalogService.bootstrap(req.auth!));
+    }),
+  );
+
+  app.get(
+    "/api/jobs",
+    requireAuth,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(await jobService.list(req.auth));
+    }),
+  );
+
+  app.post(
+    "/api/jobs",
+    requireAuth,
+    requireRole("sales"),
+    validateBody(createJobSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.status(201).json(await jobService.create(req.body, req.auth!.userId));
+    }),
+  );
+
+  app.patch(
+    "/api/jobs/:id",
+    requireAuth,
+    requireRole("sales"),
+    validateBody(updateJobFlagsSchema),
+    asyncHandler(async (req, res) => {
+      res.json(
+        await jobService.updateFlags(routeParam(req.params.id), req.body),
+      );
+    }),
+  );
+
+  app.get(
+    "/api/freelancers",
+    requireAuth,
+    requireRole("sales"),
+    asyncHandler(async (_req, res) => {
+      res.json(await profileService.listFreelancers());
+    }),
+  );
+
+  app.get(
+    "/api/profile/me",
+    requireAuth,
+    requireRole("freelancer"),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const profile = await profileService.getCurrent(req.auth!.userId);
+      if (!profile)
+        throw new AppError(
+          404,
+          "プロフィールが見つかりません。",
+          "PROFILE_NOT_FOUND",
+        );
+      res.json(profile);
+    }),
+  );
+
+  app.put(
+    "/api/profile/me",
+    requireAuth,
+    requireRole("freelancer"),
+    validateBody(updateProfileSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(await profileService.updateCurrent(req.auth!.userId, req.body));
+    }),
+  );
+
+  app.post(
+    "/api/resumes",
+    requireAuth,
+    requireRole("freelancer"),
+    validateBody(resumeMetadataSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const profile = await prisma.freelancerProfile.findUniqueOrThrow({
+        where: { userId: req.auth!.userId },
+      });
+      await prisma.resume.updateMany({
+        where: { freelancerProfileId: profile.id },
+        data: { isLatest: false },
+      });
+      const resume = await prisma.resume.create({
+        data: {
+          ...req.body,
+          originalFilename: encryptText(req.body.originalFilename),
+          freelancerProfileId: profile.id,
+          isLatest: true,
+        },
+      });
+      res.status(201).json(resume);
+    }),
+  );
+
+  app.get(
+    "/api/applications",
+    requireAuth,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(await applicationService.list(req.auth!));
+    }),
+  );
+
+  app.post(
+    "/api/applications",
+    requireAuth,
+    requireRole("freelancer"),
+    validateBody(applySchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res
+        .status(201)
+        .json(await applicationService.apply(req.body.jobId, req.auth!.userId));
+    }),
+  );
+
+  app.patch(
+    "/api/applications/:id/status",
+    requireAuth,
+    requireRole("sales"),
+    validateBody(changeApplicationStatusSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(
+        await applicationService.changeStatus(
+          routeParam(req.params.id),
+          req.body.status,
+          req.auth!.userId,
+          req.body.note,
+        ),
+      );
+    }),
+  );
+
+  app.get(
+    "/api/meeting-requests",
+    requireAuth,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const meetings = await communicationService.listMeetings(
+        req.auth!,
+        req.query.freelancerProfileId?.toString(),
+      );
+      res.json(
+        meetings.map((meeting) => ({
+          id: meeting.id,
+          freelancerId: meeting.freelancerProfileId,
+          applicationId: meeting.applicationId,
+          candidate: meeting.candidateAt.toISOString(),
+          status: getKeyByValue(labelToMeetingStatus, meeting.status),
+        })),
+      );
+    }),
+  );
+
+  app.post(
+    "/api/meeting-requests",
+    requireAuth,
+    validateBody(createMeetingSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res
+        .status(201)
+        .json(await communicationService.createMeeting(req.auth!, req.body));
+    }),
+  );
+
+  app.patch(
+    "/api/meeting-requests/:id/status",
+    requireAuth,
+    requireRole("sales"),
+    validateBody(updateMeetingStatusSchema),
+    asyncHandler(async (req, res) => {
+      res.json(
+        await communicationService.updateMeeting(
+          routeParam(req.params.id),
+          req.body.status,
+        ),
+      );
+    }),
+  );
+
+  app.get(
+    "/api/messages",
+    requireAuth,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(
+        await communicationService.listMessages(
+          req.auth!,
+          req.query.freelancerProfileId?.toString(),
+        ),
+      );
+    }),
+  );
+
+  app.post(
+    "/api/messages",
+    requireAuth,
+    validateBody(sendMessageSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res
+        .status(201)
+        .json(await communicationService.sendMessage(req.auth!, req.body));
+    }),
+  );
+
+  app.post(
+    "/api/push/subscriptions",
+    requireAuth,
+    validateBody(pushSubscriptionSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const endpointHash = piiHash(req.body.endpoint);
+      const data = {
         userId: req.auth!.userId,
-        OR: [
-          { endpointHash: piiHash(req.body.endpoint) },
-          { endpoint: req.body.endpoint }
-        ]
-      }
-    });
-    res.status(204).send();
-  }));
+        endpoint: encryptText(req.body.endpoint),
+        endpointHash,
+        p256dh: encryptText(req.body.keys.p256dh),
+        auth: encryptText(req.body.keys.auth),
+        userAgent: req.headers["user-agent"]
+          ? encryptText(req.headers["user-agent"].toString())
+          : null,
+      };
+      const existing = await prisma.pushSubscription.findFirst({
+        where: {
+          OR: [{ endpointHash }, { endpoint: req.body.endpoint }],
+        },
+      });
+      const subscription = existing
+        ? await prisma.pushSubscription.update({
+            where: { id: existing.id },
+            data,
+          })
+        : await prisma.pushSubscription.create({
+            data,
+          });
+      res.status(201).json({ id: subscription.id });
+    }),
+  );
 
-  app.post("/api/alive-checks", requireAuth, requireRole("sales"), asyncHandler<AuthedRequest>(async (req, res) => {
-    res.status(201).json(await communicationService.createAliveCheck(req.auth!.userId));
-  }));
+  app.delete(
+    "/api/push/subscriptions",
+    requireAuth,
+    validateBody(pushSubscriptionSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      await prisma.pushSubscription.deleteMany({
+        where: {
+          userId: req.auth!.userId,
+          OR: [
+            { endpointHash: piiHash(req.body.endpoint) },
+            { endpoint: req.body.endpoint },
+          ],
+        },
+      });
+      res.status(204).send();
+    }),
+  );
+
+  app.post(
+    "/api/alive-checks",
+    requireAuth,
+    requireRole("sales"),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res
+        .status(201)
+        .json(await communicationService.createAliveCheck(req.auth!.userId));
+    }),
+  );
 
   app.use(errorHandler);
 

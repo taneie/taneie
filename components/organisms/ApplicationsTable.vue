@@ -24,15 +24,28 @@
           {{ getFreelancer(application.freelancerId)?.role || "" }}
         </td>
         <td data-label="稼働">
-          <StatusBadge :value="getFreelancer(application.freelancerId)?.availability || ''" />
+          <StatusBadge
+            :value="getFreelancer(application.freelancerId)?.availability || ''"
+          />
         </td>
         <td data-label="ステータス">
-          <select :class="$style.control" :value="application.status" @change="onStatusChange(application.id, $event)">
-            <option v-for="status in statuses" :key="status" :value="status">{{ status }}</option>
+          <select
+            :class="$style.control"
+            :value="application.status"
+            @change="onStatusChange(application.id, $event)"
+          >
+            <option v-for="status in statuses" :key="status" :value="status">
+              {{ status }}
+            </option>
           </select>
         </td>
         <td v-if="withResume" data-label="レジュメ">
-          <BaseButton variant="secondary" icon="search" @click="selectPreview(application.freelancerId)">確認</BaseButton>
+          <BaseButton
+            variant="secondary"
+            icon="search"
+            @click="selectPreview(application.freelancerId)"
+            >確認</BaseButton
+          >
         </td>
       </tr>
     </tbody>
@@ -41,11 +54,14 @@
 
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-withDefaults(defineProps<{
-  withResume?: boolean;
-}>(), {
-  withResume: false
-});
+withDefaults(
+  defineProps<{
+    withResume?: boolean;
+  }>(),
+  {
+    withResume: false,
+  },
+);
 
 const {
   state,
@@ -54,11 +70,14 @@ const {
   getJob,
   streamTone,
   changeApplicationStatus,
-  selectPreview
+  selectPreview,
 } = useTryangleFreelance();
 
 function onStatusChange(applicationId: string, event: Event) {
-  changeApplicationStatus(applicationId, (event.target as HTMLSelectElement).value);
+  changeApplicationStatus(
+    applicationId,
+    (event.target as HTMLSelectElement).value,
+  );
 }
 </script>
 

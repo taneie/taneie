@@ -10,7 +10,10 @@
           v-for="item in availableNavItems"
           :key="item.view"
           type="button"
-          :class="[$style.navButton, { [$style.active]: state.activeView === item.view }]"
+          :class="[
+            $style.navButton,
+            { [$style.active]: state.activeView === item.view },
+          ]"
           @click="setView(item.view)"
         >
           <AppIcon :name="item.icon" />
@@ -19,7 +22,9 @@
       </nav>
 
       <div :class="$style.accountBar">
-        <span :class="$style.accountPill">{{ roleLabel(state.auth?.role) }}</span>
+        <span :class="$style.accountPill">{{
+          roleLabel(state.auth?.role)
+        }}</span>
         <span :class="$style.accountName">{{ state.auth?.name }}</span>
         <BaseButton
           variant="secondary"
@@ -36,7 +41,8 @@
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 
-const { state, availableNavItems, setView, logout, roleLabel } = useTryangleFreelance();
+const { state, availableNavItems, setView, logout, roleLabel } =
+  useTryangleFreelance();
 </script>
 
 <style module>

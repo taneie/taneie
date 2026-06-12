@@ -1,14 +1,19 @@
 <template>
   <div :class="[$style.grid, $style.two]">
     <aside :class="$style.panel">
-      <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">入力ステップ</h2></div>
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">入力ステップ</h2>
+      </div>
       <div :class="$style.panelBody">
         <div :class="$style.stepper">
           <button
             v-for="(label, index) in steps"
             :key="label"
             type="button"
-            :class="[$style.step, { [$style.active]: state.wizardStep === index + 1 }]"
+            :class="[
+              $style.step,
+              { [$style.active]: state.wizardStep === index + 1 },
+            ]"
             @click="moveStep(index + 1)"
           >
             <span :class="$style.stepIndex">{{ index + 1 }}</span>
@@ -21,9 +26,15 @@
             <h3>{{ profile.name || "未入力" }}</h3>
             <StatusBadge :value="profile.availability" />
           </div>
-          <p>{{ profile.role || "職種未入力" }} / {{ profile.workRate || "稼働率未入力" }} / {{ profile.remote || "リモート未入力" }}</p>
+          <p>
+            {{ profile.role || "職種未入力" }} /
+            {{ profile.workRate || "稼働率未入力" }} /
+            {{ profile.remote || "リモート未入力" }}
+          </p>
           <div :class="$style.tags">
-            <TagBadge v-for="skill in visibleProfileSkills" :key="skill">{{ skill }}</TagBadge>
+            <TagBadge v-for="skill in visibleProfileSkills" :key="skill">{{
+              skill
+            }}</TagBadge>
           </div>
         </div>
       </div>
@@ -32,48 +43,118 @@
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">{{ steps[state.wizardStep - 1] }}</h2>
-        <BaseButton variant="secondary" @click="resetProfile">初期状態に戻す</BaseButton>
+        <BaseButton variant="secondary" @click="resetProfile"
+          >初期状態に戻す</BaseButton
+        >
       </div>
 
       <div :class="$style.panelBody">
-        <form v-if="state.wizardStep === 1" :class="$style.formGrid" @submit.prevent="saveBasic">
-          <FormInput v-model="basic.name" label="氏名" name="name" @update:model-value="markDirty" />
-          <FormInput v-model="basic.email" label="メール" name="email" type="email" @update:model-value="markDirty" />
-          <FormInput v-model="basic.phone" label="電話番号" name="phone" @update:model-value="markDirty" />
-          <FormInput v-model="basic.role" label="職種" name="role" @update:model-value="markDirty" />
-          <div :class="$style.actions"><BaseButton type="submit" icon="user">保存して次へ</BaseButton></div>
+        <form
+          v-if="state.wizardStep === 1"
+          :class="$style.formGrid"
+          @submit.prevent="saveBasic"
+        >
+          <FormInput
+            v-model="basic.name"
+            label="氏名"
+            name="name"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="basic.email"
+            label="メール"
+            name="email"
+            type="email"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="basic.phone"
+            label="電話番号"
+            name="phone"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="basic.role"
+            label="職種"
+            name="role"
+            @update:model-value="markDirty"
+          />
+          <div :class="$style.actions">
+            <BaseButton type="submit" icon="user">保存して次へ</BaseButton>
+          </div>
         </form>
 
-        <form v-else-if="state.wizardStep === 2" :class="$style.formGrid" @submit.prevent="saveSkills">
+        <form
+          v-else-if="state.wizardStep === 2"
+          :class="$style.formGrid"
+          @submit.prevent="saveSkills"
+        >
           <fieldset :class="$style.skillGroup">
             <legend>開発言語</legend>
-            <label v-for="option in languageOptions" :key="option" :class="$style.checkboxPill">
-              <input v-model="skills.languages" type="checkbox" :value="option" @change="markDirty" />
+            <label
+              v-for="option in languageOptions"
+              :key="option"
+              :class="$style.checkboxPill"
+            >
+              <input
+                v-model="skills.languages"
+                type="checkbox"
+                :value="option"
+                @change="markDirty"
+              />
               <span>{{ option }}</span>
             </label>
           </fieldset>
           <fieldset :class="$style.skillGroup">
             <legend>DB</legend>
-            <label v-for="option in dbOptions" :key="option" :class="$style.checkboxPill">
-              <input v-model="skills.db" type="checkbox" :value="option" @change="markDirty" />
+            <label
+              v-for="option in dbOptions"
+              :key="option"
+              :class="$style.checkboxPill"
+            >
+              <input
+                v-model="skills.db"
+                type="checkbox"
+                :value="option"
+                @change="markDirty"
+              />
               <span>{{ option }}</span>
             </label>
           </fieldset>
           <fieldset :class="$style.skillGroup">
             <legend>フレームワーク</legend>
-            <label v-for="option in frameworkOptions" :key="option" :class="$style.checkboxPill">
-              <input v-model="skills.frameworks" type="checkbox" :value="option" @change="markDirty" />
+            <label
+              v-for="option in frameworkOptions"
+              :key="option"
+              :class="$style.checkboxPill"
+            >
+              <input
+                v-model="skills.frameworks"
+                type="checkbox"
+                :value="option"
+                @change="markDirty"
+              />
               <span>{{ option }}</span>
             </label>
           </fieldset>
           <fieldset :class="$style.skillGroup">
             <legend>クラウド</legend>
-            <label v-for="option in cloudOptions" :key="option" :class="$style.checkboxPill">
-              <input v-model="skills.cloud" type="checkbox" :value="option" @change="markDirty" />
+            <label
+              v-for="option in cloudOptions"
+              :key="option"
+              :class="$style.checkboxPill"
+            >
+              <input
+                v-model="skills.cloud"
+                type="checkbox"
+                :value="option"
+                @change="markDirty"
+              />
               <span>{{ option }}</span>
             </label>
           </fieldset>
-          <label :class="[$style.field, $style.full]">その他
+          <label :class="[$style.field, $style.full]"
+            >その他
             <textarea
               v-model="skills.other"
               :class="$style.control"
@@ -81,31 +162,92 @@
               @input="markDirty"
             ></textarea>
           </label>
-          <FormInput v-model="skills.years" label="経験年数" name="years" type="number" @update:model-value="markDirty" />
-          <div :class="$style.actions"><BaseButton type="submit" icon="user">保存して次へ</BaseButton></div>
+          <FormInput
+            v-model="skills.years"
+            label="経験年数"
+            name="years"
+            type="number"
+            @update:model-value="markDirty"
+          />
+          <div :class="$style.actions">
+            <BaseButton type="submit" icon="user">保存して次へ</BaseButton>
+          </div>
         </form>
 
-        <form v-else-if="state.wizardStep === 3" :class="$style.formGrid" @submit.prevent="saveTerms">
-          <FormInput v-model="terms.desiredRate" label="希望単価（万円）" name="desiredRate" type="number" @update:model-value="markDirty" />
-          <FormInput v-model="terms.startDate" label="稼働開始可能日" name="startDate" type="date" @update:model-value="markDirty" />
-          <FormSelect v-model="terms.workRate" label="稼働率" name="workRate" :options="['', '週3', '週4', '週5']" @update:model-value="markDirty" />
-          <FormSelect v-model="terms.remote" label="リモート可否" name="remote" :options="['', ...remoteOptions]" @update:model-value="markDirty" />
-          <FormSelect v-model="terms.availability" label="提案可能ステータス" name="availability" :options="['', ...availabilityOptions]" @update:model-value="markDirty" />
-          <label :class="$style.field">レジュメ（PDF / Word）
-            <input :class="$style.control" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" @change="onResumeChange" />
+        <form
+          v-else-if="state.wizardStep === 3"
+          :class="$style.formGrid"
+          @submit.prevent="saveTerms"
+        >
+          <FormInput
+            v-model="terms.desiredRate"
+            label="希望単価（万円）"
+            name="desiredRate"
+            type="number"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="terms.startDate"
+            label="稼働開始可能日"
+            name="startDate"
+            type="date"
+            @update:model-value="markDirty"
+          />
+          <FormSelect
+            v-model="terms.workRate"
+            label="稼働率"
+            name="workRate"
+            :options="['', '週3', '週4', '週5']"
+            @update:model-value="markDirty"
+          />
+          <FormSelect
+            v-model="terms.remote"
+            label="リモート可否"
+            name="remote"
+            :options="['', ...remoteOptions]"
+            @update:model-value="markDirty"
+          />
+          <FormSelect
+            v-model="terms.availability"
+            label="提案可能ステータス"
+            name="availability"
+            :options="['', ...availabilityOptions]"
+            @update:model-value="markDirty"
+          />
+          <label :class="$style.field"
+            >レジュメ（PDF / Word）
+            <input
+              :class="$style.control"
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              @change="onResumeChange"
+            />
           </label>
           <div :class="[$style.card, $style.full]">
             <strong>登録済みレジュメ</strong>
-            <p>{{ profile.resumeName || "未登録" }}{{ profile.resumeSize ? ` / ${profile.resumeSize}` : "" }}</p>
+            <p>
+              {{ profile.resumeName || "未登録"
+              }}{{ profile.resumeSize ? ` / ${profile.resumeSize}` : "" }}
+            </p>
           </div>
-          <div :class="$style.actions"><BaseButton type="submit" icon="user">保存して次へ</BaseButton></div>
+          <div :class="$style.actions">
+            <BaseButton type="submit" icon="user">保存して次へ</BaseButton>
+          </div>
         </form>
 
-        <form v-else :class="[$style.formGrid, $style.one]" @submit.prevent="saveMeeting">
+        <form
+          v-else
+          :class="[$style.formGrid, $style.one]"
+          @submit.prevent="saveMeeting"
+        >
           <div :class="$style.field">
             <span>初回面談の候補日</span>
             <div :class="$style.dateRows">
-              <div v-for="(_, index) in meetingCandidates" :key="index" :class="$style.dateRow">
+              <div
+                v-for="(_, index) in meetingCandidates"
+                :key="index"
+                :class="$style.dateRow"
+              >
                 <input
                   v-model="meetingCandidates[index]"
                   :class="$style.control"
@@ -121,24 +263,43 @@
                 </BaseButton>
               </div>
             </div>
-            <BaseButton variant="secondary" icon="plus" @click="addMeetingCandidate">候補日を追加</BaseButton>
+            <BaseButton
+              variant="secondary"
+              icon="plus"
+              @click="addMeetingCandidate"
+              >候補日を追加</BaseButton
+            >
           </div>
           <div :class="$style.pledgeBox">
             <h3>案件閲覧前の誓約条件</h3>
             <ul>
-              <li>案件情報、クライアント情報、個人情報、営業上知り得た情報を第三者へ開示・漏えいしません。</li>
-              <li>職務経歴、スキル、稼働条件、連絡先など登録情報に虚偽がないことを誓約します。</li>
-              <li>参画後は連絡、勤怠、成果物提出、報告相談を滞りなく行い、業務遂行に支障が出る場合は速やかに連絡します。</li>
-              <li>契約、秘密保持、情報セキュリティ、個人情報保護に関する指示を遵守します。</li>
+              <li>
+                案件情報、クライアント情報、個人情報、営業上知り得た情報を第三者へ開示・漏えいしません。
+              </li>
+              <li>
+                職務経歴、スキル、稼働条件、連絡先など登録情報に虚偽がないことを誓約します。
+              </li>
+              <li>
+                参画後は連絡、勤怠、成果物提出、報告相談を滞りなく行い、業務遂行に支障が出る場合は速やかに連絡します。
+              </li>
+              <li>
+                契約、秘密保持、情報セキュリティ、個人情報保護に関する指示を遵守します。
+              </li>
             </ul>
             <label :class="$style.checkLine">
-              <input v-model="pledgeAccepted" type="checkbox" @change="markDirty" />
+              <input
+                v-model="pledgeAccepted"
+                type="checkbox"
+                @change="markDirty"
+              />
               <span>上記の誓約条件を確認し、同意します。</span>
             </label>
           </div>
           <div :class="$style.actions">
             <BaseButton type="submit" icon="calendar">登録完了</BaseButton>
-            <BaseButton variant="ghost" icon="search" @click="setView('jobs')">案件検索へ</BaseButton>
+            <BaseButton variant="ghost" icon="search" @click="setView('jobs')"
+              >案件検索へ</BaseButton
+            >
           </div>
         </form>
       </div>
@@ -168,15 +329,29 @@ const {
   languageSkillOptions,
   dbSkillOptions,
   frameworkSkillOptions,
-  cloudSkillOptions
+  cloudSkillOptions,
 } = useTryangleFreelance();
 
 const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候補"];
 const profile = computed(() => state.value.profile);
 
 const basic = reactive({ name: "", email: "", phone: "", role: "" });
-const skills = reactive({ languages: [] as string[], db: [] as string[], frameworks: [] as string[], cloud: [] as string[], other: "", years: "" });
-const terms = reactive<ProfileTermsInput>({ desiredRate: "", startDate: "", workRate: "", remote: "", availability: "", resume: null });
+const skills = reactive({
+  languages: [] as string[],
+  db: [] as string[],
+  frameworks: [] as string[],
+  cloud: [] as string[],
+  other: "",
+  years: "",
+});
+const terms = reactive<ProfileTermsInput>({
+  desiredRate: "",
+  startDate: "",
+  workRate: "",
+  remote: "",
+  availability: "",
+  resume: null,
+});
 const meetingCandidates = ref<string[]>([""]);
 const pledgeAccepted = ref(false);
 const languageOptions = languageSkillOptions;
@@ -186,37 +361,49 @@ const cloudOptions = cloudSkillOptions;
 
 const visibleProfileSkills = computed(() => {
   return splitCsv(profile.value.languages)
-    .concat(splitCsv(profile.value.frameworks), splitCsv(profile.value.db), splitCsv(profile.value.cloud), splitCsv(profile.value.otherSkills))
+    .concat(
+      splitCsv(profile.value.frameworks),
+      splitCsv(profile.value.db),
+      splitCsv(profile.value.cloud),
+      splitCsv(profile.value.otherSkills),
+    )
     .slice(0, 7);
 });
 
-watch(
-  () => [state.value.profile.id, state.value.wizardStep],
-  hydrateForms,
-  { immediate: true }
-);
+watch(() => [state.value.profile.id, state.value.wizardStep], hydrateForms, {
+  immediate: true,
+});
 
 function hydrateForms() {
   const p = state.value.profile;
-  Object.assign(basic, { name: p.name, email: p.email, phone: p.phone, role: p.role });
+  Object.assign(basic, {
+    name: p.name,
+    email: p.email,
+    phone: p.phone,
+    role: p.role,
+  });
   const savedLanguages = splitCsv(p.languages);
   const savedDb = splitCsv(p.db);
   const savedFrameworks = splitCsv(p.frameworks);
   const savedCloud = splitCsv(p.cloud);
   const savedOther = splitCsv(p.otherSkills);
   Object.assign(skills, {
-    languages: savedLanguages.filter((skill) => languageOptions.includes(skill)),
+    languages: savedLanguages.filter((skill) =>
+      languageOptions.includes(skill),
+    ),
     db: savedDb.filter((skill) => dbOptions.includes(skill)),
-    frameworks: savedFrameworks.filter((skill) => frameworkOptions.includes(skill)),
+    frameworks: savedFrameworks.filter((skill) =>
+      frameworkOptions.includes(skill),
+    ),
     cloud: savedCloud.filter((skill) => cloudOptions.includes(skill)),
     other: [
       ...savedLanguages.filter((skill) => !languageOptions.includes(skill)),
       ...savedDb.filter((skill) => !dbOptions.includes(skill)),
       ...savedFrameworks.filter((skill) => !frameworkOptions.includes(skill)),
       ...savedCloud.filter((skill) => !cloudOptions.includes(skill)),
-      ...savedOther
+      ...savedOther,
     ].join(", "),
-    years: p.years
+    years: p.years,
   });
   Object.assign(terms, {
     desiredRate: p.desiredRate,
@@ -224,15 +411,18 @@ function hydrateForms() {
     workRate: p.workRate,
     remote: p.remote,
     availability: p.availability,
-    resume: null
+    resume: null,
   });
-  const candidates = (p.meetingCandidates || []).map(toDateTimeLocal).filter(Boolean);
+  const candidates = (p.meetingCandidates || [])
+    .map(toDateTimeLocal)
+    .filter(Boolean);
   meetingCandidates.value = candidates.length ? candidates : [""];
   pledgeAccepted.value = Boolean(p.pledgeAccepted || p.pledgedAt);
 }
 
 async function moveStep(step: number) {
-  if (state.value.wizardStep !== step && !(await confirmDiscardChanges())) return;
+  if (state.value.wizardStep !== step && !(await confirmDiscardChanges()))
+    return;
   state.value.wizardStep = step;
   persist();
 }
@@ -266,7 +456,7 @@ function saveSkills() {
     frameworks: skills.frameworks.join(", "),
     cloud: skills.cloud.join(", "),
     otherSkills: otherSkills.join(", "),
-    years: skills.years
+    years: skills.years,
   });
 }
 

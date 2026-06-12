@@ -1,16 +1,26 @@
 <template>
   <div v-if="freelancer" :class="$style.sheet">
     <h2>{{ freelancer.resumeName || "レジュメ未登録" }}</h2>
-    <p>{{ freelancer.name }} / {{ freelancer.role }} / {{ freelancer.availability }}</p>
+    <p>
+      {{ freelancer.name }} / {{ freelancer.role }} /
+      {{ freelancer.availability }}
+    </p>
     <div :class="$style.sheetGrid">
-      <div>スキル</div><div>{{ freelancer.skills.join(" / ") }}</div>
-      <div>希望単価</div><div>{{ freelancer.desiredRate }}万円</div>
-      <div>稼働率</div><div>{{ freelancer.workRate }}</div>
-      <div>リモート</div><div>{{ freelancer.remote }}</div>
-      <div>更新日</div><div>{{ freelancer.lastUpdated }}</div>
+      <div>スキル</div>
+      <div>{{ freelancer.skills.join(" / ") }}</div>
+      <div>希望単価</div>
+      <div>{{ freelancer.desiredRate }}万円</div>
+      <div>稼働率</div>
+      <div>{{ freelancer.workRate }}</div>
+      <div>リモート</div>
+      <div>{{ freelancer.remote }}</div>
+      <div>更新日</div>
+      <div>{{ freelancer.lastUpdated }}</div>
     </div>
   </div>
-  <div v-else :class="$style.empty">応募者一覧からレジュメを選択してください。</div>
+  <div v-else :class="$style.empty">
+    応募者一覧からレジュメを選択してください。
+  </div>
 </template>
 
 <script setup lang="ts">

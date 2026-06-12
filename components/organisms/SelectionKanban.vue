@@ -3,14 +3,31 @@
     <div v-for="status in statuses" :key="status" :class="$style.lane">
       <h3>{{ status }} {{ applicationsByStatus(status).length }}</h3>
       <div :class="$style.cardList">
-        <div v-for="application in applicationsByStatus(status)" :key="application.id" :class="$style.card">
-          <strong>{{ getFreelancer(application.freelancerId)?.name || "不明" }}</strong>
+        <div
+          v-for="application in applicationsByStatus(status)"
+          :key="application.id"
+          :class="$style.card"
+        >
+          <strong>{{
+            getFreelancer(application.freelancerId)?.name || "不明"
+          }}</strong>
           <p>{{ getJob(application.jobId)?.title || "不明な案件" }}</p>
-          <select :class="$style.control" :value="application.status" @change="onStatusChange(application.id, $event)">
-            <option v-for="option in statuses" :key="option" :value="option">{{ option }}</option>
+          <select
+            :class="$style.control"
+            :value="application.status"
+            @change="onStatusChange(application.id, $event)"
+          >
+            <option v-for="option in statuses" :key="option" :value="option">
+              {{ option }}
+            </option>
           </select>
         </div>
-        <div v-if="applicationsByStatus(status).length === 0" :class="$style.empty">該当なし</div>
+        <div
+          v-if="applicationsByStatus(status).length === 0"
+          :class="$style.empty"
+        >
+          該当なし
+        </div>
       </div>
     </div>
   </div>
@@ -20,14 +37,20 @@
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import type { ApplicationStatus } from "~/composables/useTryangleFreelance";
 
-const { state, statuses, getFreelancer, getJob, changeApplicationStatus } = useTryangleFreelance();
+const { state, statuses, getFreelancer, getJob, changeApplicationStatus } =
+  useTryangleFreelance();
 
 function applicationsByStatus(status: ApplicationStatus) {
-  return state.value.applications.filter((application) => application.status === status);
+  return state.value.applications.filter(
+    (application) => application.status === status,
+  );
 }
 
 function onStatusChange(applicationId: string, event: Event) {
-  changeApplicationStatus(applicationId, (event.target as HTMLSelectElement).value);
+  changeApplicationStatus(
+    applicationId,
+    (event.target as HTMLSelectElement).value,
+  );
 }
 </script>
 

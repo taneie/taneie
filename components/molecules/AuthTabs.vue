@@ -1,9 +1,17 @@
 <template>
   <div :class="$style.authTabs" role="tablist" aria-label="認証メニュー">
-    <button :class="{ [$style.active]: mode === 'login' }" type="button" @click="$emit('change', 'login')">
+    <button
+      :class="{ [$style.active]: mode === 'login' }"
+      type="button"
+      @click="$emit('change', 'login')"
+    >
       ログイン
     </button>
-    <button :class="{ [$style.active]: mode === 'register' }" type="button" @click="$emit('change', 'register')">
+    <button
+      :class="{ [$style.active]: mode === 'register' }"
+      type="button"
+      @click="$emit('change', 'register')"
+    >
       新規会員登録
     </button>
   </div>

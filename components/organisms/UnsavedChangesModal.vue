@@ -1,6 +1,10 @@
 <template>
   <Teleport to="body">
-    <div v-if="unsavedConfirmVisible" :class="$style.backdrop" role="presentation">
+    <div
+      v-if="unsavedConfirmVisible"
+      :class="$style.backdrop"
+      role="presentation"
+    >
       <section
         :class="$style.dialog"
         role="dialog"
@@ -18,8 +22,12 @@
           </p>
         </div>
         <div :class="$style.actions">
-          <BaseButton variant="secondary" @click="resolveUnsavedConfirm(false)">入力を続ける</BaseButton>
-          <BaseButton variant="warning" @click="resolveUnsavedConfirm(true)">破棄して移動</BaseButton>
+          <BaseButton variant="secondary" @click="resolveUnsavedConfirm(false)"
+            >入力を続ける</BaseButton
+          >
+          <BaseButton variant="warning" @click="resolveUnsavedConfirm(true)"
+            >破棄して移動</BaseButton
+          >
         </div>
       </section>
     </div>

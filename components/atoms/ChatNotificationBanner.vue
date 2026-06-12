@@ -9,7 +9,14 @@
       <strong>{{ chatBannerTitle }}</strong>
       <span>{{ chatBannerBody }}</span>
     </button>
-    <button :class="$style.close" type="button" aria-label="通知を閉じる" @click="dismissChatBanner">×</button>
+    <button
+      :class="$style.close"
+      type="button"
+      aria-label="通知を閉じる"
+      @click="dismissChatBanner"
+    >
+      ×
+    </button>
   </div>
 </template>
 
@@ -21,7 +28,7 @@ const {
   chatBannerTitle,
   chatBannerBody,
   openChatBanner,
-  dismissChatBanner
+  dismissChatBanner,
 } = useTryangleFreelance();
 </script>
 
@@ -42,7 +49,9 @@ const {
   opacity: 0;
   transform: translateY(-12px);
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .show {

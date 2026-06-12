@@ -1,5 +1,7 @@
 <template>
-  <div :class="[$style.grid, currentRole === 'sales' ? $style.three : $style.two]">
+  <div
+    :class="[$style.grid, currentRole === 'sales' ? $style.three : $style.two]"
+  >
     <section v-if="currentRole === 'sales'" :class="$style.panel">
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">チャット対象</h2>
@@ -11,51 +13,98 @@
             v-for="freelancer in chatFreelancers"
             :key="freelancer.id"
             type="button"
-            :class="[$style.chatUserCard, freelancer.id === activeChatFreelancerId ? $style.activeChatUser : '']"
+            :class="[
+              $style.chatUserCard,
+              freelancer.id === activeChatFreelancerId
+                ? $style.activeChatUser
+                : '',
+            ]"
             @click="selectChatFreelancer(freelancer.id)"
           >
             <span :class="$style.chatUserHead">
               <strong>{{ freelancer.name }}</strong>
-              <TagBadge :tone="freelancer.availability === '即稼働可' ? 'teal' : 'amber'">{{ freelancer.availability }}</TagBadge>
+              <TagBadge
+                :tone="
+                  freelancer.availability === '即稼働可' ? 'teal' : 'amber'
+                "
+                >{{ freelancer.availability }}</TagBadge
+              >
             </span>
-            <span :class="$style.chatUserMeta">{{ freelancer.role }} / {{ freelancer.desiredRate }}万円〜</span>
-            <span :class="$style.chatPreview">{{ freelancer.lastMessage?.body || 'まだメッセージはありません' }}</span>
+            <span :class="$style.chatUserMeta"
+              >{{ freelancer.role }} / {{ freelancer.desiredRate }}万円〜</span
+            >
+            <span :class="$style.chatPreview">{{
+              freelancer.lastMessage?.body || "まだメッセージはありません"
+            }}</span>
           </button>
         </div>
       </div>
     </section>
 
     <section :class="$style.panel">
-      <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">面談候補</h2></div>
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">面談候補</h2>
+      </div>
       <div :class="$style.panelBody">
         <form :class="$style.formGrid" @submit.prevent="submitMeeting">
           <div :class="$style.field">
             <span>候補日時</span>
             <div :class="$style.dateRows">
-              <div v-for="(_, index) in candidates" :key="index" :class="$style.dateRow">
-                <input :class="$style.control" v-model="candidates[index]" type="datetime-local" />
-                <BaseButton v-if="candidates.length > 1" variant="ghost" @click="removeCandidate(index)">削除</BaseButton>
+              <div
+                v-for="(_, index) in candidates"
+                :key="index"
+                :class="$style.dateRow"
+              >
+                <input
+                  :class="$style.control"
+                  v-model="candidates[index]"
+                  type="datetime-local"
+                />
+                <BaseButton
+                  v-if="candidates.length > 1"
+                  variant="ghost"
+                  @click="removeCandidate(index)"
+                  >削除</BaseButton
+                >
               </div>
             </div>
           </div>
           <div :class="$style.actions">
-            <BaseButton variant="secondary" icon="plus" @click="addCandidate">候補日を追加</BaseButton>
+            <BaseButton variant="secondary" icon="plus" @click="addCandidate"
+              >候補日を追加</BaseButton
+            >
             <BaseButton type="submit" icon="calendar">候補を登録</BaseButton>
           </div>
         </form>
 
         <div :class="[$style.cardList, $style.stackSm]">
-          <div v-for="meeting in activeMeetingRequests" :key="meeting.id" :class="$style.card">
+          <div
+            v-for="meeting in activeMeetingRequests"
+            :key="meeting.id"
+            :class="$style.card"
+          >
             <div :class="$style.cardHead">
               <strong>{{ displayDateTime(meeting.candidate) }}</strong>
-              <TagBadge :tone="meeting.status === '確定' ? 'teal' : 'blue'">{{ meeting.status }}</TagBadge>
+              <TagBadge :tone="meeting.status === '確定' ? 'teal' : 'blue'">{{
+                meeting.status
+              }}</TagBadge>
             </div>
             <div v-if="currentRole === 'sales'" :class="$style.actions">
-              <BaseButton variant="secondary" @click="updateMeetingStatus(meeting.id, '確定')">確定</BaseButton>
-              <BaseButton variant="secondary" @click="updateMeetingStatus(meeting.id, '再調整')">再調整</BaseButton>
+              <BaseButton
+                variant="secondary"
+                @click="updateMeetingStatus(meeting.id, '確定')"
+                >確定</BaseButton
+              >
+              <BaseButton
+                variant="secondary"
+                @click="updateMeetingStatus(meeting.id, '再調整')"
+                >再調整</BaseButton
+              >
             </div>
           </div>
-          <div v-if="!activeMeetingRequests.length" :class="$style.emptyState">この求職者の面談候補はまだありません。</div>
+          <div v-if="!activeMeetingRequests.length" :class="$style.emptyState">
+            この求職者の面談候補はまだありません。
+          </div>
         </div>
       </div>
     </section>
@@ -70,22 +119,42 @@
           <div
             v-for="message in activeChatMessages"
             :key="message.id"
-            :class="[$style.messageRow, isOwnMessage(message) ? $style.own : $style.other]"
+            :class="[
+              $style.messageRow,
+              isOwnMessage(message) ? $style.own : $style.other,
+            ]"
           >
             <div :class="$style.messageMeta">
-              <span :class="$style.messageAuthor">{{ isOwnMessage(message) ? 'あなた' : message.from }}</span>
-              <span :class="$style.messageTime">{{ displayDateTime(message.at) }}</span>
+              <span :class="$style.messageAuthor">{{
+                isOwnMessage(message) ? "あなた" : message.from
+              }}</span>
+              <span :class="$style.messageTime">{{
+                displayDateTime(message.at)
+              }}</span>
             </div>
             <div :class="$style.messageBubble">
               <div :class="$style.messageBody">{{ message.body }}</div>
             </div>
           </div>
-          <div v-if="!activeChatMessages.length" :class="$style.emptyState">この相手とのメッセージはまだありません。</div>
+          <div v-if="!activeChatMessages.length" :class="$style.emptyState">
+            この相手とのメッセージはまだありません。
+          </div>
         </div>
 
-        <form :class="[$style.formGrid, $style.one, $style.stackSm]" @submit.prevent="submitMessage">
-          <label :class="$style.field">送信内容<textarea :class="$style.control" v-model="body" @input="markDirty"></textarea></label>
-          <div :class="$style.actions"><BaseButton type="submit" icon="send">送信</BaseButton></div>
+        <form
+          :class="[$style.formGrid, $style.one, $style.stackSm]"
+          @submit.prevent="submitMessage"
+        >
+          <label :class="$style.field"
+            >送信内容<textarea
+              :class="$style.control"
+              v-model="body"
+              @input="markDirty"
+            ></textarea>
+          </label>
+          <div :class="$style.actions">
+            <BaseButton type="submit" icon="send">送信</BaseButton>
+          </div>
         </form>
       </div>
     </section>
@@ -109,7 +178,7 @@ const {
   updateMeetingStatus,
   sendMessage,
   markDirty,
-  clearUnsavedChanges
+  clearUnsavedChanges,
 } = useTryangleFreelance();
 
 const candidates = ref<string[]>([""]);
@@ -127,7 +196,9 @@ function displayDateTime(value = "") {
 }
 
 async function submitMeeting() {
-  const values = candidates.value.map((candidate) => candidate.trim()).filter(Boolean);
+  const values = candidates.value
+    .map((candidate) => candidate.trim())
+    .filter(Boolean);
   if (!values.length) {
     await addMeeting("");
     return;
@@ -288,7 +359,10 @@ textarea.control {
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .chatUserCard:hover,

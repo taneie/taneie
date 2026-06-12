@@ -2,16 +2,16 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-06-07",
   typescript: {
     strict: true,
-    typeCheck: false
+    typeCheck: false,
   },
   experimental: {
-    appManifest: false
+    appManifest: false,
   },
   components: [
     {
       path: "~/components",
-      pathPrefix: false
-    }
+      pathPrefix: false,
+    },
   ],
   css: ["~/src/styles.css"],
   app: {
@@ -22,13 +22,13 @@ export default defineNuxtConfig({
       meta: [
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
-        { name: "theme-color", content: "#1d5fd3" }
+        { name: "theme-color", content: "#1d5fd3" },
       ],
       link: [
         { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-        { rel: "apple-touch-icon", href: "/brand/tryangle-mark.svg" }
-      ]
-    }
+        { rel: "apple-touch-icon", href: "/brand/tryangle-mark.svg" },
+      ],
+    },
   },
-  ssr: true
+  ssr: true,
 });

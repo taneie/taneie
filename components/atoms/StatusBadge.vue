@@ -11,7 +11,9 @@ const props = defineProps<{
 
 const { availabilityClass } = useTryangleFreelance();
 const css = useCssModule();
-const toneClass = computed(() => css[availabilityClass(props.value)] || css.pause);
+const toneClass = computed(
+  () => css[availabilityClass(props.value)] || css.pause,
+);
 </script>
 
 <style module>

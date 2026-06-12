@@ -1,9 +1,16 @@
 <template>
-  <PageHead title="匿名スキルシート" kicker="プロフィールから提案用の匿名Webシートを生成します。">
+  <PageHead
+    title="匿名スキルシート"
+    kicker="プロフィールから提案用の匿名Webシートを生成します。"
+  >
     <template #actions>
       <div :class="$style.actions">
-        <BaseButton icon="send" @click="copyText(shareUrl)">URLコピー</BaseButton>
-        <BaseButton variant="secondary" icon="print" @click="printSheet">PDF出力</BaseButton>
+        <BaseButton icon="send" @click="copyText(shareUrl)"
+          >URLコピー</BaseButton
+        >
+        <BaseButton variant="secondary" icon="print" @click="printSheet"
+          >PDF出力</BaseButton
+        >
       </div>
     </template>
   </PageHead>
@@ -13,28 +20,53 @@
       <div :class="$style.panelBody">
         <article id="anonymous-sheet" :class="$style.sheet">
           <h2>匿名スキルシート / {{ publicId }}</h2>
-          <p>氏名・連絡先・固有社名を伏せた、クライアント提案用プロフィールです。</p>
+          <p>
+            氏名・連絡先・固有社名を伏せた、クライアント提案用プロフィールです。
+          </p>
           <div :class="$style.sheetGrid">
-            <div>職種</div><div>{{ profile.role }}</div>
-            <div>経験年数</div><div>{{ profile.years }}年</div>
-            <div>主要スキル</div><div>{{ mainSkills }}</div>
-            <div>希望単価</div><div>{{ profile.desiredRate }}万円</div>
-            <div>稼働</div><div>{{ profile.startDate }}開始 / {{ profile.workRate }} / {{ profile.remote }}</div>
-            <div>ステータス</div><div>{{ profile.availability }}</div>
-            <div>人物確認</div><div>TRYANGLE営業による初回面談調整中</div>
+            <div>職種</div>
+            <div>{{ profile.role }}</div>
+            <div>経験年数</div>
+            <div>{{ profile.years }}年</div>
+            <div>主要スキル</div>
+            <div>{{ mainSkills }}</div>
+            <div>希望単価</div>
+            <div>{{ profile.desiredRate }}万円</div>
+            <div>稼働</div>
+            <div>
+              {{ profile.startDate }}開始 / {{ profile.workRate }} /
+              {{ profile.remote }}
+            </div>
+            <div>ステータス</div>
+            <div>{{ profile.availability }}</div>
+            <div>人物確認</div>
+            <div>TRYANGLE営業による初回面談調整中</div>
           </div>
         </article>
       </div>
     </section>
 
     <section :class="$style.panel">
-      <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">出力情報</h2></div>
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">出力情報</h2>
+      </div>
       <div :class="$style.panelBody">
-        <FormInput label="共有用URL" name="sheetUrl" :model-value="shareUrl" readonly />
+        <FormInput
+          label="共有用URL"
+          name="sheetUrl"
+          :model-value="shareUrl"
+          readonly
+        />
         <div :class="[$style.card, $style.stackSm]">
           <strong>匿名化対象</strong>
-          <p>氏名: {{ maskName(profile.name) }} / メール: ******** / 電話: ********</p>
-          <p>レジュメ: {{ profile.resumeName || "未登録" }} は営業管理画面で確認できます。</p>
+          <p>
+            氏名: {{ maskName(profile.name) }} / メール: ******** / 電話:
+            ********
+          </p>
+          <p>
+            レジュメ:
+            {{ profile.resumeName || "未登録" }} は営業管理画面で確認できます。
+          </p>
         </div>
       </div>
     </section>
@@ -44,18 +76,30 @@
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import { computed } from "vue";
-const { state, splitCsv, maskName, copyText, printSheet } = useTryangleFreelance();
+const { state, splitCsv, maskName, copyText, printSheet } =
+  useTryangleFreelance();
 
 const profile = computed(() => state.value.profile);
-const publicId = computed(() => `tf-${profile.value.id.slice(-3)}-${splitCsv(profile.value.languages)[0]?.toLowerCase() || "engineer"}`);
-const shareUrl = computed(() => import.meta.client ? `${location.origin}${location.pathname}#sheet/${publicId.value}` : "");
-const mainSkills = computed(() => [
-  profile.value.languages,
-  profile.value.frameworks,
-  profile.value.db,
-  profile.value.cloud,
-  profile.value.otherSkills
-].filter(Boolean).join(" / "));
+const publicId = computed(
+  () =>
+    `tf-${profile.value.id.slice(-3)}-${splitCsv(profile.value.languages)[0]?.toLowerCase() || "engineer"}`,
+);
+const shareUrl = computed(() =>
+  import.meta.client
+    ? `${location.origin}${location.pathname}#sheet/${publicId.value}`
+    : "",
+);
+const mainSkills = computed(() =>
+  [
+    profile.value.languages,
+    profile.value.frameworks,
+    profile.value.db,
+    profile.value.cloud,
+    profile.value.otherSkills,
+  ]
+    .filter(Boolean)
+    .join(" / "),
+);
 </script>
 
 <style module>

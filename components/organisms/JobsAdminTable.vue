@@ -12,17 +12,21 @@
     </thead>
     <tbody>
       <tr v-for="job in state.jobs" :key="job.id">
-        <td data-label="案件">
-          {{ job.title }}<br />{{ job.client }}
-        </td>
+        <td data-label="案件">{{ job.title }}<br />{{ job.client }}</td>
         <td data-label="単価">{{ job.rateMin }}-{{ job.rateMax }}万円</td>
-        <td data-label="商流"><TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge></td>
+        <td data-label="商流">
+          <TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge>
+        </td>
         <td data-label="マージン">{{ job.marginRate ?? 12 }}%</td>
         <td data-label="並び替え">
-          <BaseButton variant="secondary" @click="toggleJobSort(job.id)">{{ job.sortFlag ? "上位" : "通常" }}</BaseButton>
+          <BaseButton variant="secondary" @click="toggleJobSort(job.id)">{{
+            job.sortFlag ? "上位" : "通常"
+          }}</BaseButton>
         </td>
         <td data-label="公開">
-          <BaseButton variant="secondary" @click="toggleJobActive(job.id)">{{ job.active ? "公開" : "停止" }}</BaseButton>
+          <BaseButton variant="secondary" @click="toggleJobActive(job.id)">{{
+            job.active ? "公開" : "停止"
+          }}</BaseButton>
         </td>
       </tr>
     </tbody>
@@ -31,7 +35,8 @@
 
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-const { state, streamTone, toggleJobSort, toggleJobActive } = useTryangleFreelance();
+const { state, streamTone, toggleJobSort, toggleJobActive } =
+  useTryangleFreelance();
 </script>
 
 <style module>

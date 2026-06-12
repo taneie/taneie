@@ -2,43 +2,43 @@
 
 ## 1. 共通仕様
 
-| 項目 | 内容 |
-|---|---|
-| ベースURL | `http://127.0.0.1:8787/api` |
-| データ形式 | JSON |
-| 認証方式 | JWT Bearer Token |
-| 認証ヘッダー | `Authorization: Bearer <token>` |
-| バリデーション | Zod schema |
-| エラー形式 | `{ "error": { "code": string, "message": string } }` |
+| 項目           | 内容                                                 |
+| -------------- | ---------------------------------------------------- |
+| ベースURL      | `http://127.0.0.1:8787/api`                          |
+| データ形式     | JSON                                                 |
+| 認証方式       | JWT Bearer Token                                     |
+| 認証ヘッダー   | `Authorization: Bearer <token>`                      |
+| バリデーション | Zod schema                                           |
+| エラー形式     | `{ "error": { "code": string, "message": string } }` |
 
 ## 2. エンドポイント一覧
 
-| メソッド | パス | 認証 | ロール | 概要 |
-|---|---|---:|---|---|
-| GET | `/health` | 不要 | - | APIヘルスチェック |
-| GET | `/push/public-key` | 不要 | - | Web Push公開鍵取得 |
-| POST | `/auth/register` | 不要 | - | 求職者登録 |
-| POST | `/auth/login` | 不要 | - | ログイン |
-| GET | `/auth/me` | 必要 | freelancer / sales | ログインユーザー情報取得 |
-| GET | `/bootstrap` | 必要 | freelancer / sales | 初期表示データ取得 |
-| GET | `/jobs` | 必要 | freelancer / sales | 案件一覧取得 |
-| POST | `/jobs` | 必要 | sales | 案件登録 |
-| PATCH | `/jobs/:id` | 必要 | sales | 案件の優先表示・公開状態更新 |
-| GET | `/freelancers` | 必要 | sales | 求職者一覧取得 |
-| GET | `/profile/me` | 必要 | freelancer | 自分のプロフィール取得 |
-| PUT | `/profile/me` | 必要 | freelancer | 自分のプロフィール更新 |
-| POST | `/resumes` | 必要 | freelancer | レジュメメタ情報登録 |
-| GET | `/applications` | 必要 | freelancer / sales | 応募一覧取得 |
-| POST | `/applications` | 必要 | freelancer | 応募作成 |
-| PATCH | `/applications/:id/status` | 必要 | sales | 応募ステータス変更 |
-| GET | `/meeting-requests` | 必要 | freelancer / sales | 面談候補一覧取得 |
-| POST | `/meeting-requests` | 必要 | freelancer / sales | 面談候補作成 |
-| PATCH | `/meeting-requests/:id/status` | 必要 | sales | 面談ステータス更新 |
-| GET | `/messages` | 必要 | freelancer / sales | メッセージ一覧取得 |
-| POST | `/messages` | 必要 | freelancer / sales | メッセージ送信 |
-| POST | `/push/subscriptions` | 必要 | freelancer / sales | Web Push購読登録 |
-| DELETE | `/push/subscriptions` | 必要 | freelancer / sales | Web Push購読解除 |
-| POST | `/alive-checks` | 必要 | sales | 稼働確認バッチ作成 |
+| メソッド | パス                           | 認証 | ロール             | 概要                         |
+| -------- | ------------------------------ | ---: | ------------------ | ---------------------------- |
+| GET      | `/health`                      | 不要 | -                  | APIヘルスチェック            |
+| GET      | `/push/public-key`             | 不要 | -                  | Web Push公開鍵取得           |
+| POST     | `/auth/register`               | 不要 | -                  | 求職者登録                   |
+| POST     | `/auth/login`                  | 不要 | -                  | ログイン                     |
+| GET      | `/auth/me`                     | 必要 | freelancer / sales | ログインユーザー情報取得     |
+| GET      | `/bootstrap`                   | 必要 | freelancer / sales | 初期表示データ取得           |
+| GET      | `/jobs`                        | 必要 | freelancer / sales | 案件一覧取得                 |
+| POST     | `/jobs`                        | 必要 | sales              | 案件登録                     |
+| PATCH    | `/jobs/:id`                    | 必要 | sales              | 案件の優先表示・公開状態更新 |
+| GET      | `/freelancers`                 | 必要 | sales              | 求職者一覧取得               |
+| GET      | `/profile/me`                  | 必要 | freelancer         | 自分のプロフィール取得       |
+| PUT      | `/profile/me`                  | 必要 | freelancer         | 自分のプロフィール更新       |
+| POST     | `/resumes`                     | 必要 | freelancer         | レジュメメタ情報登録         |
+| GET      | `/applications`                | 必要 | freelancer / sales | 応募一覧取得                 |
+| POST     | `/applications`                | 必要 | freelancer         | 応募作成                     |
+| PATCH    | `/applications/:id/status`     | 必要 | sales              | 応募ステータス変更           |
+| GET      | `/meeting-requests`            | 必要 | freelancer / sales | 面談候補一覧取得             |
+| POST     | `/meeting-requests`            | 必要 | freelancer / sales | 面談候補作成                 |
+| PATCH    | `/meeting-requests/:id/status` | 必要 | sales              | 面談ステータス更新           |
+| GET      | `/messages`                    | 必要 | freelancer / sales | メッセージ一覧取得           |
+| POST     | `/messages`                    | 必要 | freelancer / sales | メッセージ送信               |
+| POST     | `/push/subscriptions`          | 必要 | freelancer / sales | Web Push購読登録             |
+| DELETE   | `/push/subscriptions`          | 必要 | freelancer / sales | Web Push購読解除             |
+| POST     | `/alive-checks`                | 必要 | sales              | 稼働確認バッチ作成           |
 
 ## 3. 認証API
 
@@ -284,17 +284,17 @@ salesは `freelancerProfileId` クエリで対象者を指定できる。
 
 ## 12. 主なエラーコード
 
-| HTTP | code | 内容 |
-|---:|---|---|
-| 400 | `VALIDATION_ERROR` | 入力値が不正 |
-| 400 | `FREELANCER_PROFILE_REQUIRED` | 求職者プロフィールIDが必要 |
-| 401 | `AUTH_REQUIRED` | 認証が必要 |
-| 401 | `INVALID_CREDENTIALS` | メールアドレスまたはパスワードが不正 |
-| 403 | `FORBIDDEN` | 操作権限なし |
-| 403 | `PROFILE_REQUIREMENTS_INCOMPLETE` | 案件閲覧に必要なプロフィール要件が未完了 |
-| 403 | `CORS_FORBIDDEN` | 許可されていないオリジン |
-| 404 | `PROFILE_NOT_FOUND` | プロフィールが存在しない |
-| 409 | `EMAIL_ALREADY_EXISTS` | メールアドレス登録済み |
-| 409 | `APPLICATION_ALREADY_EXISTS` | 応募済み |
-| 409 | `UNIQUE_CONSTRAINT` | 一意制約違反 |
-| 500 | `INTERNAL_SERVER_ERROR` | サーバー内部エラー |
+| HTTP | code                              | 内容                                     |
+| ---: | --------------------------------- | ---------------------------------------- |
+|  400 | `VALIDATION_ERROR`                | 入力値が不正                             |
+|  400 | `FREELANCER_PROFILE_REQUIRED`     | 求職者プロフィールIDが必要               |
+|  401 | `AUTH_REQUIRED`                   | 認証が必要                               |
+|  401 | `INVALID_CREDENTIALS`             | メールアドレスまたはパスワードが不正     |
+|  403 | `FORBIDDEN`                       | 操作権限なし                             |
+|  403 | `PROFILE_REQUIREMENTS_INCOMPLETE` | 案件閲覧に必要なプロフィール要件が未完了 |
+|  403 | `CORS_FORBIDDEN`                  | 許可されていないオリジン                 |
+|  404 | `PROFILE_NOT_FOUND`               | プロフィールが存在しない                 |
+|  409 | `EMAIL_ALREADY_EXISTS`            | メールアドレス登録済み                   |
+|  409 | `APPLICATION_ALREADY_EXISTS`      | 応募済み                                 |
+|  409 | `UNIQUE_CONSTRAINT`               | 一意制約違反                             |
+|  500 | `INTERNAL_SERVER_ERROR`           | サーバー内部エラー                       |

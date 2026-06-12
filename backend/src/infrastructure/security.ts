@@ -12,7 +12,9 @@ export function verifyPassword(password: string, passwordHash: string) {
 }
 
 export function signToken(context: AuthContext) {
-  const options: SignOptions = { expiresIn: config.jwtExpiresIn as SignOptions["expiresIn"] };
+  const options: SignOptions = {
+    expiresIn: config.jwtExpiresIn as SignOptions["expiresIn"],
+  };
   return jwt.sign(context, config.jwtSecret, options);
 }
 

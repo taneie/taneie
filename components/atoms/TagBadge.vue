@@ -5,14 +5,17 @@
 <script setup lang="ts">
 import { computed, useCssModule } from "vue";
 
-const props = withDefaults(defineProps<{
-  tone?: "teal" | "blue" | "amber" | "rose" | "";
-}>(), {
-  tone: ""
-});
+const props = withDefaults(
+  defineProps<{
+    tone?: "teal" | "blue" | "amber" | "rose" | "";
+  }>(),
+  {
+    tone: "",
+  },
+);
 
 const css = useCssModule();
-const toneClass = computed(() => props.tone ? css[props.tone] : "");
+const toneClass = computed(() => (props.tone ? css[props.tone] : ""));
 </script>
 
 <style module>

@@ -8,14 +8,14 @@ import type {
   Message,
   Resume,
   Skill,
-  User
+  User,
 } from "@prisma/client";
 import {
   getKeyByValue,
   labelToApplicationStatus,
   labelToAvailabilityStatus,
   labelToRemoteType,
-  labelToStreamType
+  labelToStreamType,
 } from "../domain/types.js";
 import { decryptText } from "../infrastructure/crypto.js";
 
@@ -43,7 +43,10 @@ export function toStreamLabel(value: string | null | undefined) {
   return value ? getKeyByValue(labelToStreamType, value) : "";
 }
 
-export function toAvailabilityLabel(value: string | null | undefined, note?: string | null) {
+export function toAvailabilityLabel(
+  value: string | null | undefined,
+  note?: string | null,
+) {
   if (note) return note;
   return value ? getKeyByValue(labelToAvailabilityStatus, value) : "";
 }
@@ -53,8 +56,12 @@ export function toApplicationStatusLabel(value: string) {
 }
 
 export function mapJob(job: JobWithRelations) {
-  const required = job.skills.filter((item) => item.requirementType === "required").map((item) => item.skill.name);
-  const nice = job.skills.filter((item) => item.requirementType === "nice").map((item) => item.skill.name);
+  const required = job.skills
+    .filter((item) => item.requirementType === "required")
+    .map((item) => item.skill.name);
+  const nice = job.skills
+    .filter((item) => item.requirementType === "nice")
+    .map((item) => item.skill.name);
 
   return {
     id: job.id,
@@ -70,12 +77,13 @@ export function mapJob(job: JobWithRelations) {
     remote: toRemoteLabel(job.remoteType),
     sortFlag: job.isPinned,
     active: job.isActive,
-    createdAt: job.createdAt
+    createdAt: job.createdAt,
   };
 }
 
 export function mapFreelancer(profile: FreelancerWithRelations) {
-  const latestResume = profile.resumes.find((resume) => resume.isLatest) || profile.resumes[0];
+  const latestResume =
+    profile.resumes.find((resume) => resume.isLatest) || profile.resumes[0];
 
   return {
     id: profile.id,
@@ -86,15 +94,20 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
     role: profile.roleTitle || "",
     skills: profile.skills.map((item) => item.skill.name),
     desiredRate: profile.desiredRate || 0,
-    yearsExperience: profile.yearsExperience ? Number(profile.yearsExperience) : 0,
+    yearsExperience: profile.yearsExperience
+      ? Number(profile.yearsExperience)
+      : 0,
     startDate: profile.startDate?.toISOString().slice(0, 10) || "",
     workRate: profile.workRate || "",
     remote: toRemoteLabel(profile.remoteType),
-    availability: toAvailabilityLabel(profile.availabilityStatus, profile.availabilityNote),
+    availability: toAvailabilityLabel(
+      profile.availabilityStatus,
+      profile.availabilityNote,
+    ),
     pledgedAt: profile.pledgedAt?.toISOString() || "",
     lastUpdated: profile.lastUpdatedOn?.toISOString().slice(0, 10) || "",
     resumeName: decryptText(latestResume?.originalFilename) || "",
-    publicCode: profile.publicCode
+    publicCode: profile.publicCode,
   };
 }
 
@@ -106,11 +119,13 @@ export function mapApplication(application: ApplicationWithRelations) {
     status: toApplicationStatusLabel(application.status),
     appliedAt: application.appliedAt.toISOString().slice(0, 10),
     job: mapJob(application.job),
-    freelancer: mapFreelancer(application.freelancerProfile)
+    freelancer: mapFreelancer(application.freelancerProfile),
   };
 }
 
-export function mapMessage(message: Message & { sender: User; receiver: User | null }) {
+export function mapMessage(
+  message: Message & { sender: User; receiver: User | null },
+) {
   return {
     id: message.id,
     freelancerId: message.freelancerProfileId,
@@ -119,6 +134,6 @@ export function mapMessage(message: Message & { sender: User; receiver: User | n
     body: decryptText(message.body),
     at: message.sentAt.toISOString(),
     channel: message.sender.role === "sales" ? "sales" : "freelancer",
-    messageType: message.messageType
+    messageType: message.messageType,
   };
 }

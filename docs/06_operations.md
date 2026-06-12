@@ -52,15 +52,14 @@ npm run api:dev
 http://127.0.0.1:8787/api/health
 ```
 
-
 ## 3. Docker Desktopを使わない環境構築方針
 
 本プロジェクトでは、ローカルDBとして `docker-compose.yml` の PostgreSQL コンテナのみを使用する。Docker Desktop固有の機能には依存しないため、以下の方針で構築する。
 
-| OS | 推奨方針 | 備考 |
-|---|---|---|
-| Windows | WSL2 Ubuntu 内に Docker Engine / Docker Compose Plugin / Node.js を入れる | Node.js、npm、Docker、プロジェクトファイルをすべてWSL2側に寄せる |
-| macOS | Colima + Docker CLI + Docker Compose Plugin を使う | Docker Desktopを使わず、Colima上のDocker runtimeでPostgreSQLを起動する |
+| OS      | 推奨方針                                                                  | 備考                                                                   |
+| ------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Windows | WSL2 Ubuntu 内に Docker Engine / Docker Compose Plugin / Node.js を入れる | Node.js、npm、Docker、プロジェクトファイルをすべてWSL2側に寄せる       |
+| macOS   | Colima + Docker CLI + Docker Compose Plugin を使う                        | Docker Desktopを使わず、Colima上のDocker runtimeでPostgreSQLを起動する |
 
 混在構成、たとえば「Node.jsはWindows側、DockerはWSL2側」は `localhost`、ファイル監視、権限で詰まりやすいため避ける。
 
@@ -382,18 +381,18 @@ docker compose down -v
 
 ## 8. 環境変数
 
-| 変数 | 必須 | デフォルト/例 | 説明 |
-|---|---:|---|---|
-| `DATABASE_URL` | ○ | `postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public` | PostgreSQL接続文字列 |
-| `API_PORT` | - | `8787` | APIポート |
-| `JWT_SECRET` | ○ | `replace-with-a-long-random-secret` | JWT署名鍵。本番では長いランダム値必須 |
-| `JWT_EXPIRES_IN` | - | `7d` | JWT有効期限 |
-| `CORS_ORIGIN` | - | `http://127.0.0.1:5173,http://localhost:5173` | CORS許可オリジン |
-| `PRIVACY_POLICY_VERSION` | - | `2026-06-10` | 同意記録に保存するポリシー版 |
-| `WEB_PUSH_PUBLIC_KEY` | 通知利用時○ | 空 | VAPID公開鍵 |
-| `WEB_PUSH_PRIVATE_KEY` | 通知利用時○ | 空 | VAPID秘密鍵 |
-| `WEB_PUSH_SUBJECT` | 通知利用時○ | `mailto:admin@example.com` | VAPID subject |
-| `DATA_ENCRYPTION_KEY` | 本番○ | 空 | 個人情報暗号化鍵 |
+| 変数                     |        必須 | デフォルト/例                                                                    | 説明                                  |
+| ------------------------ | ----------: | -------------------------------------------------------------------------------- | ------------------------------------- |
+| `DATABASE_URL`           |           ○ | `postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public` | PostgreSQL接続文字列                  |
+| `API_PORT`               |           - | `8787`                                                                           | APIポート                             |
+| `JWT_SECRET`             |           ○ | `replace-with-a-long-random-secret`                                              | JWT署名鍵。本番では長いランダム値必須 |
+| `JWT_EXPIRES_IN`         |           - | `7d`                                                                             | JWT有効期限                           |
+| `CORS_ORIGIN`            |           - | `http://127.0.0.1:5173,http://localhost:5173`                                    | CORS許可オリジン                      |
+| `PRIVACY_POLICY_VERSION` |           - | `2026-06-10`                                                                     | 同意記録に保存するポリシー版          |
+| `WEB_PUSH_PUBLIC_KEY`    | 通知利用時○ | 空                                                                               | VAPID公開鍵                           |
+| `WEB_PUSH_PRIVATE_KEY`   | 通知利用時○ | 空                                                                               | VAPID秘密鍵                           |
+| `WEB_PUSH_SUBJECT`       | 通知利用時○ | `mailto:admin@example.com`                                                       | VAPID subject                         |
+| `DATA_ENCRYPTION_KEY`    |       本番○ | 空                                                                               | 個人情報暗号化鍵                      |
 
 ## 9. 暗号化鍵生成
 
@@ -426,21 +425,21 @@ npm run db:generate
 
 ## 12. ビルド・デプロイ関連
 
-| コマンド | 内容 |
-|---|---|
-| `npm run build` | Nuxtアプリをビルド |
-| `npm run preview` | ビルド済みアプリをローカルプレビュー |
-| `npm run generate` | 静的生成 |
-| `npm run deploy` | `generate` 後、`.output/public` を GitHub Pages にデプロイ |
-| `npm run api:build` | バックエンドTypeScriptをコンパイル |
-| `npm run api:start` | コンパイル済みAPIを起動 |
+| コマンド            | 内容                                                       |
+| ------------------- | ---------------------------------------------------------- |
+| `npm run build`     | Nuxtアプリをビルド                                         |
+| `npm run preview`   | ビルド済みアプリをローカルプレビュー                       |
+| `npm run generate`  | 静的生成                                                   |
+| `npm run deploy`    | `generate` 後、`.output/public` を GitHub Pages にデプロイ |
+| `npm run api:build` | バックエンドTypeScriptをコンパイル                         |
+| `npm run api:start` | コンパイル済みAPIを起動                                    |
 
 ## 13. デモログイン
 
-| ロール | メールアドレス | パスワード |
-|---|---|---|
+| ロール | メールアドレス           | パスワード     |
+| ------ | ------------------------ | -------------- |
 | 求職者 | `freelancer@example.com` | `freelance123` |
-| 営業 | `sales@tryangle.jp` | `sales123` |
+| 営業   | `sales@tryangle.jp`      | `sales123`     |
 
 ## 14. macOSでNuxt/Vite socketエラーが出る場合
 

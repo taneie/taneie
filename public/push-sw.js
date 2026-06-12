@@ -5,8 +5,8 @@ self.addEventListener("push", (event) => {
     body: data.body || "新着通知があります。",
     tag: data.tag || "tryangle-freelance",
     data: {
-      url: data.url || "/"
-    }
+      url: data.url || "/",
+    },
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
@@ -15,13 +15,18 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/";
-  event.waitUntil((async () => {
-    const clientsList = await clients.matchAll({ type: "window", includeUncontrolled: true });
-    const existing = clientsList.find((client) => "focus" in client);
-    if (existing) {
-      await existing.focus();
-      return;
-    }
-    await clients.openWindow(url);
-  })());
+  event.waitUntil(
+    (async () => {
+      const clientsList = await clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      const existing = clientsList.find((client) => "focus" in client);
+      if (existing) {
+        await existing.focus();
+        return;
+      }
+      await clients.openWindow(url);
+    })(),
+  );
 });

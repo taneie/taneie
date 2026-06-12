@@ -1,32 +1,70 @@
 <template>
-  <PageHead title="案件検索・応募" kicker="キーワード、スキル、単価、リモート、商流で絞り込みます。" />
+  <PageHead
+    title="案件検索・応募"
+    kicker="キーワード、スキル、単価、リモート、商流で絞り込みます。"
+  />
 
-  <section v-if="currentRole === 'freelancer' && !canViewJobs" :class="$style.lockPanel">
+  <section
+    v-if="currentRole === 'freelancer' && !canViewJobs"
+    :class="$style.lockPanel"
+  >
     <div>
       <h2>案件閲覧にはプロフィール登録と誓約同意が必要です</h2>
-      <p>案件情報にはクライアント情報や営業上の機密情報が含まれるため、以下の条件を満たすまで閲覧できません。</p>
+      <p>
+        案件情報にはクライアント情報や営業上の機密情報が含まれるため、以下の条件を満たすまで閲覧できません。
+      </p>
     </div>
     <ul :class="$style.requirementList">
-      <li v-for="item in profileRequirementItems" :key="item.label" :class="item.done ? $style.done : $style.pending">
-        <span>{{ item.done ? '完了' : '未完了' }}</span>{{ item.label }}
+      <li
+        v-for="item in profileRequirementItems"
+        :key="item.label"
+        :class="item.done ? $style.done : $style.pending"
+      >
+        <span>{{ item.done ? "完了" : "未完了" }}</span
+        >{{ item.label }}
       </li>
     </ul>
-    <BaseButton icon="user" @click="setView('profile')">プロフィールを入力する</BaseButton>
+    <BaseButton icon="user" @click="setView('profile')"
+      >プロフィールを入力する</BaseButton
+    >
   </section>
 
   <div v-else :class="[$style.grid, $style.two]">
     <section :class="$style.panel">
-      <div :class="$style.panelHeader"><h2 :class="$style.panelTitle">検索条件</h2></div>
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">検索条件</h2>
+      </div>
       <div :class="$style.panelBody">
         <form :class="[$style.formGrid, $style.one]" @submit.prevent>
-          <FormInput v-model="filters.keyword" label="キーワード" name="keyword" />
+          <FormInput
+            v-model="filters.keyword"
+            label="キーワード"
+            name="keyword"
+          />
           <FormInput v-model="filters.skill" label="スキル" name="skill" />
-          <FormInput v-model="filters.rate" label="下限単価（万円）" name="rate" type="number" />
-          <FormSelect v-model="filters.remote" label="リモート" name="remote" :options="['', ...remoteOptions]" />
-          <FormSelect v-model="filters.stream" label="商流" name="stream" :options="['', ...flowOptions]" />
+          <FormInput
+            v-model="filters.rate"
+            label="下限単価（万円）"
+            name="rate"
+            type="number"
+          />
+          <FormSelect
+            v-model="filters.remote"
+            label="リモート"
+            name="remote"
+            :options="['', ...remoteOptions]"
+          />
+          <FormSelect
+            v-model="filters.stream"
+            label="商流"
+            name="stream"
+            :options="['', ...flowOptions]"
+          />
           <div :class="$style.actions">
             <BaseButton type="submit" icon="search">検索</BaseButton>
-            <BaseButton variant="secondary" @click="clearJobFilter">クリア</BaseButton>
+            <BaseButton variant="secondary" @click="clearJobFilter"
+              >クリア</BaseButton
+            >
           </div>
         </form>
       </div>
@@ -46,7 +84,9 @@
           @apply="applyJob"
           @open-admin="setView('admin')"
         />
-        <div v-if="filteredJobs.length === 0" :class="$style.empty">条件に合う案件がありません。</div>
+        <div v-if="filteredJobs.length === 0" :class="$style.empty">
+          条件に合う案件がありません。
+        </div>
       </div>
     </section>
   </div>
@@ -65,7 +105,7 @@ const {
   clearJobFilter,
   hasApplied,
   applyJob,
-  setView
+  setView,
 } = useTryangleFreelance();
 </script>
 

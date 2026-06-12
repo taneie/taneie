@@ -1,7 +1,12 @@
 <template>
   <label :class="$style.field">
     {{ label }}
-    <select :class="$style.control" :name="name" :value="modelValue" @change="onChange">
+    <select
+      :class="$style.control"
+      :name="name"
+      :value="modelValue"
+      @change="onChange"
+    >
       <option v-for="option in options" :key="option" :value="option">
         {{ option }}
       </option>

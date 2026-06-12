@@ -14,17 +14,20 @@
 import { computed, useCssModule } from "vue";
 import type { IconName } from "~/composables/useTryangleFreelance";
 
-const props = withDefaults(defineProps<{
-  type?: "button" | "submit" | "reset";
-  variant?: "primary" | "secondary" | "ghost" | "warning";
-  icon?: IconName;
-  disabled?: boolean;
-}>(), {
-  type: "button",
-  variant: "primary",
-  icon: undefined,
-  disabled: false
-});
+const props = withDefaults(
+  defineProps<{
+    type?: "button" | "submit" | "reset";
+    variant?: "primary" | "secondary" | "ghost" | "warning";
+    icon?: IconName;
+    disabled?: boolean;
+  }>(),
+  {
+    type: "button",
+    variant: "primary",
+    icon: undefined,
+    disabled: false,
+  },
+);
 
 defineEmits<{
   click: [event: MouseEvent];
@@ -35,7 +38,7 @@ const css = useCssModule();
 const variantClass = computed(() => ({
   [css.secondary]: props.variant === "secondary",
   [css.ghost]: props.variant === "ghost",
-  [css.warning]: props.variant === "warning"
+  [css.warning]: props.variant === "warning",
 }));
 </script>
 

@@ -16,22 +16,25 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
-  label: string;
-  name: string;
-  modelValue: string | number;
-  type?: string;
-  autocomplete?: string;
-  placeholder?: string;
-  required?: boolean;
-  readonly?: boolean;
-}>(), {
-  type: "text",
-  autocomplete: undefined,
-  placeholder: undefined,
-  required: false,
-  readonly: false
-});
+withDefaults(
+  defineProps<{
+    label: string;
+    name: string;
+    modelValue: string | number;
+    type?: string;
+    autocomplete?: string;
+    placeholder?: string;
+    required?: boolean;
+    readonly?: boolean;
+  }>(),
+  {
+    type: "text",
+    autocomplete: undefined,
+    placeholder: undefined,
+    required: false,
+    readonly: false,
+  },
+);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];

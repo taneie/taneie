@@ -11,7 +11,10 @@
       <SheetPage v-else-if="state.activeView === 'sheet'" />
       <section v-else :class="$style.panel">
         <div :class="$style.panelBody">
-          <BaseButton @click="setView(currentRole === 'sales' ? 'dashboard' : 'jobs')">戻る</BaseButton>
+          <BaseButton
+            @click="setView(currentRole === 'sales' ? 'dashboard' : 'jobs')"
+            >戻る</BaseButton
+          >
         </div>
       </section>
     </main>
@@ -23,12 +26,13 @@
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import { watch } from "vue";
-const { state, currentRole, ensureActiveView, setView } = useTryangleFreelance();
+const { state, currentRole, ensureActiveView, setView } =
+  useTryangleFreelance();
 
 watch(
   () => [state.value.auth?.role, state.value.activeView],
   ensureActiveView,
-  { immediate: true }
+  { immediate: true },
 );
 </script>
 

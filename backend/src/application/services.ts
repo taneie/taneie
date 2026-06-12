@@ -1,6 +1,10 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
-import { hashPassword, signToken, verifyPassword } from "../infrastructure/security.js";
+import {
+  hashPassword,
+  signToken,
+  verifyPassword,
+} from "../infrastructure/security.js";
 import { notifyUser } from "../infrastructure/push.js";
 import { decryptText, encryptText, piiHash } from "../infrastructure/crypto.js";
 import {
@@ -10,24 +14,29 @@ import {
   labelToMeetingStatus,
   labelToRemoteType,
   labelToStreamType,
-  type AuthContext
+  type AuthContext,
 } from "../domain/types.js";
-import { mapApplication, mapFreelancer, mapJob, mapMessage } from "./mappers.js";
+import {
+  mapApplication,
+  mapFreelancer,
+  mapJob,
+  mapMessage,
+} from "./mappers.js";
 
 const jobInclude = {
   client: true,
-  skills: { include: { skill: true } }
+  skills: { include: { skill: true } },
 } satisfies Prisma.JobInclude;
 
 const freelancerInclude = {
   user: true,
   skills: { include: { skill: true } },
-  resumes: { orderBy: { uploadedAt: "desc" as const } }
+  resumes: { orderBy: { uploadedAt: "desc" as const } },
 } satisfies Prisma.FreelancerProfileInclude;
 
 const applicationInclude = {
   job: { include: jobInclude },
-  freelancerProfile: { include: freelancerInclude }
+  freelancerProfile: { include: freelancerInclude },
 } satisfies Prisma.ApplicationInclude;
 
 export class AuthService {
@@ -45,7 +54,11 @@ export class AuthService {
   }) {
     const existingUser = await findUserByEmailForAuth(this.db, input.email);
     if (existingUser) {
-      throw new AppError(409, "このメールアドレスはすでに登録されています。", "EMAIL_ALREADY_EXISTS");
+      throw new AppError(
+        409,
+        "このメールアドレスはすでに登録されています。",
+        "EMAIL_ALREADY_EXISTS",
+      );
     }
 
     const passwordHash = await hashPassword(input.password);
@@ -61,21 +74,25 @@ export class AuthService {
           create: {
             publicCode: `tf-${randomUUID().slice(0, 8)}`,
             roleTitle: input.roleTitle || null,
-            lastUpdatedOn: new Date()
-          }
+            lastUpdatedOn: new Date(),
+          },
         },
         privacyConsents: {
           create: {
             policyVersion: input.policyVersion,
             ipAddress: input.ipAddress ? encryptText(input.ipAddress) : null,
-            userAgent: input.userAgent ? encryptText(input.userAgent) : null
-          }
-        }
+            userAgent: input.userAgent ? encryptText(input.userAgent) : null,
+          },
+        },
       },
-      include: { freelancerProfile: true }
+      include: { freelancerProfile: true },
     });
 
-    const token = signToken({ userId: user.id, role: user.role, email: input.email });
+    const token = signToken({
+      userId: user.id,
+      role: user.role,
+      email: input.email,
+    });
     return { token, user: toAuthUser(user) };
   }
 
@@ -88,7 +105,7 @@ export class AuthService {
 
     await this.db.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() }
+      data: { lastLoginAt: new Date() },
     });
 
     const token = signToken({ userId: user.id, role: user.role, email });
@@ -103,18 +120,19 @@ export class CatalogService {
     const jobs = await this.db.job.findMany({
       where: context.role === "sales" ? {} : { isActive: true },
       include: jobInclude,
-      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }]
+      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
     });
-    const freelancers = context.role === "sales"
-      ? await this.db.freelancerProfile.findMany({
-        include: freelancerInclude,
-        orderBy: { updatedAt: "desc" }
-      })
-      : [];
+    const freelancers =
+      context.role === "sales"
+        ? await this.db.freelancerProfile.findMany({
+            include: freelancerInclude,
+            orderBy: { updatedAt: "desc" },
+          })
+        : [];
 
     return {
       jobs: jobs.map(mapJob),
-      freelancers: freelancers.map(mapFreelancer)
+      freelancers: freelancers.map(mapFreelancer),
     };
   }
 }
@@ -129,7 +147,7 @@ export class JobService {
     const jobs = await this.db.job.findMany({
       where: context?.role === "sales" ? {} : { isActive: true },
       include: jobInclude,
-      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }]
+      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
     });
     return jobs.map(mapJob);
   }
@@ -138,9 +156,13 @@ export class JobService {
     const client = await this.db.client.upsert({
       where: { name: input.client || "未設定" },
       update: {},
-      create: { name: input.client || "未設定" }
+      create: { name: input.client || "未設定" },
     });
-    const required = await upsertSkills(this.db, input.required || [], "language");
+    const required = await upsertSkills(
+      this.db,
+      input.required || [],
+      "language",
+    );
     const nice = await upsertSkills(this.db, input.nice || [], "other");
 
     const job = await this.db.job.create({
@@ -158,21 +180,30 @@ export class JobService {
         createdBy,
         skills: {
           create: [
-            ...required.map((skill) => ({ skillId: skill.id, requirementType: "required" as const })),
-            ...nice.map((skill) => ({ skillId: skill.id, requirementType: "nice" as const }))
-          ]
-        }
+            ...required.map((skill) => ({
+              skillId: skill.id,
+              requirementType: "required" as const,
+            })),
+            ...nice.map((skill) => ({
+              skillId: skill.id,
+              requirementType: "nice" as const,
+            })),
+          ],
+        },
       },
-      include: jobInclude
+      include: jobInclude,
     });
     return mapJob(job);
   }
 
-  async updateFlags(id: string, input: { isPinned?: boolean; isActive?: boolean }) {
+  async updateFlags(
+    id: string,
+    input: { isPinned?: boolean; isActive?: boolean },
+  ) {
     const job = await this.db.job.update({
       where: { id },
       data: input,
-      include: jobInclude
+      include: jobInclude,
     });
     return mapJob(job);
   }
@@ -184,7 +215,7 @@ export class ProfileService {
   async listFreelancers() {
     const profiles = await this.db.freelancerProfile.findMany({
       include: freelancerInclude,
-      orderBy: { updatedAt: "desc" }
+      orderBy: { updatedAt: "desc" },
     });
     return profiles.map(mapFreelancer);
   }
@@ -192,7 +223,7 @@ export class ProfileService {
   async getCurrent(userId: string) {
     const profile = await this.db.freelancerProfile.findUnique({
       where: { userId },
-      include: freelancerInclude
+      include: freelancerInclude,
     });
     return profile ? mapFreelancer(profile) : null;
   }
@@ -210,7 +241,7 @@ export class ProfileService {
         availabilityStatus: input.availabilityStatus,
         availabilityNote: input.availabilityNote,
         pledgedAt: input.pledgeAccepted ? new Date() : undefined,
-        lastUpdatedOn: new Date()
+        lastUpdatedOn: new Date(),
       },
       create: {
         userId,
@@ -224,8 +255,8 @@ export class ProfileService {
         availabilityStatus: input.availabilityStatus,
         availabilityNote: input.availabilityNote,
         pledgedAt: input.pledgeAccepted ? new Date() : undefined,
-        lastUpdatedOn: new Date()
-      }
+        lastUpdatedOn: new Date(),
+      },
     });
 
     if (input.name || input.phone) {
@@ -233,22 +264,27 @@ export class ProfileService {
         where: { id: userId },
         data: {
           name: input.name ? encryptText(input.name) : undefined,
-          phone: input.phone ? encryptText(input.phone) : undefined
-        }
+          phone: input.phone ? encryptText(input.phone) : undefined,
+        },
       });
     }
 
     if (input.skills) {
-      await this.db.freelancerSkill.deleteMany({ where: { freelancerProfileId: profile.id } });
+      await this.db.freelancerSkill.deleteMany({
+        where: { freelancerProfileId: profile.id },
+      });
       const skills = await upsertSkills(this.db, input.skills, "other");
       await this.db.freelancerSkill.createMany({
-        data: skills.map((skill) => ({ freelancerProfileId: profile.id, skillId: skill.id }))
+        data: skills.map((skill) => ({
+          freelancerProfileId: profile.id,
+          skillId: skill.id,
+        })),
       });
     }
 
     const updated = await this.db.freelancerProfile.findUniqueOrThrow({
       where: { id: profile.id },
-      include: freelancerInclude
+      include: freelancerInclude,
     });
     return mapFreelancer(updated);
   }
@@ -258,42 +294,64 @@ export class ApplicationService {
   constructor(private readonly db: PrismaClient) {}
 
   async list(context: AuthContext) {
-    const where = context.role === "sales"
-      ? {}
-      : { freelancerProfile: { userId: context.userId } };
+    const where =
+      context.role === "sales"
+        ? {}
+        : { freelancerProfile: { userId: context.userId } };
     const applications = await this.db.application.findMany({
       where,
       include: applicationInclude,
-      orderBy: { appliedAt: "desc" }
+      orderBy: { appliedAt: "desc" },
     });
     return applications.map(mapApplication);
   }
 
   async apply(jobId: string, userId: string) {
     await assertFreelancerCanViewJobs(this.db, userId);
-    const profile = await this.db.freelancerProfile.findUniqueOrThrow({ where: { userId } });
-    const application = await this.db.application.create({
-      data: {
-        jobId,
-        freelancerProfileId: profile.id,
-        status: "screening",
-        histories: { create: { toStatus: "screening", changedBy: userId } }
-      },
-      include: applicationInclude
-    }).catch((error: unknown) => {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-        throw new AppError(409, "この案件にはすでに応募済みです。", "APPLICATION_ALREADY_EXISTS");
-      }
-      throw error;
+    const profile = await this.db.freelancerProfile.findUniqueOrThrow({
+      where: { userId },
     });
+    const application = await this.db.application
+      .create({
+        data: {
+          jobId,
+          freelancerProfileId: profile.id,
+          status: "screening",
+          histories: { create: { toStatus: "screening", changedBy: userId } },
+        },
+        include: applicationInclude,
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new AppError(
+            409,
+            "この案件にはすでに応募済みです。",
+            "APPLICATION_ALREADY_EXISTS",
+          );
+        }
+        throw error;
+      });
     return mapApplication(application);
   }
 
-  async changeStatus(id: string, toStatus: keyof typeof labelToApplicationStatus | string, changedBy: string, note?: string) {
-    const status = toStatus in labelToApplicationStatus
-      ? labelToApplicationStatus[toStatus as keyof typeof labelToApplicationStatus]
-      : toStatus;
-    const current = await this.db.application.findUniqueOrThrow({ where: { id } });
+  async changeStatus(
+    id: string,
+    toStatus: keyof typeof labelToApplicationStatus | string,
+    changedBy: string,
+    note?: string,
+  ) {
+    const status =
+      toStatus in labelToApplicationStatus
+        ? labelToApplicationStatus[
+            toStatus as keyof typeof labelToApplicationStatus
+          ]
+        : toStatus;
+    const current = await this.db.application.findUniqueOrThrow({
+      where: { id },
+    });
     const application = await this.db.application.update({
       where: { id },
       data: {
@@ -303,11 +361,11 @@ export class ApplicationService {
             fromStatus: current.status,
             toStatus: status as never,
             changedBy,
-            note
-          }
-        }
+            note,
+          },
+        },
       },
-      include: applicationInclude
+      include: applicationInclude,
     });
     return mapApplication(application);
   }
@@ -317,60 +375,103 @@ export class CommunicationService {
   constructor(private readonly db: PrismaClient) {}
 
   async listMeetings(context: AuthContext, freelancerProfileId?: string) {
-    const where = context.role === "sales"
-      ? { freelancerProfileId }
-      : { freelancerProfile: { userId: context.userId } };
+    const where =
+      context.role === "sales"
+        ? { freelancerProfileId }
+        : { freelancerProfile: { userId: context.userId } };
     return this.db.meetingRequest.findMany({
       where,
-      orderBy: { candidateAt: "asc" }
+      orderBy: { candidateAt: "asc" },
     });
   }
 
-  async createMeeting(context: AuthContext, input: { freelancerProfileId?: string; applicationId?: string; candidateAt: string }) {
-    const profileId = context.role === "sales"
-      ? input.freelancerProfileId
-      : (await this.db.freelancerProfile.findUniqueOrThrow({ where: { userId: context.userId } })).id;
-    if (!profileId) throw new AppError(400, "freelancerProfileId is required", "FREELANCER_PROFILE_REQUIRED");
+  async createMeeting(
+    context: AuthContext,
+    input: {
+      freelancerProfileId?: string;
+      applicationId?: string;
+      candidateAt: string;
+    },
+  ) {
+    const profileId =
+      context.role === "sales"
+        ? input.freelancerProfileId
+        : (
+            await this.db.freelancerProfile.findUniqueOrThrow({
+              where: { userId: context.userId },
+            })
+          ).id;
+    if (!profileId)
+      throw new AppError(
+        400,
+        "freelancerProfileId is required",
+        "FREELANCER_PROFILE_REQUIRED",
+      );
     return this.db.meetingRequest.create({
       data: {
         freelancerProfileId: profileId,
         applicationId: input.applicationId,
         candidateAt: new Date(input.candidateAt),
         status: "candidate",
-        createdBy: context.userId
-      }
+        createdBy: context.userId,
+      },
     });
   }
 
-  async updateMeeting(id: string, status: keyof typeof labelToMeetingStatus | string) {
-    const nextStatus = status in labelToMeetingStatus
-      ? labelToMeetingStatus[status as keyof typeof labelToMeetingStatus]
-      : status;
+  async updateMeeting(
+    id: string,
+    status: keyof typeof labelToMeetingStatus | string,
+  ) {
+    const nextStatus =
+      status in labelToMeetingStatus
+        ? labelToMeetingStatus[status as keyof typeof labelToMeetingStatus]
+        : status;
     return this.db.meetingRequest.update({
       where: { id },
-      data: { status: nextStatus as never }
+      data: { status: nextStatus as never },
     });
   }
 
   async listMessages(context: AuthContext, freelancerProfileId?: string) {
-    const where = context.role === "sales"
-      ? { freelancerProfileId }
-      : { freelancerProfile: { userId: context.userId } };
+    const where =
+      context.role === "sales"
+        ? { freelancerProfileId }
+        : { freelancerProfile: { userId: context.userId } };
     const messages = await this.db.message.findMany({
       where,
       include: { sender: true, receiver: true },
-      orderBy: { sentAt: "asc" }
+      orderBy: { sentAt: "asc" },
     });
     return messages.map(mapMessage);
   }
 
-  async sendMessage(context: AuthContext, input: { freelancerProfileId?: string; receiverUserId?: string; jobId?: string; body: string; messageType?: "chat" | "scout" | "alive_check" | "system" }) {
-    const profile = context.role === "sales"
-      ? await this.db.freelancerProfile.findUniqueOrThrow({ where: { id: input.freelancerProfileId || "" } })
-      : await this.db.freelancerProfile.findUniqueOrThrow({ where: { userId: context.userId } });
-    const receiverUserId = context.role === "sales"
-      ? profile.userId
-      : input.receiverUserId || (await this.db.user.findFirstOrThrow({ where: { role: "sales", isActive: true } })).id;
+  async sendMessage(
+    context: AuthContext,
+    input: {
+      freelancerProfileId?: string;
+      receiverUserId?: string;
+      jobId?: string;
+      body: string;
+      messageType?: "chat" | "scout" | "alive_check" | "system";
+    },
+  ) {
+    const profile =
+      context.role === "sales"
+        ? await this.db.freelancerProfile.findUniqueOrThrow({
+            where: { id: input.freelancerProfileId || "" },
+          })
+        : await this.db.freelancerProfile.findUniqueOrThrow({
+            where: { userId: context.userId },
+          });
+    const receiverUserId =
+      context.role === "sales"
+        ? profile.userId
+        : input.receiverUserId ||
+          (
+            await this.db.user.findFirstOrThrow({
+              where: { role: "sales", isActive: true },
+            })
+          ).id;
     const message = await this.db.message.create({
       data: {
         senderUserId: context.userId,
@@ -378,16 +479,16 @@ export class CommunicationService {
         freelancerProfileId: profile.id,
         jobId: input.jobId,
         body: encryptText(input.body),
-        messageType: input.messageType || "chat"
+        messageType: input.messageType || "chat",
       },
-      include: { sender: true, receiver: true }
+      include: { sender: true, receiver: true },
     });
     const mapped = mapMessage(message);
     await notifyUser(this.db, receiverUserId, {
       title: "TRYANGLE FREELANCE",
       body: `${decryptText(message.sender.name)}: ${input.body}`,
       url: "/",
-      tag: `tryangle-chat-${message.id}`
+      tag: `tryangle-chat-${message.id}`,
     });
     return mapped;
   }
@@ -397,38 +498,56 @@ export class CommunicationService {
       where: {
         OR: [
           { availabilityStatus: { not: "ready" } },
-          { lastUpdatedOn: { lt: new Date(Date.now() - 14 * 86400000) } }
-        ]
+          { lastUpdatedOn: { lt: new Date(Date.now() - 14 * 86400000) } },
+        ],
       },
-      select: { id: true }
+      select: { id: true },
     });
     return this.db.aliveCheckBatch.create({
       data: {
         executedBy,
         targetCount: targets.length,
-        targets: { create: targets.map((target) => ({ freelancerProfileId: target.id })) }
+        targets: {
+          create: targets.map((target) => ({ freelancerProfileId: target.id })),
+        },
       },
-      include: { targets: true }
+      include: { targets: true },
     });
   }
 }
 
-async function upsertSkills(db: PrismaClient, names: string[], category: "language" | "database" | "framework" | "cloud" | "tool" | "other") {
-  const uniqueNames = [...new Set(names.map((name) => name.trim()).filter(Boolean))];
-  return Promise.all(uniqueNames.map((name) => db.skill.upsert({
-    where: { name_category: { name, category } },
-    update: {},
-    create: { name, category }
-  })));
+async function upsertSkills(
+  db: PrismaClient,
+  names: string[],
+  category: "language" | "database" | "framework" | "cloud" | "tool" | "other",
+) {
+  const uniqueNames = [
+    ...new Set(names.map((name) => name.trim()).filter(Boolean)),
+  ];
+  return Promise.all(
+    uniqueNames.map((name) =>
+      db.skill.upsert({
+        where: { name_category: { name, category } },
+        update: {},
+        create: { name, category },
+      }),
+    ),
+  );
 }
 
-function toAuthUser(user: { id: string; role: "freelancer" | "sales"; email: string; name: string; freelancerProfile?: { id: string } | null }) {
+function toAuthUser(user: {
+  id: string;
+  role: "freelancer" | "sales";
+  email: string;
+  name: string;
+  freelancerProfile?: { id: string } | null;
+}) {
   return {
     id: user.id,
     email: decryptText(user.email),
     role: user.role,
     name: decryptText(user.name),
-    freelancerId: user.freelancerProfile?.id
+    freelancerId: user.freelancerProfile?.id,
   };
 }
 
@@ -436,16 +555,19 @@ async function findUserByEmailForAuth(db: PrismaClient, email: string) {
   const emailHash = piiHash(email);
   const user = await db.user.findUnique({
     where: { emailHash },
-    include: { freelancerProfile: true }
+    include: { freelancerProfile: true },
   });
   if (user) return user;
 
   const normalized = email.trim().toLowerCase();
   const legacyUsers = await db.user.findMany({
     where: { emailHash: null },
-    include: { freelancerProfile: true }
+    include: { freelancerProfile: true },
   });
-  const legacyUser = legacyUsers.find((candidate) => decryptText(candidate.email).trim().toLowerCase() === normalized);
+  const legacyUser = legacyUsers.find(
+    (candidate) =>
+      decryptText(candidate.email).trim().toLowerCase() === normalized,
+  );
   if (!legacyUser) return null;
 
   return db.user.update({
@@ -454,9 +576,11 @@ async function findUserByEmailForAuth(db: PrismaClient, email: string) {
       email: encryptText(decryptText(legacyUser.email)),
       emailHash,
       name: encryptText(decryptText(legacyUser.name)),
-      phone: legacyUser.phone ? encryptText(decryptText(legacyUser.phone)) : null
+      phone: legacyUser.phone
+        ? encryptText(decryptText(legacyUser.phone))
+        : null,
     },
-    include: { freelancerProfile: true }
+    include: { freelancerProfile: true },
   });
 }
 
@@ -496,29 +620,33 @@ async function assertFreelancerCanViewJobs(db: PrismaClient, userId: string) {
       skills: true,
       resumes: { where: { isLatest: true } },
       meetingRequests: true,
-      user: true
-    }
+      user: true,
+    },
   });
 
   const complete = Boolean(
-    profile
-    && decryptText(profile.user.name)
-    && decryptText(profile.user.email)
-    && decryptText(profile.user.phone)
-    && profile.roleTitle
-    && profile.yearsExperience
-    && profile.desiredRate
-    && profile.startDate
-    && profile.workRate
-    && profile.remoteType
-    && profile.availabilityStatus
-    && profile.skills.length
-    && profile.resumes.length
-    && profile.meetingRequests.length
-    && profile.pledgedAt
+    profile &&
+    decryptText(profile.user.name) &&
+    decryptText(profile.user.email) &&
+    decryptText(profile.user.phone) &&
+    profile.roleTitle &&
+    profile.yearsExperience &&
+    profile.desiredRate &&
+    profile.startDate &&
+    profile.workRate &&
+    profile.remoteType &&
+    profile.availabilityStatus &&
+    profile.skills.length &&
+    profile.resumes.length &&
+    profile.meetingRequests.length &&
+    profile.pledgedAt,
   );
 
   if (!complete) {
-    throw new AppError(403, "案件閲覧にはプロフィール詳細の入力、レジュメ登録、面談候補登録、誓約同意が必要です。", "PROFILE_REQUIREMENTS_INCOMPLETE");
+    throw new AppError(
+      403,
+      "案件閲覧にはプロフィール詳細の入力、レジュメ登録、面談候補登録、誓約同意が必要です。",
+      "PROFILE_REQUIREMENTS_INCOMPLETE",
+    );
   }
 }

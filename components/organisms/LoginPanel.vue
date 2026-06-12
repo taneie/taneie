@@ -13,10 +13,18 @@
         </nav>
 
         <div :class="$style.headerActions">
-          <button type="button" :class="$style.loginTrigger" @click="showLogin = !showLogin">
+          <button
+            type="button"
+            :class="$style.loginTrigger"
+            @click="showLogin = !showLogin"
+          >
             ログイン
           </button>
-          <button type="button" :class="$style.headerCta" @click="scrollToRegister">
+          <button
+            type="button"
+            :class="$style.headerCta"
+            @click="scrollToRegister"
+          >
             無料登録
           </button>
         </div>
@@ -24,12 +32,19 @@
         <div v-if="showLogin" :class="$style.loginPopover">
           <div :class="$style.popoverHead">
             <strong>ログイン</strong>
-            <button type="button" aria-label="ログインを閉じる" @click="showLogin = false">
+            <button
+              type="button"
+              aria-label="ログインを閉じる"
+              @click="showLogin = false"
+            >
               ×
             </button>
           </div>
 
-          <form :class="[$style.formGrid, $style.one]" @submit.prevent="submitLogin">
+          <form
+            :class="[$style.formGrid, $style.one]"
+            @submit.prevent="submitLogin"
+          >
             <FormInput
               v-model="loginForm.email"
               label="メールアドレス"
@@ -66,17 +81,28 @@
         <div :class="$style.contentColumn">
           <section :class="$style.heroSection">
             <div :class="$style.heroContent">
-              <p :class="$style.eyebrow">フリーランスエンジニア向け案件マッチング</p>
-              <h1>希望条件とスキルをもとに、営業担当が最適な案件提案まで伴走します。</h1>
+              <p :class="$style.eyebrow">
+                フリーランスエンジニア向け案件マッチング
+              </p>
+              <h1>
+                希望条件とスキルをもとに、営業担当が最適な案件提案まで伴走します。
+              </h1>
               <p :class="$style.heroLead">
-                TRYANGLE FREELANCEは、プロフィール登録、案件検索、応募、面談調整、チャットまでを一つにつなげたマッチングシステムです。
+                TRYANGLE
+                FREELANCEは、プロフィール登録、案件検索、応募、面談調整、チャットまでを一つにつなげたマッチングシステムです。
               </p>
 
               <div :class="$style.heroActions">
-                <button type="button" :class="$style.primaryCta" @click="scrollToRegister">
+                <button
+                  type="button"
+                  :class="$style.primaryCta"
+                  @click="scrollToRegister"
+                >
                   無料で登録する
                 </button>
-                <a href="#projects" :class="$style.secondaryCta">案件例を見る</a>
+                <a href="#projects" :class="$style.secondaryCta"
+                  >案件例を見る</a
+                >
               </div>
 
               <dl :class="$style.stats">
@@ -117,15 +143,21 @@
             <div :class="$style.featureGrid">
               <article>
                 <strong>条件に合う案件を探しやすい</strong>
-                <p>キーワード、スキル、単価、リモート、商流で絞り込み、優先案件からすぐ応募できます。</p>
+                <p>
+                  キーワード、スキル、単価、リモート、商流で絞り込み、優先案件からすぐ応募できます。
+                </p>
               </article>
               <article>
                 <strong>営業担当とのやり取りを集約</strong>
-                <p>面談候補とチャットを同じ画面で管理し、応募後の調整をスムーズに進められます。</p>
+                <p>
+                  面談候補とチャットを同じ画面で管理し、応募後の調整をスムーズに進められます。
+                </p>
               </article>
               <article>
                 <strong>提案用プロフィールを整備</strong>
-                <p>スキル、稼働条件、レジュメ、面談候補を段階的に登録し、提案準備を整えます。</p>
+                <p>
+                  スキル、稼働条件、レジュメ、面談候補を段階的に登録し、提案準備を整えます。
+                </p>
               </article>
             </div>
           </section>
@@ -183,7 +215,9 @@
               </li>
               <li>
                 <strong>営業担当と調整</strong>
-                <p>チャットや面談候補を使いながら、商談までの調整を進めます。</p>
+                <p>
+                  チャットや面談候補を使いながら、商談までの調整を進めます。
+                </p>
               </li>
             </ol>
           </section>
@@ -194,15 +228,18 @@
             <div :class="$style.registerHead">
               <span>FREE ENTRY</span>
               <h2>無料登録</h2>
-              <p>デモ環境では、登録後すぐに案件検索や応募機能を確認できます。</p>
+              <p>
+                デモ環境では、登録後すぐに案件検索や応募機能を確認できます。
+              </p>
             </div>
 
-            <AuthTabs
-              :mode="activeTab"
-              @change="activeTab = $event"
-            />
+            <AuthTabs :mode="activeTab" @change="activeTab = $event" />
 
-            <form v-if="activeTab === 'register'" :class="$style.formStack" @submit.prevent="submitRegister">
+            <form
+              v-if="activeTab === 'register'"
+              :class="$style.formStack"
+              @submit.prevent="submitRegister"
+            >
               <FormInput
                 v-model="registerForm.name"
                 label="氏名"
@@ -252,7 +289,11 @@
               <label :class="$style.checkbox">
                 <input v-model="registerForm.privacyAccepted" type="checkbox" />
                 <span>
-                  <button type="button" :class="$style.policyButton" @click="showPolicy = true">
+                  <button
+                    type="button"
+                    :class="$style.policyButton"
+                    @click="showPolicy = true"
+                  >
                     個人情報の取り扱い
                   </button>
                   に同意する
@@ -262,7 +303,11 @@
               <BaseButton type="submit" icon="user">登録して始める</BaseButton>
             </form>
 
-            <form v-else :class="$style.formStack" @submit.prevent="submitLogin">
+            <form
+              v-else
+              :class="$style.formStack"
+              @submit.prevent="submitLogin"
+            >
               <FormInput
                 v-model="loginForm.email"
                 label="メールアドレス"
@@ -299,20 +344,22 @@
 
     <footer :class="$style.footer">
       <span>© 2026 TRYANGLE FREELANCE. All rights reserved.</span>
-      <button type="button" @click="showPolicy = true">個人情報の取り扱い</button>
+      <button type="button" @click="showPolicy = true">
+        個人情報の取り扱い
+      </button>
     </footer>
 
-    <PrivacyPolicyModal
-      :open="showPolicy"
-      @close="showPolicy = false"
-    />
+    <PrivacyPolicyModal :open="showPolicy" @close="showPolicy = false" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import type { AuthMode, RegisterInput } from "~/composables/useTryangleFreelance";
+import type {
+  AuthMode,
+  RegisterInput,
+} from "~/composables/useTryangleFreelance";
 
 type UserRole = "freelancer" | "sales";
 
@@ -325,7 +372,7 @@ const registerCardRef = ref<HTMLElement | null>(null);
 
 const loginForm = reactive({
   email: "",
-  password: ""
+  password: "",
 });
 
 const registerForm = reactive<RegisterInput & { privacyAccepted: boolean }>({
@@ -335,7 +382,7 @@ const registerForm = reactive<RegisterInput & { privacyAccepted: boolean }>({
   role: "freelancer",
   password: "",
   passwordConfirm: "",
-  privacyAccepted: false
+  privacyAccepted: false,
 });
 
 const roleOptions = ["freelancer", "sales"];
@@ -347,15 +394,16 @@ const projects = [
     title: "FinTech SaaS フロントエンド刷新",
     summary: "Nuxt / TypeScript を使った管理画面の再設計と実装を担当します。",
     rate: "月80〜95万円",
-    skills: "Nuxt, Vue, TypeScript"
+    skills: "Nuxt, Vue, TypeScript",
   },
   {
     remote: "週3リモート",
     stream: "エンド直",
     title: "生成AI活用業務システム開発",
-    summary: "社内ナレッジ検索とチャットUIを組み合わせた新規プロダクト開発です。",
+    summary:
+      "社内ナレッジ検索とチャットUIを組み合わせた新規プロダクト開発です。",
     rate: "月90〜110万円",
-    skills: "Node.js, PostgreSQL, AWS"
+    skills: "Node.js, PostgreSQL, AWS",
   },
   {
     remote: "ハイブリッド",
@@ -363,8 +411,8 @@ const projects = [
     title: "EC基盤バックエンド改善",
     summary: "API性能改善、DB設計、運用監視の改善まで幅広く関わります。",
     rate: "月75〜90万円",
-    skills: "Express, Prisma, PostgreSQL"
-  }
+    skills: "Express, Prisma, PostgreSQL",
+  },
 ];
 
 const submitLogin = () => {
@@ -383,7 +431,7 @@ const submitRegister = async () => {
     phone: registerForm.phone,
     role: registerForm.role,
     password: registerForm.password,
-    passwordConfirm: registerForm.passwordConfirm
+    passwordConfirm: registerForm.passwordConfirm,
   });
 };
 
@@ -399,7 +447,10 @@ const loginWithDemo = (role: UserRole) => {
 };
 
 const scrollToRegister = () => {
-  registerCardRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+  registerCardRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 };
 </script>
 
