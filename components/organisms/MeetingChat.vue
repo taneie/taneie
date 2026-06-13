@@ -23,12 +23,17 @@
           >
             <span :class="$style.chatUserHead">
               <strong>{{ freelancer.name }}</strong>
-              <TagBadge
-                :tone="
-                  freelancer.availability === '即稼働可' ? 'teal' : 'amber'
-                "
-                >{{ freelancer.availability }}</TagBadge
-              >
+              <span :class="$style.chatUserBadges">
+                <TagBadge v-if="freelancer.unreadCount" tone="amber"
+                  >未読 {{ freelancer.unreadCount }}</TagBadge
+                >
+                <TagBadge
+                  :tone="
+                    freelancer.availability === '即稼働可' ? 'teal' : 'amber'
+                  "
+                  >{{ freelancer.availability }}</TagBadge
+                >
+              </span>
             </span>
             <span :class="$style.chatUserMeta"
               >{{ freelancer.role }} / {{ freelancer.desiredRate }}万円〜</span
@@ -131,6 +136,11 @@
               <span :class="$style.messageTime">{{
                 displayDateTime(message.at)
               }}</span>
+              <span
+                v-if="isOwnMessage(message) && message.readAt"
+                :class="$style.readStatus"
+                >既読</span
+              >
             </div>
             <div :class="$style.messageBubble">
               <div :class="$style.messageBody">{{ message.body }}</div>
@@ -163,7 +173,7 @@
 
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import { ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import type { Message } from "~/composables/useTryangleFreelance";
 
 const {
@@ -177,6 +187,7 @@ const {
   addMeeting,
   updateMeetingStatus,
   sendMessage,
+  markActiveChatAsRead,
   markDirty,
   clearUnsavedChanges,
 } = useTryangleFreelance();
@@ -215,6 +226,17 @@ function removeCandidate(index: number) {
   candidates.value.splice(index, 1);
   if (!candidates.value.length) candidates.value.push("");
 }
+
+onMounted(() => {
+  void markActiveChatAsRead();
+});
+
+watch(
+  () => [activeChatFreelancerId.value, activeChatMessages.value.length],
+  () => {
+    void markActiveChatAsRead();
+  },
+);
 
 async function submitMessage() {
   if (await sendMessage(body.value)) {
@@ -386,6 +408,13 @@ textarea.control {
   overflow-wrap: anywhere;
 }
 
+.chatUserBadges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
 .chatUserMeta,
 .chatPreview {
   color: var(--muted);
@@ -472,6 +501,11 @@ textarea.control {
 .messageTime {
   opacity: 0.9;
   overflow-wrap: anywhere;
+}
+
+.readStatus {
+  color: var(--primary);
+  font-weight: 800;
 }
 
 .messageBubble {

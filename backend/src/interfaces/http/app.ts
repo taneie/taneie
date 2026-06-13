@@ -37,6 +37,7 @@ import {
   createJobSchema,
   createMeetingSchema,
   loginSchema,
+  markMessagesReadSchema,
   pushSubscriptionSchema,
   registerSchema,
   resumeMetadataSchema,
@@ -333,6 +334,15 @@ export function createApp() {
       res
         .status(201)
         .json(await communicationService.sendMessage(req.auth!, req.body));
+    }),
+  );
+
+  app.patch(
+    "/api/messages/read",
+    requireAuth,
+    validateBody(markMessagesReadSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(await communicationService.markMessagesRead(req.auth!, req.body));
     }),
   );
 

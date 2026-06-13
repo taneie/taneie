@@ -497,6 +497,35 @@ export class CommunicationService {
     return mapped;
   }
 
+  async markMessagesRead(
+    context: AuthContext,
+    input: { freelancerProfileId?: string },
+  ) {
+    const profile =
+      context.role === "sales"
+        ? await this.db.freelancerProfile.findUnique({
+            where: { id: input.freelancerProfileId || "" },
+          })
+        : await this.db.freelancerProfile.findUnique({
+            where: { userId: context.userId },
+          });
+
+    if (!profile) {
+      throw new AppError(404, "チャット対象が見つかりません。", "PROFILE_NOT_FOUND");
+    }
+
+    await this.db.message.updateMany({
+      where: {
+        freelancerProfileId: profile.id,
+        receiverUserId: context.userId,
+        readAt: null,
+      },
+      data: { readAt: new Date() },
+    });
+
+    return this.listMessages(context, profile.id);
+  }
+
   async createAliveCheck(executedBy: string) {
     const targets = await this.db.freelancerProfile.findMany({
       where: {

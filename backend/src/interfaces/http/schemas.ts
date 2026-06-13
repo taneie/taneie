@@ -172,6 +172,10 @@ export const sendMessageSchema = z.object({
     .default("chat"),
 });
 
+export const markMessagesReadSchema = z.object({
+  freelancerProfileId: z.string().uuid().optional(),
+});
+
 export const resumeMetadataSchema = z.object({
   originalFilename: z.string().trim().min(1).max(255),
   mimeType: z.string().trim().max(100).optional(),

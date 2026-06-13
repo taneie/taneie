@@ -134,6 +134,7 @@ export function mapMessage(
     to: decryptText(message.receiver?.name),
     body: decryptText(message.body),
     at: message.sentAt.toISOString(),
+    readAt: message.readAt?.toISOString() || "",
     channel: message.sender.role === "sales" ? "sales" : "freelancer",
     messageType: message.messageType,
   };

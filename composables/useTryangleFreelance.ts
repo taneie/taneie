@@ -118,6 +118,7 @@ export interface Message {
   to: string;
   body: string;
   at: string;
+  readAt?: string;
   channel: "sales" | "freelancer";
 }
 
@@ -757,6 +758,7 @@ async function loadWorkspace() {
   }
 
   ensureChatSelection();
+  if (state.value.activeView === "meeting") void markActiveChatAsRead();
   persist();
 }
 
@@ -773,6 +775,9 @@ async function refreshMessagesWithNotification() {
     state.value.messages = messages;
     knownMessageIds = new Set(messages.map((message) => message.id));
     if (incoming.length) showChatBanner(incoming.at(-1)!);
+    if (incoming.length && state.value.activeView === "meeting") {
+      void markActiveChatAsRead();
+    }
   } catch {
     stopChatPolling();
   }
@@ -1095,10 +1100,17 @@ const chatFreelancers = computed(() => {
     const lastMessage = [...state.value.messages]
       .filter((message) => message.freelancerId === freelancer.id)
       .sort((a, b) => b.at.localeCompare(a.at))[0];
+    const unreadCount = state.value.messages.filter(
+      (message) =>
+        message.freelancerId === freelancer.id &&
+        isIncomingMessage(message) &&
+        !message.readAt,
+    ).length;
 
     return {
       ...freelancer,
       lastMessage,
+      unreadCount,
     };
   });
 });
@@ -1169,7 +1181,10 @@ async function setView(view: ViewKey) {
     }
 
     state.value.activeView = view;
-    if (view === "meeting") ensureChatSelection();
+    if (view === "meeting") {
+      ensureChatSelection();
+      void markActiveChatAsRead();
+    }
     persist();
     scrollToPageTop();
     await sleep(180);
@@ -1203,6 +1218,7 @@ function selectChatFreelancer(freelancerId: string) {
 
   state.value.selectedFreelancerId = freelancer.id;
   void setView("meeting");
+  void markActiveChatAsRead();
   persist();
 }
 
@@ -1669,11 +1685,59 @@ async function sendMessage(body: string) {
     state.value.messages.push(message);
     knownMessageIds.add(message.id);
     persist();
+    void markActiveChatAsRead();
     showToast("メッセージを送信しました。");
     return true;
   } catch (error) {
     showToast(error instanceof Error ? error.message : "送信に失敗しました。");
     return false;
+  }
+}
+
+function mergeMessages(messages: Message[]) {
+  const messageById = new Map(messages.map((message) => [message.id, message]));
+  state.value.messages = state.value.messages.map(
+    (message) => messageById.get(message.id) || message,
+  );
+  for (const message of messages) {
+    if (!state.value.messages.some((item) => item.id === message.id)) {
+      state.value.messages.push(message);
+    }
+  }
+}
+
+async function markActiveChatAsRead() {
+  if (!state.value.auth || state.value.activeView !== "meeting") return;
+  const freelancerId = activeChatFreelancerId.value;
+  if (!freelancerId) return;
+
+  const unreadIds = activeChatMessages.value
+    .filter((message) => isIncomingMessage(message) && !message.readAt)
+    .map((message) => message.id);
+  if (!unreadIds.length) return;
+
+  const readAt = new Date().toISOString();
+  state.value.messages = state.value.messages.map((message) =>
+    unreadIds.includes(message.id) ? { ...message, readAt } : message,
+  );
+  persist();
+
+  try {
+    const messages = await apiRequest<Message[]>("/messages/read", {
+      method: "PATCH",
+      body: JSON.stringify({
+        freelancerProfileId:
+          currentRole.value === "sales" ? freelancerId : undefined,
+      }),
+      silent: true,
+    });
+    mergeMessages(messages);
+    persist();
+  } catch {
+    state.value.messages = state.value.messages.map((message) =>
+      unreadIds.includes(message.id) ? { ...message, readAt: "" } : message,
+    );
+    persist();
   }
 }
 
@@ -2036,6 +2100,7 @@ export function useTryangleFreelance() {
     addMeeting,
     updateMeetingStatus,
     sendMessage,
+    markActiveChatAsRead,
     aliveCheck,
     copyText,
     printSheet,
