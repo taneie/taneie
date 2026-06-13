@@ -89,6 +89,7 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
     id: profile.id,
     userId: profile.userId,
     name: decryptText(profile.user.name),
+    nameKana: decryptText(profile.user.nameKana),
     email: decryptText(profile.user.email),
     phone: decryptText(profile.user.phone),
     role: profile.roleTitle || "",

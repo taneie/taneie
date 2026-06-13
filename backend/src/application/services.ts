@@ -259,11 +259,15 @@ export class ProfileService {
       },
     });
 
-    if (input.name || input.phone) {
+    if (input.name || input.nameKana !== undefined || input.phone) {
       await this.db.user.update({
         where: { id: userId },
         data: {
           name: input.name ? encryptText(input.name) : undefined,
+          nameKana:
+            input.nameKana !== undefined
+              ? encryptText(input.nameKana)
+              : undefined,
           phone: input.phone ? encryptText(input.phone) : undefined,
         },
       });
@@ -600,6 +604,7 @@ export interface JobInput {
 
 export interface ProfileInput {
   name?: string;
+  nameKana?: string;
   phone?: string;
   roleTitle?: string;
   yearsExperience?: number;

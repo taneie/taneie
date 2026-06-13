@@ -49,6 +49,7 @@ export interface AuthUser {
 export interface Profile {
   id: string;
   name: string;
+  nameKana: string;
   email: string;
   phone: string;
   role: string;
@@ -499,6 +500,7 @@ function blankProfile(id = "fr-current"): Profile {
   return {
     id,
     name: "",
+    nameKana: "",
     email: "",
     phone: "",
     role: "",
@@ -849,6 +851,7 @@ function urlBase64ToUint8Array(value: string) {
 
 function freelancerToProfile(
   freelancer: Freelancer & {
+    nameKana?: string;
     email?: string;
     phone?: string | null;
     yearsExperience?: number;
@@ -860,6 +863,7 @@ function freelancerToProfile(
   return {
     ...blankProfile(freelancer.id),
     name: freelancer.name || "",
+    nameKana: freelancer.nameKana || "",
     email: freelancer.email || state.value.auth?.email || "",
     phone: freelancer.phone || "",
     role: freelancer.role || "",
@@ -884,6 +888,7 @@ function freelancerToProfile(
 function profileToApi(profile: Profile) {
   return {
     name: profile.name,
+    nameKana: profile.nameKana,
     phone: profile.phone,
     roleTitle: profile.role,
     yearsExperience: Number(profile.years || 0),
@@ -1246,7 +1251,7 @@ async function logout() {
 }
 
 async function saveProfileBasic(
-  values: Pick<Profile, "name" | "email" | "phone" | "role">,
+  values: Pick<Profile, "name" | "nameKana" | "email" | "phone" | "role">,
 ) {
   Object.assign(state.value.profile, values, { lastUpdated: today() });
   state.value.wizardStep = 2;
@@ -1681,6 +1686,7 @@ async function saveProfileToApi(message: string) {
   try {
     const profile = await apiRequest<
       Freelancer & {
+        nameKana?: string;
         email?: string;
         phone?: string | null;
         yearsExperience?: number;

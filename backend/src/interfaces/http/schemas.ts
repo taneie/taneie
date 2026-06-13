@@ -129,6 +129,7 @@ export const updateJobFlagsSchema = z.object({
 
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(255).optional(),
+  nameKana: z.string().trim().max(255).optional(),
   phone: z.string().trim().max(50).optional(),
   roleTitle: z.string().trim().max(255).optional(),
   yearsExperience: z.coerce.number().min(0).max(99).optional(),

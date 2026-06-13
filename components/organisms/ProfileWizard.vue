@@ -55,9 +55,29 @@
           @submit.prevent="saveBasic"
         >
           <FormInput
-            v-model="basic.name"
-            label="氏名"
-            name="name"
+            v-model="basic.lastName"
+            label="姓"
+            name="lastName"
+            autocomplete="family-name"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="basic.firstName"
+            label="名"
+            name="firstName"
+            autocomplete="given-name"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="basic.lastNameKana"
+            label="セイ"
+            name="lastNameKana"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="basic.firstNameKana"
+            label="メイ"
+            name="firstNameKana"
             @update:model-value="markDirty"
           />
           <FormInput
@@ -335,7 +355,15 @@ const {
 const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候補"];
 const profile = computed(() => state.value.profile);
 
-const basic = reactive({ name: "", email: "", phone: "", role: "" });
+const basic = reactive({
+  lastName: "",
+  firstName: "",
+  lastNameKana: "",
+  firstNameKana: "",
+  email: "",
+  phone: "",
+  role: "",
+});
 const skills = reactive({
   languages: [] as string[],
   db: [] as string[],
@@ -376,8 +404,13 @@ watch(() => [state.value.profile.id, state.value.wizardStep], hydrateForms, {
 
 function hydrateForms() {
   const p = state.value.profile;
+  const [lastName, firstName] = splitProfileName(p.name);
+  const [lastNameKana, firstNameKana] = splitProfileName(p.nameKana);
   Object.assign(basic, {
-    name: p.name,
+    lastName,
+    firstName,
+    lastNameKana,
+    firstNameKana,
     email: p.email,
     phone: p.phone,
     role: p.role,
@@ -445,7 +478,13 @@ function removeMeetingCandidate(index: number) {
 }
 
 function saveBasic() {
-  saveProfileBasic(basic);
+  saveProfileBasic({
+    name: joinProfileName(basic.lastName, basic.firstName),
+    nameKana: joinProfileName(basic.lastNameKana, basic.firstNameKana),
+    email: basic.email,
+    phone: basic.phone,
+    role: basic.role,
+  });
 }
 
 function saveSkills() {
@@ -471,6 +510,20 @@ function saveMeeting() {
 function toDateTimeLocal(value = "") {
   if (!value) return "";
   return value.trim().replace(" ", "T").slice(0, 16);
+}
+
+function splitProfileName(name = "") {
+  const normalized = name.trim().replace(/\s+/g, " ");
+  if (!normalized) return ["", ""];
+  const [lastName, ...rest] = normalized.split(" ");
+  return [lastName, rest.join(" ")];
+}
+
+function joinProfileName(lastName: string, firstName: string) {
+  return [lastName, firstName]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" ");
 }
 </script>
 

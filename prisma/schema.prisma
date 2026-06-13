@@ -86,6 +86,7 @@ model User {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   role            UserRole
   name            String    @db.VarChar(1000)
+  nameKana        String?   @map("name_kana") @db.VarChar(1000)
   email           String    @db.VarChar(1000)
   emailHash       String?   @unique @map("email_hash") @db.VarChar(128)
   passwordHash    String    @map("password_hash") @db.VarChar(255)
