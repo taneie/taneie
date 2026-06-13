@@ -198,11 +198,13 @@ export interface JobInput {
 
 const STORAGE_KEY = "tryangle-freelance-state-v1";
 const TOKEN_KEY = "tryangle-freelance-token";
-const runtimeConfig = useRuntimeConfig();
+const API_BASE_FALLBACK = "http://127.0.0.1:8787/api";
 
-const API_BASE = String(
-  runtimeConfig.public.apiBase || "http://127.0.0.1:8787/api"
-).replace(/\/$/, "");
+function getApiBase() {
+  const runtimeConfig = useRuntimeConfig();
+
+  return String(runtimeConfig.public.apiBase || API_BASE_FALLBACK).replace(/\/$/, "");
+}
 
 const navItems: NavItem[] = [
   {
@@ -626,11 +628,14 @@ async function apiRequest<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const headers = new Headers(options.headers);
-  if (options.body && !headers.has("Content-Type"))
+  if (options.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
-  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
 
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const response = await fetch(`${getApiBase()}${path}`, { ...options, headers });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(data?.error?.message || "API通信に失敗しました。");
@@ -867,7 +872,7 @@ function freelancerToProfile(
     desiredRate: freelancer.desiredRate ? String(freelancer.desiredRate) : "",
     startDate: freelancer.startDate || "",
     workRate: freelancer.workRate || "",
-    remote: freelancer.remote || "",
+    remote: freelancer.remote,
     availability: freelancer.availability || "",
     resumeName: freelancer.resumeName || "",
     pledgeAccepted: Boolean(freelancer.pledgedAt),
@@ -954,10 +959,10 @@ const profileRequirementItems = computed(() => {
       label: "稼働条件",
       done: Boolean(
         p.desiredRate &&
-        p.startDate &&
-        p.workRate &&
-        p.remote &&
-        p.availability,
+          p.startDate &&
+          p.workRate &&
+          p.remote &&
+          p.availability,
       ),
     },
     { label: "レジュメ", done: Boolean(p.resumeName) },
@@ -1712,19 +1717,19 @@ async function saveProfileToApi(message: string) {
 function hasProfileContent(profile: Profile) {
   return Boolean(
     profile?.name ||
-    profile?.email ||
-    profile?.phone ||
-    profile?.role ||
-    profile?.languages ||
-    profile?.db ||
-    profile?.frameworks ||
-    profile?.cloud ||
-    profile?.otherSkills ||
-    profile?.years ||
-    profile?.desiredRate ||
-    profile?.startDate ||
-    profile?.resumeName ||
-    profile?.meetingCandidates?.length,
+      profile?.email ||
+      profile?.phone ||
+      profile?.role ||
+      profile?.languages ||
+      profile?.db ||
+      profile?.frameworks ||
+      profile?.cloud ||
+      profile?.otherSkills ||
+      profile?.years ||
+      profile?.desiredRate ||
+      profile?.startDate ||
+      profile?.resumeName ||
+      profile?.meetingCandidates?.length,
   );
 }
 
