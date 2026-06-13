@@ -130,6 +130,21 @@ export interface MeetingRequest {
   status: "候補" | "確定" | "再調整";
 }
 
+export interface ContactInquiry {
+  id: string;
+  inquiryType: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  body: string;
+  status: string;
+  createdAt: string;
+  answerBody: string;
+  answeredAt: string;
+  answererName: string;
+}
+
 export interface AliveCheck {
   id: string;
   count: number;
@@ -150,6 +165,7 @@ export interface TryangleState {
   applications: Application[];
   messages: Message[];
   meetingRequests: MeetingRequest[];
+  contactInquiries: ContactInquiry[];
   aliveChecks: AliveCheck[];
 }
 
@@ -540,6 +556,7 @@ function createSeedState(): TryangleState {
         status: "候補",
       },
     ],
+    contactInquiries: [],
     aliveChecks: [],
   };
 }
@@ -610,6 +627,7 @@ function mergeState(
       ? normalizeMessages(saved.messages, base)
       : base.messages,
     meetingRequests: saved.meetingRequests || base.meetingRequests,
+    contactInquiries: saved.contactInquiries || base.contactInquiries,
     aliveChecks: saved.aliveChecks || base.aliveChecks,
     previewFreelancerId: saved.previewFreelancerId || "",
   };
@@ -756,21 +774,30 @@ async function loadWorkspace() {
   knownMessageIds = new Set(messages.map((message) => message.id));
 
   if (state.value.auth.role === "sales") {
-    state.value.freelancers = await apiRequest<Freelancer[]>("/freelancers");
+    const [freelancers, contactInquiries] = await Promise.all([
+      apiRequest<Freelancer[]>("/freelancers"),
+      apiRequest<ContactInquiry[]>("/contact-inquiries").catch(() => []),
+    ]);
+    state.value.freelancers = freelancers;
+    state.value.contactInquiries = contactInquiries;
   } else {
-    const profile = await apiRequest<
-      Freelancer & {
-        email?: string;
-        phone?: string;
-        yearsExperience?: number;
-        startDate?: string;
-      }
-    >("/profile/me");
+    const [profile, contactInquiries] = await Promise.all([
+      apiRequest<
+        Freelancer & {
+          email?: string;
+          phone?: string;
+          yearsExperience?: number;
+          startDate?: string;
+        }
+      >("/profile/me"),
+      apiRequest<ContactInquiry[]>("/contact-inquiries").catch(() => []),
+    ]);
     state.value.profile = {
       ...freelancerToProfile(profile),
       meetingCandidates: meetingCandidatesForProfile(profile.id),
     };
     state.value.freelancers = [profile];
+    state.value.contactInquiries = contactInquiries;
   }
 
   ensureChatSelection();
@@ -1735,12 +1762,46 @@ async function submitContactInquiry(values: ContactInquiryInput) {
       }),
     });
     clearUnsavedChanges();
+    await loadContactInquiries();
     showToast("問い合わせを送信しました。");
     return true;
   } catch (error) {
     showToast(
       error instanceof Error ? error.message : "問い合わせ送信に失敗しました。",
     );
+    return false;
+  }
+}
+
+async function loadContactInquiries() {
+  if (!currentRole.value) return;
+  state.value.contactInquiries =
+    await apiRequest<ContactInquiry[]>("/contact-inquiries");
+  persist();
+}
+
+async function answerContactInquiry(id: string, answerBody: string) {
+  if (!answerBody.trim()) {
+    showToast("回答内容を入力してください。");
+    return false;
+  }
+
+  try {
+    const inquiry = await apiRequest<ContactInquiry>(
+      `/contact-inquiries/${id}/answer`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ answerBody }),
+      },
+    );
+    state.value.contactInquiries = state.value.contactInquiries.map((item) =>
+      item.id === inquiry.id ? inquiry : item,
+    );
+    showToast("問い合わせに回答しました。");
+    persist();
+    return true;
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "回答に失敗しました。");
     return false;
   }
 }
@@ -2152,6 +2213,8 @@ export function useTryangleFreelance() {
     updateMeetingStatus,
     sendMessage,
     submitContactInquiry,
+    loadContactInquiries,
+    answerContactInquiry,
     markActiveChatAsRead,
     aliveCheck,
     copyText,

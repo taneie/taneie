@@ -1,67 +1,195 @@
 <template>
   <PageHead
     title="問い合わせ"
-    kicker="サービス利用中の確認事項やサポート依頼を送信します。"
+    :kicker="
+      currentRole === 'sales'
+        ? '求職者から届いた問い合わせを確認し、回答します。'
+        : 'サービス利用中の確認事項やサポート依頼を送信します。'
+    "
   />
 
-  <section :class="$style.panel">
+  <section v-if="currentRole === 'sales'" :class="$style.panel">
     <div :class="$style.panelHeader">
-      <h2 :class="$style.panelTitle">問い合わせ内容</h2>
+      <h2 :class="$style.panelTitle">問い合わせ一覧</h2>
     </div>
     <div :class="$style.panelBody">
-      <form :class="$style.formGrid" @submit.prevent="submit">
-        <FormSelect
-          v-model="form.inquiryType"
-          label="問い合わせ種別"
-          name="inquiryType"
-          :options="inquiryTypeOptions"
-          @update:model-value="markDirty"
-        />
-        <FormInput
-          v-model="form.subject"
-          label="件名"
-          name="subject"
-          @update:model-value="markDirty"
-        />
-        <FormInput
-          v-model="form.name"
-          label="氏名"
-          name="name"
-          autocomplete="name"
-          @update:model-value="markDirty"
-        />
-        <FormInput
-          v-model="form.email"
-          label="メールアドレス"
-          name="email"
-          type="email"
-          autocomplete="email"
-          @update:model-value="markDirty"
-        />
-        <FormInput
-          v-model="form.phone"
-          label="電話番号"
-          name="phone"
-          autocomplete="tel"
-          @update:model-value="markDirty"
-        />
-        <FieldLabel label="本文" full>
-          <AppTextarea
-            v-model="form.body"
-            name="body"
-            @update:model-value="markDirty"
-          />
-        </FieldLabel>
-        <div :class="$style.actions">
-          <BaseButton type="submit" icon="send">送信</BaseButton>
-        </div>
-      </form>
+      <p v-if="!state.contactInquiries.length" :class="$style.empty">
+        問い合わせはまだありません。
+      </p>
+      <div v-else :class="$style.inquiryList">
+        <article
+          v-for="inquiry in state.contactInquiries"
+          :key="inquiry.id"
+          :class="$style.inquiryCard"
+        >
+          <div :class="$style.inquiryHeader">
+            <div :class="$style.inquiryTitleGroup">
+              <span :class="$style.inquiryType">{{ inquiry.inquiryType }}</span>
+              <h3 :class="$style.inquiryTitle">{{ inquiry.subject }}</h3>
+            </div>
+            <span :class="[$style.status, statusClass(inquiry.status)]">
+              {{ statusLabel(inquiry.status) }}
+            </span>
+          </div>
+
+          <dl :class="$style.metaGrid">
+            <div>
+              <dt>氏名</dt>
+              <dd>{{ inquiry.name }}</dd>
+            </div>
+            <div>
+              <dt>メール</dt>
+              <dd>{{ inquiry.email }}</dd>
+            </div>
+            <div>
+              <dt>電話番号</dt>
+              <dd>{{ inquiry.phone || "未入力" }}</dd>
+            </div>
+            <div>
+              <dt>受付日時</dt>
+              <dd>{{ formatDateTime(inquiry.createdAt) }}</dd>
+            </div>
+          </dl>
+
+          <p :class="$style.bodyText">{{ inquiry.body }}</p>
+
+          <div v-if="inquiry.answerBody" :class="$style.answerBox">
+            <div :class="$style.answerMeta">
+              <span>回答済み</span>
+              <span>{{ formatDateTime(inquiry.answeredAt) }}</span>
+              <span v-if="inquiry.answererName">{{ inquiry.answererName }}</span>
+            </div>
+            <p>{{ inquiry.answerBody }}</p>
+          </div>
+
+          <form :class="$style.answerForm" @submit.prevent="answer(inquiry.id)">
+            <FieldLabel label="回答内容" full>
+              <AppTextarea
+                v-model="answerForms[inquiry.id]"
+                name="answerBody"
+                :placeholder="
+                  inquiry.answerBody
+                    ? '回答を更新する場合は入力してください'
+                    : '回答を入力してください'
+                "
+              />
+            </FieldLabel>
+            <div :class="$style.actions">
+              <BaseButton type="submit" icon="send">
+                {{ inquiry.answerBody ? "回答を更新" : "回答する" }}
+              </BaseButton>
+            </div>
+          </form>
+        </article>
+      </div>
     </div>
   </section>
+
+  <template v-else>
+    <section :class="$style.panel">
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">問い合わせ内容</h2>
+      </div>
+      <div :class="$style.panelBody">
+        <form :class="$style.formGrid" @submit.prevent="submit">
+          <FormSelect
+            v-model="form.inquiryType"
+            label="問い合わせ種別"
+            name="inquiryType"
+            :options="inquiryTypeOptions"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="form.subject"
+            label="件名"
+            name="subject"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="form.name"
+            label="氏名"
+            name="name"
+            autocomplete="name"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="form.email"
+            label="メールアドレス"
+            name="email"
+            type="email"
+            autocomplete="email"
+            @update:model-value="markDirty"
+          />
+          <FormInput
+            v-model="form.phone"
+            label="電話番号"
+            name="phone"
+            autocomplete="tel"
+            @update:model-value="markDirty"
+          />
+          <FieldLabel label="本文" full>
+            <AppTextarea
+              v-model="form.body"
+              name="body"
+              @update:model-value="markDirty"
+            />
+          </FieldLabel>
+          <div :class="$style.actions">
+            <BaseButton type="submit" icon="send">送信</BaseButton>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section :class="[$style.panel, $style.historyPanel]">
+      <div :class="$style.panelHeader">
+        <h2 :class="$style.panelTitle">問い合わせ履歴</h2>
+      </div>
+      <div :class="$style.panelBody">
+        <p v-if="!state.contactInquiries.length" :class="$style.empty">
+          送信済みの問い合わせはまだありません。
+        </p>
+        <div v-else :class="$style.inquiryList">
+          <article
+            v-for="inquiry in state.contactInquiries"
+            :key="inquiry.id"
+            :class="$style.inquiryCard"
+          >
+            <div :class="$style.inquiryHeader">
+              <div :class="$style.inquiryTitleGroup">
+                <span :class="$style.inquiryType">{{ inquiry.inquiryType }}</span>
+                <h3 :class="$style.inquiryTitle">{{ inquiry.subject }}</h3>
+              </div>
+              <span :class="[$style.status, statusClass(inquiry.status)]">
+                {{ statusLabel(inquiry.status) }}
+              </span>
+            </div>
+            <dl :class="$style.metaGrid">
+              <div>
+                <dt>送信日時</dt>
+                <dd>{{ formatDateTime(inquiry.createdAt) }}</dd>
+              </div>
+            </dl>
+            <p :class="$style.bodyText">{{ inquiry.body }}</p>
+            <div v-if="inquiry.answerBody" :class="$style.answerBox">
+              <div :class="$style.answerMeta">
+                <span>営業からの回答</span>
+                <span>{{ formatDateTime(inquiry.answeredAt) }}</span>
+              </div>
+              <p>{{ inquiry.answerBody }}</p>
+            </div>
+            <p v-else :class="$style.pendingText">
+              営業からの回答をお待ちください。
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </template>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from "vue";
+import { onMounted, reactive, useCssModule } from "vue";
 import {
   useTryangleFreelance,
   type ContactInquiryInput,
@@ -70,10 +198,14 @@ import {
 const {
   state,
   currentUser,
+  currentRole,
   submitContactInquiry,
+  loadContactInquiries,
+  answerContactInquiry,
   markDirty,
   clearUnsavedChanges,
 } = useTryangleFreelance();
+const styles = useCssModule();
 
 const inquiryTypeOptions = [
   "",
@@ -93,9 +225,15 @@ const form = reactive<ContactInquiryInput>({
   subject: "",
   body: "",
 });
+const answerForms = reactive<Record<string, string>>({});
 
 onMounted(() => {
-  hydrateForm();
+  if (currentRole.value === "sales") {
+    void loadContactInquiries();
+  } else {
+    hydrateForm();
+    void loadContactInquiries();
+  }
 });
 
 function hydrateForm() {
@@ -120,6 +258,31 @@ async function submit() {
     clearUnsavedChanges();
   }
 }
+
+async function answer(id: string) {
+  if (await answerContactInquiry(id, answerForms[id] || "")) {
+    answerForms[id] = "";
+  }
+}
+
+function statusLabel(status: string) {
+  return status === "answered" ? "回答済み" : "未回答";
+}
+
+function statusClass(status: string) {
+  return status === "answered" ? styles.statusAnswered : styles.statusNew;
+}
+
+function formatDateTime(value: string) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
 </script>
 
 <style module>
@@ -130,6 +293,10 @@ async function submit() {
   box-shadow: var(--shadow);
   min-width: 0;
   max-width: 100%;
+}
+
+.historyPanel {
+  margin-top: 16px;
 }
 
 .panelHeader {
@@ -169,6 +336,137 @@ async function submit() {
   margin-top: 8px;
 }
 
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.inquiryList {
+  display: grid;
+  gap: 14px;
+}
+
+.inquiryCard {
+  min-width: 0;
+  border: 1px solid #d8e4f7;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.inquiryHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.inquiryTitleGroup {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.inquiryType {
+  color: #1d5aa6;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.inquiryTitle {
+  margin: 0;
+  color: #10294f;
+  font-size: 17px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.status {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.statusNew {
+  background: #fff4dd;
+  color: #955b00;
+}
+
+.statusAnswered {
+  background: #e6f5ef;
+  color: #13704f;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.metaGrid div {
+  min-width: 0;
+}
+
+.metaGrid dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.metaGrid dd {
+  margin: 3px 0 0;
+  color: #10294f;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.bodyText {
+  margin: 0 0 14px;
+  color: #263a58;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.answerBox {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  border-left: 3px solid #2f74d0;
+  background: #f3f7fd;
+  padding: 12px;
+}
+
+.answerBox p {
+  margin: 0;
+  color: #10294f;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.answerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.answerForm {
+  display: grid;
+  gap: 10px;
+}
+
+.pendingText {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 @media (max-width: 620px) {
   .panelBody,
   .panelHeader {
@@ -185,6 +483,14 @@ async function submit() {
 
   .actions button {
     width: 100%;
+  }
+
+  .inquiryHeader {
+    display: grid;
+  }
+
+  .metaGrid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
