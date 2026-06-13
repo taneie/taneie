@@ -111,77 +111,60 @@
         >
           <fieldset :class="$style.skillGroup">
             <legend>開発言語</legend>
-            <label
+            <AppCheckboxPill
               v-for="option in languageOptions"
               :key="option"
-              :class="$style.checkboxPill"
+              v-model="skills.languages"
+              :value="option"
+              @change="markDirty"
             >
-              <input
-                v-model="skills.languages"
-                type="checkbox"
-                :value="option"
-                @change="markDirty"
-              />
-              <span>{{ option }}</span>
-            </label>
+              {{ option }}
+            </AppCheckboxPill>
           </fieldset>
           <fieldset :class="$style.skillGroup">
             <legend>DB</legend>
-            <label
+            <AppCheckboxPill
               v-for="option in dbOptions"
               :key="option"
-              :class="$style.checkboxPill"
+              v-model="skills.db"
+              :value="option"
+              @change="markDirty"
             >
-              <input
-                v-model="skills.db"
-                type="checkbox"
-                :value="option"
-                @change="markDirty"
-              />
-              <span>{{ option }}</span>
-            </label>
+              {{ option }}
+            </AppCheckboxPill>
           </fieldset>
           <fieldset :class="$style.skillGroup">
             <legend>フレームワーク</legend>
-            <label
+            <AppCheckboxPill
               v-for="option in frameworkOptions"
               :key="option"
-              :class="$style.checkboxPill"
+              v-model="skills.frameworks"
+              :value="option"
+              @change="markDirty"
             >
-              <input
-                v-model="skills.frameworks"
-                type="checkbox"
-                :value="option"
-                @change="markDirty"
-              />
-              <span>{{ option }}</span>
-            </label>
+              {{ option }}
+            </AppCheckboxPill>
           </fieldset>
           <fieldset :class="$style.skillGroup">
             <legend>クラウド</legend>
-            <label
+            <AppCheckboxPill
               v-for="option in cloudOptions"
               :key="option"
-              :class="$style.checkboxPill"
+              v-model="skills.cloud"
+              :value="option"
+              @change="markDirty"
             >
-              <input
-                v-model="skills.cloud"
-                type="checkbox"
-                :value="option"
-                @change="markDirty"
-              />
-              <span>{{ option }}</span>
-            </label>
+              {{ option }}
+            </AppCheckboxPill>
           </fieldset>
-          <label :class="[$style.field, $style.full]"
-            >その他
-            <textarea
+          <FieldLabel label="その他" full>
+            <AppTextarea
               v-model="skills.other"
-              :class="$style.control"
+              name="otherSkills"
               placeholder="Docker, Kubernetes, GitHub Actions など"
-              @input="markDirty"
-            ></textarea>
-          </label>
+              @update:model-value="markDirty"
+            />
+          </FieldLabel>
           <FormInput
             v-model="skills.years"
             label="経験年数"

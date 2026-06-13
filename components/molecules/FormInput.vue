@@ -1,18 +1,16 @@
 <template>
-  <label :class="$style.field">
-    {{ label }}
-    <input
-      :class="$style.control"
+  <FieldLabel :label="label">
+    <AppInput
       :name="name"
       :type="type"
-      :value="modelValue"
+      :model-value="modelValue"
       :autocomplete="autocomplete"
       :required="required"
       :readonly="readonly"
       :placeholder="placeholder"
-      @input="onInput"
+      @update:model-value="emit('update:modelValue', $event)"
     />
-  </label>
+  </FieldLabel>
 </template>
 
 <script setup lang="ts">
@@ -39,33 +37,4 @@ withDefaults(
 const emit = defineEmits<{
   "update:modelValue": [value: string];
 }>();
-
-function onInput(event: Event) {
-  emit("update:modelValue", (event.target as HTMLInputElement).value);
-}
 </script>
-
-<style module>
-.field {
-  display: grid;
-  gap: 6px;
-  color: #263f63;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.control {
-  width: 100%;
-  border: 1px solid #c6d5e8;
-  border-radius: 6px;
-  padding: 10px 11px;
-  background: #fff;
-  color: var(--ink);
-  outline: none;
-}
-
-.control:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
-}
-</style>
