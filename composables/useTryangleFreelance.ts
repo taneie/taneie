@@ -198,7 +198,8 @@ export interface JobInput {
 
 const STORAGE_KEY = "tryangle-freelance-state-v1";
 const TOKEN_KEY = "tryangle-freelance-token";
-const API_BASE = "http://127.0.0.1:8787/api";
+const API_BASE =
+  import.meta.env.VITE_API_BASE || (import.meta.dev ? "http://127.0.0.1:8787/api" : "/api");
 
 const navItems: NavItem[] = [
   {

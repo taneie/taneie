@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: tryangle-freelance
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run deploy:build
+    startCommand: npm run deploy:start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DATA_ENCRYPTION_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: NUXT_APP_BASE_URL
+        value: /
+      - key: VITE_API_BASE
+        value: /api
+      - key: PRIVACY_POLICY_VERSION
+        value: 2026-06-10
+      - key: WEB_PUSH_PUBLIC_KEY
+        sync: false
+      - key: WEB_PUSH_PRIVATE_KEY
+        sync: false
+      - key: WEB_PUSH_SUBJECT
+        value: mailto:admin@example.com

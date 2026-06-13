@@ -1,5 +1,7 @@
 import cors from "cors";
 import express from "express";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { config } from "../../infrastructure/config.js";
 import { prisma } from "../../infrastructure/prisma.js";
 import { getWebPushPublicKey } from "../../infrastructure/push.js";
@@ -395,6 +397,14 @@ export function createApp() {
         .json(await communicationService.createAliveCheck(req.auth!.userId));
     }),
   );
+
+  const staticDir = process.env.STATIC_DIR || path.resolve(process.cwd(), ".output/public");
+  if (existsSync(staticDir)) {
+    app.use(express.static(staticDir));
+    app.get(/^(?!\/api).*/, (_req, res) => {
+      res.sendFile(path.join(staticDir, "index.html"));
+    });
+  }
 
   app.use(errorHandler);
 

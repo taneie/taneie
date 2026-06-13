@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node ./scripts/nuxt-short-tmp.mjs dev --host 127.0.0.1 --port 5173",
+    "start": "node backend/dist/interfaces/http/server.js",
     "build": "node ./scripts/nuxt-short-tmp.mjs build",
     "preview": "node ./scripts/nuxt-short-tmp.mjs preview . --host 127.0.0.1 --port 5173",
     "typecheck": "node ./scripts/nuxt-short-tmp.mjs typecheck",
@@ -16,6 +17,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:encrypt-pii": "tsx scripts/encrypt-existing-pii.ts",
     "db:seed": "tsx prisma/seed.ts",
+    "deploy:build": "npm run db:generate && npm run generate && npm run api:build",
+    "deploy:start": "npm run db:deploy && npm run db:seed && npm run api:start",
     "postinstall": "node ./scripts/nuxt-short-tmp.mjs prepare",
     "generate": "nuxt generate",
     "deploy": "npm run generate && gh-pages -d .output/public"

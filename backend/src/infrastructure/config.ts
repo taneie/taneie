@@ -7,7 +7,7 @@ function readEnv(name: string, fallback: string) {
 }
 
 export const config = {
-  apiPort: Number(readEnv("API_PORT", "8787")),
+  apiPort: Number(process.env.PORT || readEnv("API_PORT", "8787")),
   jwtSecret: readEnv("JWT_SECRET", "local-development-secret-change-me"),
   jwtExpiresIn: readEnv("JWT_EXPIRES_IN", "7d"),
   corsOrigins: readEnv(

@@ -79,6 +79,28 @@ npm run api:build
 npm run db:generate
 ```
 
+## 無料枠での公開
+
+無料でネット公開する場合は、Web/API を Render Free Web Service、DB を Neon Free Postgres に置きます。
+Render Postgres の無料枠は 30 日制限があるため、このプロジェクトでは Neon を推奨します。
+
+1. Neon で無料プロジェクトを作成し、接続文字列を取得します。
+2. GitHub にこのリポジトリを push します。
+3. Render で Blueprint または Web Service を作成し、`render.yaml` を使ってデプロイします。
+4. Render の Environment に以下を設定します。
+
+```txt
+DATABASE_URL=Neon の接続文字列
+JWT_SECRET=十分に長いランダム文字列
+DATA_ENCRYPTION_KEY=openssl rand -base64 32 で生成した値
+CORS_ORIGIN=https://Renderで発行されたURL
+NUXT_APP_BASE_URL=/
+VITE_API_BASE=/api
+```
+
+ビルドは `npm run deploy:build`、起動は `npm run deploy:start` です。
+起動時に Prisma migration と seed を実行するため、デモログインも利用できます。
+
 ## デモログイン
 
 - 求職者: freelancer@example.com / freelance123

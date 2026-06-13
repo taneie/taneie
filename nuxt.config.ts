@@ -15,7 +15,7 @@ export default defineNuxtConfig({
   ],
   css: ["~/src/styles.css"],
   app: {
-    baseURL: "/taneie/",
+    baseURL: process.env.NUXT_APP_BASE_URL || "/",
     head: {
       htmlAttrs: { lang: "ja" },
       title: "TRYANGLE FREELANCE",
