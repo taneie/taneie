@@ -1,0 +1,92 @@
+import { Prisma, type PrismaClient } from "@prisma/client";
+import {
+  AppError,
+  labelToApplicationStatus,
+  type AuthContext,
+} from "../../domain/types.js";
+import { mapApplication } from "../mappers.js";
+import {
+  applicationInclude,
+  assertFreelancerCanViewJobs,
+} from "./shared.js";
+
+export class ApplicationService {
+  constructor(private readonly db: PrismaClient) {}
+
+  async list(context: AuthContext) {
+    const where =
+      context.role === "sales"
+        ? {}
+        : { freelancerProfile: { userId: context.userId } };
+    const applications = await this.db.application.findMany({
+      where,
+      include: applicationInclude,
+      orderBy: { appliedAt: "desc" },
+    });
+    return applications.map(mapApplication);
+  }
+
+  async apply(jobId: string, userId: string) {
+    await assertFreelancerCanViewJobs(this.db, userId);
+    const profile = await this.db.freelancerProfile.findUniqueOrThrow({
+      where: { userId },
+    });
+    const application = await this.db.application
+      .create({
+        data: {
+          jobId,
+          freelancerProfileId: profile.id,
+          status: "screening",
+          histories: { create: { toStatus: "screening", changedBy: userId } },
+        },
+        include: applicationInclude,
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new AppError(
+            409,
+            "この案件にはすでに応募済みです。",
+            "APPLICATION_ALREADY_EXISTS",
+          );
+        }
+        throw error;
+      });
+    return mapApplication(application);
+  }
+
+  async changeStatus(
+    id: string,
+    toStatus: keyof typeof labelToApplicationStatus | string,
+    changedBy: string,
+    note?: string,
+  ) {
+    const status =
+      toStatus in labelToApplicationStatus
+        ? labelToApplicationStatus[
+            toStatus as keyof typeof labelToApplicationStatus
+          ]
+        : toStatus;
+    const current = await this.db.application.findUniqueOrThrow({
+      where: { id },
+    });
+    const application = await this.db.application.update({
+      where: { id },
+      data: {
+        status: status as never,
+        histories: {
+          create: {
+            fromStatus: current.status,
+            toStatus: status as never,
+            changedBy,
+            note,
+          },
+        },
+      },
+      include: applicationInclude,
+    });
+    return mapApplication(application);
+  }
+}

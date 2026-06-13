@@ -2,52 +2,33 @@ import cors from "cors";
 import express from "express";
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { config } from "../../infrastructure/config.js";
-import { prisma } from "../../infrastructure/prisma.js";
-import { getWebPushPublicKey } from "../../infrastructure/push.js";
-import {
-  decryptText,
-  encryptText,
-  piiHash,
-} from "../../infrastructure/crypto.js";
 import {
   ApplicationService,
   AuthService,
   CatalogService,
-  ContactService,
   CommunicationService,
+  ContactService,
   JobService,
   ProfileService,
+  PushSubscriptionService,
+  ResumeService,
 } from "../../application/services.js";
-import {
-  AppError,
-  getKeyByValue,
-  labelToMeetingStatus,
-} from "../../domain/types.js";
-import {
-  asyncHandler,
-  errorHandler,
-  requireAuth,
-  requireRole,
-  validateBody,
-  type AuthedRequest,
-} from "./middleware.js";
-import {
-  applySchema,
-  changeApplicationStatusSchema,
-  createContactInquirySchema,
-  createJobSchema,
-  createMeetingSchema,
-  loginSchema,
-  markMessagesReadSchema,
-  pushSubscriptionSchema,
-  registerSchema,
-  resumeMetadataSchema,
-  sendMessageSchema,
-  updateJobFlagsSchema,
-  updateMeetingStatusSchema,
-  updateProfileSchema,
-} from "./schemas.js";
+import { AppError } from "../../domain/types.js";
+import { config } from "../../infrastructure/config.js";
+import { prisma } from "../../infrastructure/prisma.js";
+import { errorHandler } from "./middleware.js";
+import { registerAliveCheckRoutes } from "./routes/alive-checks.routes.js";
+import { registerApplicationRoutes } from "./routes/applications.routes.js";
+import { registerAuthRoutes } from "./routes/auth.routes.js";
+import { registerBootstrapRoutes } from "./routes/bootstrap.routes.js";
+import { registerContactRoutes } from "./routes/contact.routes.js";
+import { registerHealthRoutes } from "./routes/health.routes.js";
+import { registerJobRoutes } from "./routes/jobs.routes.js";
+import { registerMeetingRoutes } from "./routes/meetings.routes.js";
+import { registerMessageRoutes } from "./routes/messages.routes.js";
+import { registerProfileRoutes } from "./routes/profiles.routes.js";
+import { registerPushRoutes } from "./routes/push.routes.js";
+import { registerResumeRoutes } from "./routes/resumes.routes.js";
 
 const authService = new AuthService(prisma);
 const catalogService = new CatalogService(prisma);
@@ -56,10 +37,8 @@ const profileService = new ProfileService(prisma);
 const applicationService = new ApplicationService(prisma);
 const communicationService = new CommunicationService(prisma);
 const contactService = new ContactService(prisma);
-
-function routeParam(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value || "";
-}
+const resumeService = new ResumeService(prisma);
+const pushSubscriptionService = new PushSubscriptionService(prisma);
 
 export function createApp() {
   const app = express();
@@ -80,347 +59,21 @@ export function createApp() {
   );
   app.use(express.json({ limit: "1mb" }));
 
-  app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", service: "TRYANGLE FREELANCE API" });
-  });
+  registerHealthRoutes(app);
+  registerPushRoutes(app, pushSubscriptionService);
+  registerAuthRoutes(app, authService);
+  registerBootstrapRoutes(app, catalogService);
+  registerJobRoutes(app, jobService);
+  registerProfileRoutes(app, profileService);
+  registerResumeRoutes(app, resumeService);
+  registerApplicationRoutes(app, applicationService);
+  registerMeetingRoutes(app, communicationService);
+  registerMessageRoutes(app, communicationService);
+  registerContactRoutes(app, contactService);
+  registerAliveCheckRoutes(app, communicationService);
 
-  app.get("/api/push/public-key", (_req, res) => {
-    res.json({ publicKey: getWebPushPublicKey() });
-  });
-
-  app.post(
-    "/api/auth/register",
-    validateBody(registerSchema),
-    asyncHandler(async (req, res) => {
-      const result = await authService.register({
-        ...req.body,
-        policyVersion: config.privacyPolicyVersion,
-        ipAddress: req.ip,
-        userAgent: req.headers["user-agent"],
-      });
-      res.status(201).json(result);
-    }),
-  );
-
-  app.post(
-    "/api/auth/login",
-    validateBody(loginSchema),
-    asyncHandler(async (req, res) => {
-      const result = await authService.login(req.body.email, req.body.password);
-      if (!result)
-        throw new AppError(
-          401,
-          "メールアドレスまたはパスワードが違います。",
-          "INVALID_CREDENTIALS",
-        );
-      res.json(result);
-    }),
-  );
-
-  app.get(
-    "/api/auth/me",
-    requireAuth,
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      const user = await prisma.user.findUniqueOrThrow({
-        where: { id: req.auth!.userId },
-        include: { freelancerProfile: true },
-      });
-      res.json({
-        id: user.id,
-        email: decryptText(user.email),
-        role: user.role,
-        name: decryptText(user.name),
-        freelancerId: user.freelancerProfile?.id,
-      });
-    }),
-  );
-
-  app.get(
-    "/api/bootstrap",
-    requireAuth,
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(await catalogService.bootstrap(req.auth!));
-    }),
-  );
-
-  app.get(
-    "/api/jobs",
-    requireAuth,
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(await jobService.list(req.auth));
-    }),
-  );
-
-  app.post(
-    "/api/jobs",
-    requireAuth,
-    requireRole("sales"),
-    validateBody(createJobSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.status(201).json(await jobService.create(req.body, req.auth!.userId));
-    }),
-  );
-
-  app.patch(
-    "/api/jobs/:id",
-    requireAuth,
-    requireRole("sales"),
-    validateBody(updateJobFlagsSchema),
-    asyncHandler(async (req, res) => {
-      res.json(
-        await jobService.updateFlags(routeParam(req.params.id), req.body),
-      );
-    }),
-  );
-
-  app.get(
-    "/api/freelancers",
-    requireAuth,
-    requireRole("sales"),
-    asyncHandler(async (_req, res) => {
-      res.json(await profileService.listFreelancers());
-    }),
-  );
-
-  app.get(
-    "/api/profile/me",
-    requireAuth,
-    requireRole("freelancer"),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      const profile = await profileService.getCurrent(req.auth!.userId);
-      if (!profile)
-        throw new AppError(
-          404,
-          "プロフィールが見つかりません。",
-          "PROFILE_NOT_FOUND",
-        );
-      res.json(profile);
-    }),
-  );
-
-  app.put(
-    "/api/profile/me",
-    requireAuth,
-    requireRole("freelancer"),
-    validateBody(updateProfileSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(await profileService.updateCurrent(req.auth!.userId, req.body));
-    }),
-  );
-
-  app.post(
-    "/api/resumes",
-    requireAuth,
-    requireRole("freelancer"),
-    validateBody(resumeMetadataSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      const profile = await prisma.freelancerProfile.findUniqueOrThrow({
-        where: { userId: req.auth!.userId },
-      });
-      await prisma.resume.updateMany({
-        where: { freelancerProfileId: profile.id },
-        data: { isLatest: false },
-      });
-      const resume = await prisma.resume.create({
-        data: {
-          ...req.body,
-          originalFilename: encryptText(req.body.originalFilename),
-          freelancerProfileId: profile.id,
-          isLatest: true,
-        },
-      });
-      res.status(201).json(resume);
-    }),
-  );
-
-  app.get(
-    "/api/applications",
-    requireAuth,
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(await applicationService.list(req.auth!));
-    }),
-  );
-
-  app.post(
-    "/api/applications",
-    requireAuth,
-    requireRole("freelancer"),
-    validateBody(applySchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res
-        .status(201)
-        .json(await applicationService.apply(req.body.jobId, req.auth!.userId));
-    }),
-  );
-
-  app.patch(
-    "/api/applications/:id/status",
-    requireAuth,
-    requireRole("sales"),
-    validateBody(changeApplicationStatusSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(
-        await applicationService.changeStatus(
-          routeParam(req.params.id),
-          req.body.status,
-          req.auth!.userId,
-          req.body.note,
-        ),
-      );
-    }),
-  );
-
-  app.get(
-    "/api/meeting-requests",
-    requireAuth,
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      const meetings = await communicationService.listMeetings(
-        req.auth!,
-        req.query.freelancerProfileId?.toString(),
-      );
-      res.json(
-        meetings.map((meeting) => ({
-          id: meeting.id,
-          freelancerId: meeting.freelancerProfileId,
-          applicationId: meeting.applicationId,
-          candidate: meeting.candidateAt.toISOString(),
-          status: getKeyByValue(labelToMeetingStatus, meeting.status),
-        })),
-      );
-    }),
-  );
-
-  app.post(
-    "/api/meeting-requests",
-    requireAuth,
-    validateBody(createMeetingSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res
-        .status(201)
-        .json(await communicationService.createMeeting(req.auth!, req.body));
-    }),
-  );
-
-  app.patch(
-    "/api/meeting-requests/:id/status",
-    requireAuth,
-    requireRole("sales"),
-    validateBody(updateMeetingStatusSchema),
-    asyncHandler(async (req, res) => {
-      res.json(
-        await communicationService.updateMeeting(
-          routeParam(req.params.id),
-          req.body.status,
-        ),
-      );
-    }),
-  );
-
-  app.get(
-    "/api/messages",
-    requireAuth,
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(
-        await communicationService.listMessages(
-          req.auth!,
-          req.query.freelancerProfileId?.toString(),
-        ),
-      );
-    }),
-  );
-
-  app.post(
-    "/api/messages",
-    requireAuth,
-    validateBody(sendMessageSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res
-        .status(201)
-        .json(await communicationService.sendMessage(req.auth!, req.body));
-    }),
-  );
-
-  app.patch(
-    "/api/messages/read",
-    requireAuth,
-    validateBody(markMessagesReadSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(await communicationService.markMessagesRead(req.auth!, req.body));
-    }),
-  );
-
-  app.post(
-    "/api/contact-inquiries",
-    requireAuth,
-    validateBody(createContactInquirySchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res.status(201).json(await contactService.createInquiry(req.auth!, req.body));
-    }),
-  );
-
-  app.post(
-    "/api/push/subscriptions",
-    requireAuth,
-    validateBody(pushSubscriptionSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      const endpointHash = piiHash(req.body.endpoint);
-      const data = {
-        userId: req.auth!.userId,
-        endpoint: encryptText(req.body.endpoint),
-        endpointHash,
-        p256dh: encryptText(req.body.keys.p256dh),
-        auth: encryptText(req.body.keys.auth),
-        userAgent: req.headers["user-agent"]
-          ? encryptText(req.headers["user-agent"].toString())
-          : null,
-      };
-      const existing = await prisma.pushSubscription.findFirst({
-        where: {
-          OR: [{ endpointHash }, { endpoint: req.body.endpoint }],
-        },
-      });
-      const subscription = existing
-        ? await prisma.pushSubscription.update({
-            where: { id: existing.id },
-            data,
-          })
-        : await prisma.pushSubscription.create({
-            data,
-          });
-      res.status(201).json({ id: subscription.id });
-    }),
-  );
-
-  app.delete(
-    "/api/push/subscriptions",
-    requireAuth,
-    validateBody(pushSubscriptionSchema),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      await prisma.pushSubscription.deleteMany({
-        where: {
-          userId: req.auth!.userId,
-          OR: [
-            { endpointHash: piiHash(req.body.endpoint) },
-            { endpoint: req.body.endpoint },
-          ],
-        },
-      });
-      res.status(204).send();
-    }),
-  );
-
-  app.post(
-    "/api/alive-checks",
-    requireAuth,
-    requireRole("sales"),
-    asyncHandler<AuthedRequest>(async (req, res) => {
-      res
-        .status(201)
-        .json(await communicationService.createAliveCheck(req.auth!.userId));
-    }),
-  );
-
-  const staticDir = process.env.STATIC_DIR || path.resolve(process.cwd(), ".output/public");
+  const staticDir =
+    process.env.STATIC_DIR || path.resolve(process.cwd(), ".output/public");
   if (existsSync(staticDir)) {
     app.use(express.static(staticDir));
     app.get(/^(?!\/api).*/, (_req, res) => {
