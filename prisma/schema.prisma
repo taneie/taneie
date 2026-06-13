@@ -105,6 +105,7 @@ model User {
   aliveCheckBatches AliveCheckBatch[]
   privacyConsents   PrivacyPolicyConsent[]
   pushSubscriptions  PushSubscription[]
+  contactInquiries   ContactInquiry[]
 
   @@map("users")
 }
@@ -366,4 +367,24 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+model ContactInquiry {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String?   @map("user_id") @db.Uuid
+  role        UserRole?
+  inquiryType String    @map("inquiry_type") @db.VarChar(100)
+  name        String    @db.VarChar(1000)
+  email       String    @db.VarChar(1000)
+  phone       String?   @db.VarChar(1000)
+  subject     String    @db.VarChar(1000)
+  body        String
+  status      String    @default("new") @db.VarChar(50)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("contact_inquiries")
 }

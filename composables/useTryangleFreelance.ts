@@ -8,7 +8,8 @@ export type ViewKey =
   | "admin"
   | "scout"
   | "meeting"
-  | "sheet";
+  | "sheet"
+  | "contact";
 export type AuthMode = "login" | "register";
 export type ApplicationStatus = "選考中" | "面談待ち" | "成約" | "見送り";
 export type IconName =
@@ -198,6 +199,15 @@ export interface JobInput {
   sortFlag: boolean;
 }
 
+export interface ContactInquiryInput {
+  inquiryType: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  body: string;
+}
+
 type ApiRequestOptions = RequestInit & {
   silent?: boolean;
 };
@@ -239,6 +249,12 @@ const navItems: NavItem[] = [
     icon: "shield",
     label: "匿名スキルシート",
     roles: ["freelancer"],
+  },
+  {
+    view: "contact",
+    icon: "send",
+    label: "問い合わせ",
+    roles: ["freelancer", "sales"],
   },
 ];
 
@@ -1694,6 +1710,41 @@ async function sendMessage(body: string) {
   }
 }
 
+async function submitContactInquiry(values: ContactInquiryInput) {
+  if (
+    !values.inquiryType ||
+    !values.name ||
+    !values.email ||
+    !values.subject ||
+    !values.body
+  ) {
+    showToast("問い合わせ種別、氏名、メールアドレス、件名、本文を入力してください。");
+    return false;
+  }
+
+  try {
+    await apiRequest<{ id: string; createdAt: string }>("/contact-inquiries", {
+      method: "POST",
+      body: JSON.stringify({
+        inquiryType: values.inquiryType,
+        name: values.name,
+        email: values.email,
+        phone: values.phone || undefined,
+        subject: values.subject,
+        body: values.body,
+      }),
+    });
+    clearUnsavedChanges();
+    showToast("問い合わせを送信しました。");
+    return true;
+  } catch (error) {
+    showToast(
+      error instanceof Error ? error.message : "問い合わせ送信に失敗しました。",
+    );
+    return false;
+  }
+}
+
 function mergeMessages(messages: Message[]) {
   const messageById = new Map(messages.map((message) => [message.id, message]));
   state.value.messages = state.value.messages.map(
@@ -2100,6 +2151,7 @@ export function useTryangleFreelance() {
     addMeeting,
     updateMeetingStatus,
     sendMessage,
+    submitContactInquiry,
     markActiveChatAsRead,
     aliveCheck,
     copyText,

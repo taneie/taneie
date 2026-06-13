@@ -176,6 +176,15 @@ export const markMessagesReadSchema = z.object({
   freelancerProfileId: z.string().uuid().optional(),
 });
 
+export const createContactInquirySchema = z.object({
+  inquiryType: z.string().trim().min(1).max(100),
+  name: z.string().trim().min(1).max(255),
+  email: z.string().trim().email().max(255),
+  phone: z.string().trim().max(50).optional(),
+  subject: z.string().trim().min(1).max(255),
+  body: z.string().trim().min(1).max(5000),
+});
+
 export const resumeMetadataSchema = z.object({
   originalFilename: z.string().trim().min(1).max(255),
   mimeType: z.string().trim().max(100).optional(),

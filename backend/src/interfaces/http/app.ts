@@ -14,6 +14,7 @@ import {
   ApplicationService,
   AuthService,
   CatalogService,
+  ContactService,
   CommunicationService,
   JobService,
   ProfileService,
@@ -34,6 +35,7 @@ import {
 import {
   applySchema,
   changeApplicationStatusSchema,
+  createContactInquirySchema,
   createJobSchema,
   createMeetingSchema,
   loginSchema,
@@ -53,6 +55,7 @@ const jobService = new JobService(prisma);
 const profileService = new ProfileService(prisma);
 const applicationService = new ApplicationService(prisma);
 const communicationService = new CommunicationService(prisma);
+const contactService = new ContactService(prisma);
 
 function routeParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value || "";
@@ -343,6 +346,15 @@ export function createApp() {
     validateBody(markMessagesReadSchema),
     asyncHandler<AuthedRequest>(async (req, res) => {
       res.json(await communicationService.markMessagesRead(req.auth!, req.body));
+    }),
+  );
+
+  app.post(
+    "/api/contact-inquiries",
+    requireAuth,
+    validateBody(createContactInquirySchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.status(201).json(await contactService.createInquiry(req.auth!, req.body));
     }),
   );
 

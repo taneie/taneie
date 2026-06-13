@@ -9,6 +9,7 @@
       <ScoutPage v-else-if="state.activeView === 'scout'" />
       <MeetingPage v-else-if="state.activeView === 'meeting'" />
       <SheetPage v-else-if="state.activeView === 'sheet'" />
+      <ContactPage v-else-if="state.activeView === 'contact'" />
       <section v-else :class="$style.panel">
         <div :class="$style.panelBody">
           <BaseButton
