@@ -26,6 +26,7 @@
             <strong>ログイン</strong>
             <button type="button" aria-label="ログインを閉じる" @click="showLogin = false">×</button>
           </div>
+
           <form :class="[$style.formGrid, $style.one]" @submit.prevent="submitLogin">
             <FormInput
               v-model="loginForm.email"
@@ -43,6 +44,7 @@
             />
             <BaseButton type="submit" icon="user">ログイン</BaseButton>
           </form>
+
           <div :class="$style.demoList">
             <button type="button" @click="loginWithDemo('freelancer')">
               <strong>求職者デモ</strong>
@@ -109,6 +111,7 @@
               <span>FEATURES</span>
               <h2>案件探しの手間を減らす、TRYANGLEの仕組み</h2>
             </div>
+
             <div :class="$style.featureGrid">
               <article>
                 <strong>条件に合う案件を探しやすい</strong>
@@ -144,6 +147,7 @@
               <span>PROJECTS</span>
               <h2>案件のご紹介例</h2>
             </div>
+
             <div :class="$style.projectGrid">
               <article v-for="project in projects" :key="project.title">
                 <div :class="$style.projectMeta">
@@ -165,6 +169,7 @@
               <span>FLOW</span>
               <h2>登録後の流れ</h2>
             </div>
+
             <ol :class="$style.flowList">
               <li>
                 <strong>プロフィール入力</strong>
@@ -189,11 +194,20 @@
             <p>登録後、プロフィール入力画面へ進みます。</p>
           </div>
 
-          <form :class="[$style.formGrid, $style.one]" @submit.prevent="submitRegister">
+          <form :class="[$style.formGrid, $style.registerGrid]" @submit.prevent="submitRegister">
             <FormInput
-              v-model="registerForm.name"
-              label="氏名"
-              name="name"
+              v-model="registerForm.lastName"
+              label="姓"
+              name="lastName"
+              autocomplete="family-name"
+              required
+              @update:model-value="markDirty"
+            />
+            <FormInput
+              v-model="registerForm.firstName"
+              label="名"
+              name="firstName"
+              autocomplete="given-name"
               required
               @update:model-value="markDirty"
             />
@@ -280,8 +294,14 @@ const loginForm = reactive({
   password: "freelance123"
 });
 
-const registerForm = reactive<RegisterInput>({
-  name: "",
+const registerForm = reactive<
+  Omit<RegisterInput, "name"> & {
+    lastName: string;
+    firstName: string;
+  }
+>({
+  lastName: "",
+  firstName: "",
   email: "",
   phone: "",
   role: "",
@@ -326,7 +346,17 @@ function submitRegister() {
     showPrivacyPolicy.value = true;
     return;
   }
-  register(registerForm);
+
+  const name = `${registerForm.lastName} ${registerForm.firstName}`.trim();
+
+  register({
+    name,
+    email: registerForm.email,
+    phone: registerForm.phone,
+    role: registerForm.role,
+    password: registerForm.password,
+    passwordConfirm: registerForm.passwordConfirm
+  });
 }
 
 function scrollToRegister() {
@@ -488,13 +518,13 @@ function scrollToRegister() {
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: 34px 20px 56px;
+  padding: 24px 20px 40px;
 }
 
 .landingLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1fr) minmax(390px, 460px);
+  gap: 24px;
   align-items: start;
 }
 
@@ -509,7 +539,7 @@ function scrollToRegister() {
 
 .heroContent {
   min-width: 0;
-  padding: 32px 0 0;
+  padding: 18px 0 0;
 }
 
 .eyebrow {
@@ -533,17 +563,17 @@ function scrollToRegister() {
 
 .heroLead {
   max-width: 690px;
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   color: #4f6279;
-  font-size: 16px;
-  line-height: 1.9;
+  font-size: 15px;
+  line-height: 1.75;
 }
 
 .heroActions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 24px;
+  margin-top: 18px;
 }
 
 .primaryCta,
@@ -562,7 +592,7 @@ function scrollToRegister() {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  margin: 28px 0 0;
+  margin: 20px 0 0;
 }
 
 .stats div {
@@ -600,7 +630,7 @@ function scrollToRegister() {
 .heroVisual img {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 8.5;
+  aspect-ratio: 16 / 7.2;
   object-fit: cover;
   object-position: left center;
 }
@@ -639,20 +669,16 @@ function scrollToRegister() {
 }
 
 .registerPanel {
-  position: sticky;
-  top: 84px;
-  max-height: calc(100vh - 104px);
-  overflow: auto;
-  padding: 20px;
-  border: 1px solid var(--line);
+  padding: 18px;
+  border: 1px solid rgba(215, 224, 236, 0.9);
   border-radius: 8px;
-  background: #fff;
-  box-shadow: var(--shadow);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 28px rgba(29, 78, 137, 0.08);
   scrollbar-gutter: stable;
 }
 
 .registerHead {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .registerHead span {
@@ -662,23 +688,23 @@ function scrollToRegister() {
 }
 
 .registerHead h2 {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   color: #10294f;
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .registerHead p,
 .formNote {
-  margin: 7px 0 0;
+  margin: 5px 0 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .formGrid > * {
@@ -687,6 +713,16 @@ function scrollToRegister() {
 
 .one {
   grid-template-columns: 1fr;
+}
+
+.registerGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.registerGrid > :nth-child(3),
+.registerGrid > :nth-last-child(2),
+.registerGrid > :last-child {
+  grid-column: 1 / -1;
 }
 
 .privacyConsent {
@@ -724,7 +760,7 @@ function scrollToRegister() {
 .visualSection,
 .projectsSection,
 .flowSection {
-  margin-top: 56px;
+  margin-top: 42px;
 }
 
 .sectionHead {
@@ -925,6 +961,19 @@ function scrollToRegister() {
   text-underline-offset: 3px;
 }
 
+@media (min-width: 981px) {
+  .registerPanel {
+    position: fixed;
+    z-index: 20;
+    top: 96px;
+    right: max(20px, calc((100vw - 1280px) / 2 + 20px));
+    width: min(460px, calc(100vw - 40px));
+    max-height: calc(100dvh - 116px);
+    overflow: auto;
+    backdrop-filter: blur(10px);
+  }
+}
+
 @media (max-width: 980px) {
   .headerNav {
     display: none;
@@ -943,6 +992,7 @@ function scrollToRegister() {
 
   .registerPanel {
     position: static;
+    width: auto;
     max-height: none;
     overflow: visible;
   }
@@ -1002,6 +1052,16 @@ function scrollToRegister() {
 
   .registerPanel {
     padding: 16px;
+  }
+
+  .registerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .registerGrid > :nth-child(3),
+  .registerGrid > :nth-last-child(2),
+  .registerGrid > :last-child {
+    grid-column: auto;
   }
 
   .visualText {
