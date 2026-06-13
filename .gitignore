@@ -19,3 +19,4 @@ logs
 !.env.example
 package-lock.json
 AGENTS.md
+SKILLS.md
