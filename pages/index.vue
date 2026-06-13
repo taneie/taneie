@@ -3,6 +3,7 @@
     <LoginPanel v-if="!state.auth" />
     <AppShell v-else />
     <UnsavedChangesModal />
+    <AppLoadingOverlay :visible="isLoading" />
 
     <template #fallback>
       <div :class="$style.loginShell">
@@ -23,7 +24,7 @@
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import { onMounted } from "vue";
-const { state, init } = useTryangleFreelance();
+const { state, isLoading, init } = useTryangleFreelance();
 
 onMounted(() => {
   init();

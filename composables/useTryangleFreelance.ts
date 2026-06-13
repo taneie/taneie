@@ -197,6 +197,10 @@ export interface JobInput {
   sortFlag: boolean;
 }
 
+type ApiRequestOptions = RequestInit & {
+  silent?: boolean;
+};
+
 const STORAGE_KEY = "tryangle-freelance-state-v1";
 const TOKEN_KEY = "tryangle-freelance-token";
 const API_BASE_FALLBACK = "http://127.0.0.1:8787/api";
@@ -327,6 +331,7 @@ const hasUnsavedChanges = ref(false);
 const toastMessage = ref("");
 const toastVisible = ref(false);
 const unsavedConfirmVisible = ref(false);
+const loadingCount = ref(0);
 const chatBannerVisible = ref(false);
 const chatBannerTitle = ref("");
 const chatBannerBody = ref("");
@@ -339,6 +344,32 @@ let chatPollingTimer: ReturnType<typeof setInterval> | undefined;
 let knownMessageIds = new Set<string>();
 let pushRegistrationStarted = false;
 let unsavedConfirmResolver: ((value: boolean) => void) | undefined;
+
+const isLoading = computed(() => loadingCount.value > 0);
+
+function beginLoading() {
+  loadingCount.value += 1;
+  let finished = false;
+
+  return () => {
+    if (finished) return;
+    finished = true;
+    loadingCount.value = Math.max(0, loadingCount.value - 1);
+  };
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function scrollToPageTop() {
+  if (!import.meta.client) return;
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
+}
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -627,8 +658,10 @@ function persist() {
 
 async function apiRequest<T>(
   path: string,
-  options: RequestInit = {},
+  options: ApiRequestOptions = {},
 ): Promise<T> {
+  const { silent = false, ...requestOptions } = options;
+  const finishLoading = silent ? undefined : beginLoading();
   const headers = new Headers(options.headers);
   if (options.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -637,12 +670,19 @@ async function apiRequest<T>(
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  const response = await fetch(`${getApiBase()}${path}`, { ...options, headers });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(data?.error?.message || "API通信に失敗しました。");
+  try {
+    const response = await fetch(`${getApiBase()}${path}`, {
+      ...requestOptions,
+      headers,
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.error?.message || "API通信に失敗しました。");
+    }
+    return data as T;
+  } finally {
+    finishLoading?.();
   }
-  return data as T;
 }
 
 function setAuth(
@@ -723,7 +763,9 @@ async function loadWorkspace() {
 async function refreshMessagesWithNotification() {
   if (!state.value.auth || !accessToken) return;
   try {
-    const messages = await apiRequest<Message[]>("/messages");
+    const messages = await apiRequest<Message[]>("/messages", {
+      silent: true,
+    });
     const incoming = messages.filter(
       (message) =>
         !knownMessageIds.has(message.id) && isIncomingMessage(message),
@@ -823,6 +865,7 @@ async function registerPushSubscription() {
   try {
     const { publicKey } = await apiRequest<{ publicKey: string }>(
       "/push/public-key",
+      { silent: true },
     );
     if (!publicKey) return;
     const registration = await navigator.serviceWorker.register("/push-sw.js");
@@ -836,6 +879,7 @@ async function registerPushSubscription() {
     await apiRequest("/push/subscriptions", {
       method: "POST",
       body: JSON.stringify(subscription.toJSON()),
+      silent: true,
     });
   } catch {
     pushRegistrationStarted = false;
@@ -1107,21 +1151,31 @@ async function setView(view: ViewKey) {
 
   if (state.value.activeView !== view && !(await confirmDiscardChanges()))
     return;
+  if (state.value.activeView === view) return;
 
-  if (
-    view === "jobs" &&
-    currentRole.value === "freelancer" &&
-    !canViewJobs.value
-  ) {
-    state.value.activeView = "jobs";
-    showToast("案件閲覧にはプロフィール詳細の入力と誓約同意が必要です。");
+  const finishLoading = beginLoading();
+  try {
+    if (
+      view === "jobs" &&
+      currentRole.value === "freelancer" &&
+      !canViewJobs.value
+    ) {
+      state.value.activeView = "jobs";
+      showToast("案件閲覧にはプロフィール詳細の入力と誓約同意が必要です。");
+      persist();
+      scrollToPageTop();
+      await sleep(180);
+      return;
+    }
+
+    state.value.activeView = view;
+    if (view === "meeting") ensureChatSelection();
     persist();
-    return;
+    scrollToPageTop();
+    await sleep(180);
+  } finally {
+    finishLoading();
   }
-
-  state.value.activeView = view;
-  if (view === "meeting") ensureChatSelection();
-  persist();
 }
 
 function ensureChatSelection() {
@@ -1923,6 +1977,7 @@ export function useTryangleFreelance() {
     filters,
     scoutFilters,
     hasUnsavedChanges,
+    isLoading,
     toastMessage,
     toastVisible,
     unsavedConfirmVisible,
