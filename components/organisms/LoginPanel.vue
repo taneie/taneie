@@ -95,7 +95,7 @@
 
             <figure :class="$style.heroVisual">
               <img
-                src="/images/lp-hero-engineer.png"
+                :src="heroImageSrc"
                 alt="案件提案とチャットを管理するフリーランス向け画面のイメージ"
               />
               <figcaption>
@@ -130,7 +130,7 @@
 
           <section :class="$style.visualSection">
             <img
-              src="/images/lp-flow-visual.png"
+              :src="flowImageSrc"
               alt="プロフィール登録、案件推薦、オンライン面談へ進む流れのイメージ"
             />
             <div :class="$style.visualText">
@@ -284,6 +284,9 @@ import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import type { RegisterInput } from "~/composables/useTryangleFreelance";
 
 const { login, loginWithDemo, register, markDirty, confirmDiscardChanges } = useTryangleFreelance();
+
+const heroImageSrc = "/images/lp-hero-engineer.png";
+const flowImageSrc = "/images/lp-flow-visual.png";
 
 const showLogin = ref(false);
 const showPrivacyPolicy = ref(false);
