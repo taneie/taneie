@@ -338,8 +338,8 @@ const privacyAccepted = ref(false);
 const registerErrors = reactive<Record<string, string>>({});
 
 const loginForm = reactive({
-  email: "freelancer@example.com",
-  password: "freelance123"
+  email: "",
+  password: ""
 });
 
 const registerForm = reactive<
