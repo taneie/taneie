@@ -68,7 +68,7 @@ ALTER TABLE "privacy_policy_consents" DROP CONSTRAINT "privacy_policy_consents_u
 ALTER TABLE "resumes" DROP CONSTRAINT "resumes_freelancer_profile_id_fkey";
 
 -- DropIndex
-DROP INDEX "idx_users_role_active";
+DROP INDEX IF EXISTS "idx_users_role_active";
 
 -- AddForeignKey
 ALTER TABLE "freelancer_profiles" ADD CONSTRAINT "freelancer_profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
