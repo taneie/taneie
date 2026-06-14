@@ -3,7 +3,7 @@
     title="問い合わせ"
     :kicker="
       currentRole === 'sales'
-        ? '求職者から届いた問い合わせを確認し、回答します。'
+        ? '問い合わせを確認し、回答します。'
         : 'サービス利用中の確認事項やサポート依頼を送信します。'
     "
   />
@@ -31,7 +31,7 @@
             <div :class="$style.inquiryTitleGroup">
               <span :class="$style.inquiryType">{{ inquiry.inquiryType }}</span>
               <h3 :class="$style.inquiryTitle">{{ inquiry.subject }}</h3>
-              <span :class="$style.inquiryDate">{{
+              <span :class="$style.inquiryDate">問い合わせ日時：{{
                 formatDateTime(inquiry.createdAt)
               }}</span>
             </div>

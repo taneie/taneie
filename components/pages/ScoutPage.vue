@@ -1,7 +1,7 @@
 <template>
   <PageHead
     title="簡易スカウト"
-    kicker="スキル・稼働状況・リモート条件で人材を検索し、サイト内メッセージで直接アプローチします。"
+    kicker="スキル・稼働状況・リモート条件で人材を検索し、直接アプローチします。"
   />
 
   <div :class="[$style.grid, $style.two]">
