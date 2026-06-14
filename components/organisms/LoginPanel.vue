@@ -298,9 +298,6 @@
             <BaseButton type="submit" icon="user">会員登録して始める</BaseButton>
           </form>
 
-          <p :class="$style.formNote">
-            登録は求職者アカウントとして作成されます。営業側はヘッダーのログインからデモアカウントをご利用ください。
-          </p>
         </aside>
       </div>
     </main>
@@ -794,12 +791,6 @@ function scrollToRegister() {
 }
 
 .registerHead p,
-.formNote {
-  margin: 5px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
 
 .formGrid {
   display: grid;
