@@ -198,13 +198,18 @@
             <p>登録後、プロフィール入力画面へ進みます。</p>
           </div>
 
-          <form :class="[$style.formGrid, $style.registerGrid]" @submit.prevent="submitRegister">
+          <form
+            :class="[$style.formGrid, $style.registerGrid]"
+            novalidate
+            @submit.prevent="submitRegister"
+          >
             <FormInput
               v-model="registerForm.lastName"
               label="姓"
               name="lastName"
               autocomplete="family-name"
               required
+              :error="registerErrors.lastName"
               @update:model-value="markDirty"
             />
             <FormInput
@@ -213,6 +218,7 @@
               name="firstName"
               autocomplete="given-name"
               required
+              :error="registerErrors.firstName"
               @update:model-value="markDirty"
             />
             <FormInput
@@ -220,6 +226,7 @@
               label="姓（かな）"
               name="lastNameKana"
               required
+              :error="registerErrors.lastNameKana"
               @update:model-value="markDirty"
             />
             <FormInput
@@ -227,6 +234,7 @@
               label="名（かな）"
               name="firstNameKana"
               required
+              :error="registerErrors.firstNameKana"
               @update:model-value="markDirty"
             />
             <FormInput
@@ -236,6 +244,7 @@
               type="email"
               autocomplete="email"
               required
+              :error="registerErrors.email"
               @update:model-value="markDirty"
             />
             <FormInput
@@ -258,6 +267,7 @@
               type="password"
               autocomplete="new-password"
               required
+              :error="registerErrors.password"
               @update:model-value="markDirty"
             />
             <FormInput
@@ -267,14 +277,23 @@
               type="password"
               autocomplete="new-password"
               required
+              :error="registerErrors.passwordConfirm"
               @update:model-value="markDirty"
             />
-            <label :class="$style.privacyConsent">
+            <label
+              :class="[
+                $style.privacyConsent,
+                { [$style.privacyConsentError]: registerErrors.privacyAccepted },
+              ]"
+            >
               <input v-model="privacyAccepted" type="checkbox" required @change="markDirty" />
               <span>
                 <button type="button" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
                 に同意します
               </span>
+              <small v-if="registerErrors.privacyAccepted">
+                {{ registerErrors.privacyAccepted }}
+              </small>
             </label>
             <BaseButton type="submit" icon="user">会員登録して始める</BaseButton>
           </form>
@@ -309,6 +328,7 @@ const flowImageSrc = "/images/lp-flow-visual.png";
 const showLogin = ref(false);
 const showPrivacyPolicy = ref(false);
 const privacyAccepted = ref(false);
+const registerErrors = reactive<Record<string, string>>({});
 
 const loginForm = reactive({
   email: "freelancer@example.com",
@@ -367,8 +387,7 @@ async function submitLogin() {
 }
 
 function submitRegister() {
-  if (!privacyAccepted.value) {
-    showPrivacyPolicy.value = true;
+  if (!validateRegisterForm()) {
     return;
   }
 
@@ -384,6 +403,46 @@ function submitRegister() {
     password: registerForm.password,
     passwordConfirm: registerForm.passwordConfirm
   });
+}
+
+function validateRegisterForm() {
+  Object.keys(registerErrors).forEach((key) => {
+    delete registerErrors[key];
+  });
+
+  if (!registerForm.lastName.trim()) {
+    registerErrors.lastName = "姓を入力してください。";
+  }
+  if (!registerForm.firstName.trim()) {
+    registerErrors.firstName = "名を入力してください。";
+  }
+  if (!registerForm.lastNameKana.trim()) {
+    registerErrors.lastNameKana = "姓のふりがなを入力してください。";
+  }
+  if (!registerForm.firstNameKana.trim()) {
+    registerErrors.firstNameKana = "名のふりがなを入力してください。";
+  }
+  if (!registerForm.email.trim()) {
+    registerErrors.email = "メールアドレスを入力してください。";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email.trim())) {
+    registerErrors.email = "メールアドレスの形式で入力してください。";
+  }
+  if (!registerForm.password) {
+    registerErrors.password = "パスワードを入力してください。";
+  } else if (registerForm.password.length < 8) {
+    registerErrors.password = "パスワードは8文字以上で入力してください。";
+  }
+  if (!registerForm.passwordConfirm) {
+    registerErrors.passwordConfirm = "確認用パスワードを入力してください。";
+  } else if (registerForm.password !== registerForm.passwordConfirm) {
+    registerErrors.passwordConfirm = "確認用パスワードが一致しません。";
+  }
+  if (!privacyAccepted.value) {
+    registerErrors.privacyAccepted = "登録にはプライバシーポリシーへの同意が必要です。";
+    showPrivacyPolicy.value = true;
+  }
+
+  return !Object.keys(registerErrors).length;
 }
 
 function scrollToRegister() {
@@ -781,6 +840,18 @@ function scrollToRegister() {
   font-weight: 900;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.privacyConsent small {
+  grid-column: 1 / -1;
+  color: #b8202d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.privacyConsentError {
+  border-color: #d83f4b;
+  background: #fff7f7;
 }
 
 .infoSection,
