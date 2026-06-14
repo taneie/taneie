@@ -1,5 +1,5 @@
 <template>
-  <header :class="$style.topbar">
+  <header :class="$style.topbar" data-print-hidden="true">
     <div :class="$style.topbarInner">
       <div :class="$style.brand">
         <BrandMark />

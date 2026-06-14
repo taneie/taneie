@@ -1891,7 +1891,15 @@ function copyText(text: string) {
 }
 
 function printSheet() {
+  if (!import.meta.client) return;
+  const previousTitle = document.title;
+  document.title = "TRYANGLE FREELANCE 匿名スキルシート";
+  document.body.classList.add("printing-anonymous-sheet");
   window.print();
+  setTimeout(() => {
+    document.title = previousTitle;
+    document.body.classList.remove("printing-anonymous-sheet");
+  }, 300);
 }
 
 function syncProfileToFreelancer() {
