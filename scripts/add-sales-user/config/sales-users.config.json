@@ -1,0 +1,41 @@
+{
+  "target": "local",
+  "dryRun": false,
+  "defaults": {
+    "onExisting": "fail",
+    "privacyPolicyVersion": "2026-06-10"
+  },
+  "environments": {
+    "local": {
+      "enabled": true,
+      "databaseUrl": "postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public",
+      "dataEncryptionKey": "",
+      "privacyPolicyVersion": "2026-06-10"
+    },
+    "staging": {
+      "enabled": true,
+      "databaseUrl": "postgresql://USER:PASSWORD@HOST:5432/DB_NAME?schema=public",
+      "dataEncryptionKey": "STAGING_DATA_ENCRYPTION_KEY_BASE64_OR_TEXT",
+      "privacyPolicyVersion": "2026-06-10"
+    },
+    "production": {
+      "enabled": false,
+      "allowProductionInsert": false,
+      "databaseUrl": "postgresql://USER:PASSWORD@HOST:5432/DB_NAME?schema=public",
+      "dataEncryptionKey": "PRODUCTION_DATA_ENCRYPTION_KEY_BASE64_OR_TEXT",
+      "privacyPolicyVersion": "2026-06-10"
+    }
+  },
+  "users": [
+    {
+      "email": "sales2@tryangle.jp",
+      "name": "TRYANGLE 営業2",
+      "nameKana": "トライアングル エイギョウニ",
+      "phone": "03-0000-0000",
+      "password": "change-me-12chars-or-more",
+      "isActive": true,
+      "onExisting": "fail",
+      "skipPolicyConsent": false
+    }
+  ]
+}
