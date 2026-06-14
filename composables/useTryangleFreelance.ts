@@ -366,6 +366,7 @@ const toastMessage = ref("");
 const toastVisible = ref(false);
 const unsavedConfirmVisible = ref(false);
 const loadingCount = ref(0);
+const loadingVisible = ref(false);
 const chatBannerVisible = ref(false);
 const chatBannerTitle = ref("");
 const chatBannerBody = ref("");
@@ -375,20 +376,43 @@ let accessToken = "";
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 let chatBannerTimer: ReturnType<typeof setTimeout> | undefined;
 let chatPollingTimer: ReturnType<typeof setInterval> | undefined;
+let loadingShowTimer: ReturnType<typeof setTimeout> | undefined;
+let loadingHideTimer: ReturnType<typeof setTimeout> | undefined;
+let loadingShownAt = 0;
 let knownMessageIds = new Set<string>();
 let pushRegistrationStarted = false;
 let unsavedConfirmResolver: ((value: boolean) => void) | undefined;
 
-const isLoading = computed(() => loadingCount.value > 0);
+const isLoading = computed(() => loadingVisible.value);
 
 function beginLoading() {
   loadingCount.value += 1;
+  if (loadingHideTimer) clearTimeout(loadingHideTimer);
+  if (!loadingVisible.value && !loadingShowTimer) {
+    loadingShowTimer = setTimeout(() => {
+      if (loadingCount.value <= 0) return;
+      loadingVisible.value = true;
+      loadingShownAt = Date.now();
+      loadingShowTimer = undefined;
+    }, 120);
+  }
   let finished = false;
 
   return () => {
     if (finished) return;
     finished = true;
     loadingCount.value = Math.max(0, loadingCount.value - 1);
+    if (loadingCount.value > 0) return;
+    if (loadingShowTimer) {
+      clearTimeout(loadingShowTimer);
+      loadingShowTimer = undefined;
+    }
+    if (!loadingVisible.value) return;
+    const remaining = Math.max(0, 260 - (Date.now() - loadingShownAt));
+    loadingHideTimer = setTimeout(() => {
+      if (loadingCount.value === 0) loadingVisible.value = false;
+      loadingHideTimer = undefined;
+    }, remaining);
   };
 }
 
