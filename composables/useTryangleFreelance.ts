@@ -2086,8 +2086,9 @@ function categorizeSkills(skills: string[]) {
 }
 
 function maskName(name: string) {
-  const text = String(name || "");
-  return text ? `${text[0]}氏` : "匿名";
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "匿名";
+  return `${parts.map((part) => part[0]).join(".")}.`;
 }
 
 function today() {
