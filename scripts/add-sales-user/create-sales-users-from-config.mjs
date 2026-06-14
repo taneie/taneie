@@ -13,7 +13,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-const DEFAULT_CONFIG_PATH = "config/sales-users.config.json";
+const DEFAULT_CONFIG_PATH = "scripts/add-sales-user/config/sales-users.config.json";
 const LOCAL_DATABASE_URL =
   "postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public";
 const ENCRYPTION_PREFIX = "enc:v1:";
