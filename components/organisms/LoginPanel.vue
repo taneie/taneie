@@ -819,7 +819,7 @@ function scrollToRegister() {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.registerGrid > :nth-child(3),
+.registerGrid > :nth-child(5),
 .registerGrid > :nth-last-child(2),
 .registerGrid > :last-child {
   grid-column: 1 / -1;
