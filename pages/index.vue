@@ -11,7 +11,6 @@
           <div :class="$style.loginBrand">
             <BrandMark />
             <div>
-              <h1>TRYANGLE FREELANCE</h1>
               <p>読み込み中です。</p>
             </div>
           </div>
