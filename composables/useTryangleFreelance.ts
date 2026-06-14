@@ -1225,6 +1225,9 @@ async function setView(view: ViewKey) {
     }
 
     state.value.activeView = view;
+    if (view === "profile") {
+      state.value.wizardStep = 1;
+    }
     if (view === "meeting") {
       ensureChatSelection();
       void markActiveChatAsRead();
@@ -1339,7 +1342,7 @@ async function register(values: RegisterInput) {
     clearUnsavedChanges();
     setAuth(result.token, result.user);
     state.value.activeView = "profile";
-    state.value.wizardStep = 2;
+    state.value.wizardStep = 1;
     await loadWorkspace();
     startChatPolling();
     void requestBrowserNotificationPermission();
