@@ -22,64 +22,79 @@
           :key="inquiry.id"
           :class="$style.inquiryCard"
         >
-          <div :class="$style.inquiryHeader">
+          <button
+            type="button"
+            :class="$style.inquiryHeader"
+            :aria-expanded="isInquiryOpen(inquiry.id)"
+            @click="toggleInquiry(inquiry.id)"
+          >
             <div :class="$style.inquiryTitleGroup">
               <span :class="$style.inquiryType">{{ inquiry.inquiryType }}</span>
               <h3 :class="$style.inquiryTitle">{{ inquiry.subject }}</h3>
+              <span :class="$style.inquiryDate">{{
+                formatDateTime(inquiry.createdAt)
+              }}</span>
             </div>
-            <span :class="[$style.status, statusClass(inquiry.status)]">
-              {{ statusLabel(inquiry.status) }}
+            <span :class="$style.headerRight">
+              <span :class="[$style.status, statusClass(inquiry.status)]">
+                {{ statusLabel(inquiry.status) }}
+              </span>
+              <span :class="$style.toggleText">
+                {{ isInquiryOpen(inquiry.id) ? "閉じる" : "開く" }}
+              </span>
             </span>
+          </button>
+
+          <div v-if="isInquiryOpen(inquiry.id)" :class="$style.inquiryDetail">
+            <dl :class="$style.metaGrid">
+              <div>
+                <dt>氏名</dt>
+                <dd>{{ inquiry.name }}</dd>
+              </div>
+              <div>
+                <dt>メール</dt>
+                <dd>{{ inquiry.email }}</dd>
+              </div>
+              <div>
+                <dt>電話番号</dt>
+                <dd>{{ inquiry.phone || "未入力" }}</dd>
+              </div>
+              <div>
+                <dt>受付日時</dt>
+                <dd>{{ formatDateTime(inquiry.createdAt) }}</dd>
+              </div>
+            </dl>
+
+            <p :class="$style.bodyText">{{ inquiry.body }}</p>
+
+            <div v-if="inquiry.answerBody" :class="$style.answerBox">
+              <div :class="$style.answerMeta">
+                <span>回答済み</span>
+                <span>{{ formatDateTime(inquiry.answeredAt) }}</span>
+                <span v-if="inquiry.answererName">{{ inquiry.answererName }}</span>
+              </div>
+              <p>{{ inquiry.answerBody }}</p>
+            </div>
+
+            <form :class="$style.answerForm" @submit.prevent="answer(inquiry.id)">
+              <FieldLabel label="回答内容" full>
+                <AppTextarea
+                  v-model="answerForms[inquiry.id]"
+                  name="answerBody"
+                  :placeholder="
+                    inquiry.answerBody
+                      ? '回答を更新する場合は入力してください'
+                      : '回答を入力してください'
+                  "
+                />
+              </FieldLabel>
+              <div :class="$style.actions">
+                <BaseButton type="submit" icon="send">
+                  {{ inquiry.answerBody ? "回答を更新" : "回答する" }}
+                </BaseButton>
+              </div>
+            </form>
           </div>
-
-          <dl :class="$style.metaGrid">
-            <div>
-              <dt>氏名</dt>
-              <dd>{{ inquiry.name }}</dd>
-            </div>
-            <div>
-              <dt>メール</dt>
-              <dd>{{ inquiry.email }}</dd>
-            </div>
-            <div>
-              <dt>電話番号</dt>
-              <dd>{{ inquiry.phone || "未入力" }}</dd>
-            </div>
-            <div>
-              <dt>受付日時</dt>
-              <dd>{{ formatDateTime(inquiry.createdAt) }}</dd>
-            </div>
-          </dl>
-
-          <p :class="$style.bodyText">{{ inquiry.body }}</p>
-
-          <div v-if="inquiry.answerBody" :class="$style.answerBox">
-            <div :class="$style.answerMeta">
-              <span>回答済み</span>
-              <span>{{ formatDateTime(inquiry.answeredAt) }}</span>
-              <span v-if="inquiry.answererName">{{ inquiry.answererName }}</span>
-            </div>
-            <p>{{ inquiry.answerBody }}</p>
-          </div>
-
-          <form :class="$style.answerForm" @submit.prevent="answer(inquiry.id)">
-            <FieldLabel label="回答内容" full>
-              <AppTextarea
-                v-model="answerForms[inquiry.id]"
-                name="answerBody"
-                :placeholder="
-                  inquiry.answerBody
-                    ? '回答を更新する場合は入力してください'
-                    : '回答を入力してください'
-                "
-              />
-            </FieldLabel>
-            <div :class="$style.actions">
-              <BaseButton type="submit" icon="send">
-                {{ inquiry.answerBody ? "回答を更新" : "回答する" }}
-              </BaseButton>
-            </div>
-          </form>
         </article>
       </div>
     </div>
@@ -226,6 +241,7 @@ const form = reactive<ContactInquiryInput>({
   body: "",
 });
 const answerForms = reactive<Record<string, string>>({});
+const openInquiries = reactive<Record<string, boolean>>({});
 
 onMounted(() => {
   if (currentRole.value === "sales") {
@@ -271,6 +287,14 @@ function statusLabel(status: string) {
 
 function statusClass(status: string) {
   return status === "answered" ? styles.statusAnswered : styles.statusNew;
+}
+
+function isInquiryOpen(id: string) {
+  return Boolean(openInquiries[id]);
+}
+
+function toggleInquiry(id: string) {
+  openInquiries[id] = !openInquiries[id];
 }
 
 function formatDateTime(value: string) {
@@ -351,15 +375,27 @@ function formatDateTime(value: string) {
   border: 1px solid #d8e4f7;
   border-radius: 8px;
   background: #ffffff;
-  padding: 16px;
+  overflow: hidden;
 }
 
 .inquiryHeader {
+  width: 100%;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  padding: 16px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+}
+
+.inquiryHeader:hover {
+  background: #f6f9fe;
+}
+
+.inquiryDetail {
+  padding: 0 16px 16px;
 }
 
 .inquiryTitleGroup {
@@ -380,6 +416,25 @@ function formatDateTime(value: string) {
   font-size: 17px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+.inquiryDate {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.headerRight {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggleText {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .status {
