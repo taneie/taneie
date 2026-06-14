@@ -185,9 +185,10 @@ const rejectedApplications = computed(
 );
 
 async function submitJob() {
-  await createJob(jobForm);
-  Object.assign(jobForm, initialJobForm());
-  clearUnsavedChanges();
+  if (await createJob(jobForm)) {
+    Object.assign(jobForm, initialJobForm());
+    clearUnsavedChanges();
+  }
 }
 </script>
 

@@ -1513,18 +1513,42 @@ async function resetProfile() {
 }
 
 async function createJob(values: JobInput) {
+  const rateMin = Number(values.rateMin || 0);
+  const rateMax = Number(values.rateMax || 0);
+  const marginRate = Number(values.marginRate || 0);
+  if (!String(values.title || "").trim()) {
+    showToast("案件概要を入力してください。");
+    return false;
+  }
+  if (!String(values.client || "").trim()) {
+    showToast("顧客名を入力してください。");
+    return false;
+  }
+  if (!splitCsv(values.required).length) {
+    showToast("必須スキルを1つ以上入力してください。");
+    return false;
+  }
+  if (!rateMin || !rateMax || rateMax < rateMin) {
+    showToast("単価は下限・上限を入力し、上限が下限以上になるようにしてください。");
+    return false;
+  }
+  if (marginRate < 0 || marginRate > 100) {
+    showToast("マージン率は0〜100の範囲で入力してください。");
+    return false;
+  }
+
   try {
     const job = await apiRequest<Job>("/jobs", {
       method: "POST",
       body: JSON.stringify({
-        title: values.title || "新規案件",
-        client: values.client || "未設定",
+        title: String(values.title).trim(),
+        client: String(values.client).trim(),
         summary: values.summary || "",
         required: splitCsv(values.required),
         nice: splitCsv(values.nice),
-        rateMin: Number(values.rateMin || 0),
-        rateMax: Number(values.rateMax || 0),
-        marginRate: Number(values.marginRate || 0),
+        rateMin,
+        rateMax,
+        marginRate,
         streamType: values.stream,
         remoteType: values.remote,
         isPinned: values.sortFlag,
@@ -1532,10 +1556,12 @@ async function createJob(values: JobInput) {
     });
     state.value.jobs.unshift(job);
     saveAndNotify("案件を登録しました。");
+    return true;
   } catch (error) {
     showToast(
       error instanceof Error ? error.message : "案件登録に失敗しました。",
     );
+    return false;
   }
 }
 
