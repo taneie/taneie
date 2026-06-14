@@ -343,7 +343,7 @@ const loginForm = reactive({
 });
 
 const registerForm = reactive<
-  Omit<RegisterInput, "name"> & {
+  Omit<RegisterInput, "name" | "nameKana"> & {
     lastName: string;
     firstName: string;
     lastNameKana: string;
