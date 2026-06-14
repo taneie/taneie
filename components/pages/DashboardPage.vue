@@ -51,26 +51,26 @@
 
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">営業チェック</h2>
+        <h2 :class="$style.panelTitle">提案前チェック</h2>
         <BaseButton variant="ghost" icon="send" @click="aliveCheck"
-          >生存確認</BaseButton
+          >稼働状況を確認</BaseButton
         >
       </div>
       <div :class="$style.panelBody">
         <div :class="[$style.grid, $style.three]">
           <CoverageCard
-            title="MVP"
-            body="登録・案件検索・応募・案件管理・応募管理"
+            title="基本導線"
+            body="登録、案件検索、応募、案件管理、応募管理が利用可能"
             tone="teal"
           />
           <CoverageCard
-            title="営業効率化"
+            title="案件候補"
             :body="`商流フィルタ ${endDirectJobs}件 / 稼働ステータス`"
             tone="blue"
           />
           <CoverageCard
-            title="差別化"
-            body="チャット・匿名化・共有用URL"
+            title="提案資料"
+            body="チャット履歴、匿名スキルシート、共有用URLを確認"
             tone="amber"
           />
         </div>
@@ -86,8 +86,8 @@
             tone="teal"
           />
           <CoverageCard
-            title="生存確認"
-            :body="`${state.aliveChecks.length}回送信 / 最新 ${state.aliveChecks.at(-1)?.at || '未送信'}`"
+            title="稼働状況確認"
+            :body="`${state.aliveChecks.length}回確認 / 最新 ${state.aliveChecks.at(-1)?.at || '未実施'}`"
             tone="blue"
           />
         </div>
