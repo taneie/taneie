@@ -14,6 +14,7 @@ export class AuthService {
 
   async register(input: {
     name: string;
+    nameKana?: string;
     email: string;
     password: string;
     phone?: string;
@@ -36,6 +37,7 @@ export class AuthService {
       data: {
         role: "freelancer",
         name: encryptText(input.name),
+        nameKana: input.nameKana ? encryptText(input.nameKana) : null,
         email: encryptText(input.email),
         emailHash: piiHash(input.email),
         passwordHash,

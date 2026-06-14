@@ -216,6 +216,20 @@
               @update:model-value="markDirty"
             />
             <FormInput
+              v-model="registerForm.lastNameKana"
+              label="姓（かな）"
+              name="lastNameKana"
+              required
+              @update:model-value="markDirty"
+            />
+            <FormInput
+              v-model="registerForm.firstNameKana"
+              label="名（かな）"
+              name="firstNameKana"
+              required
+              @update:model-value="markDirty"
+            />
+            <FormInput
               v-model="registerForm.email"
               label="メールアドレス"
               name="email"
@@ -305,10 +319,14 @@ const registerForm = reactive<
   Omit<RegisterInput, "name"> & {
     lastName: string;
     firstName: string;
+    lastNameKana: string;
+    firstNameKana: string;
   }
 >({
   lastName: "",
   firstName: "",
+  lastNameKana: "",
+  firstNameKana: "",
   email: "",
   phone: "",
   role: "",
@@ -355,9 +373,11 @@ function submitRegister() {
   }
 
   const name = `${registerForm.lastName} ${registerForm.firstName}`.trim();
+  const nameKana = `${registerForm.lastNameKana} ${registerForm.firstNameKana}`.trim();
 
   register({
     name,
+    nameKana,
     email: registerForm.email,
     phone: registerForm.phone,
     role: registerForm.role,
