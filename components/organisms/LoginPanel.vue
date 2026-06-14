@@ -158,7 +158,11 @@
                 <p>{{ project.summary }}</p>
                 <div :class="$style.projectFoot">
                   <strong>{{ project.rate }}</strong>
-                  <span>{{ project.skills }}</span>
+                  <div :class="$style.skillBadges" aria-label="スキルセット">
+                    <span v-for="skill in project.skills" :key="skill">
+                      {{ skill }}
+                    </span>
+                  </div>
                 </div>
               </article>
             </div>
@@ -317,7 +321,7 @@ const projects = [
     title: "金融SaaSのバックエンド刷新",
     summary: "Java/Spring Bootで決済基盤を刷新。設計から実装、テストまで担当。",
     rate: "80-100万円",
-    skills: "Java / Spring Boot / PostgreSQL",
+    skills: ["Java", "Spring Boot", "PostgreSQL"],
     remote: "一部リモート",
     stream: "エンド直"
   },
@@ -325,7 +329,7 @@ const projects = [
     title: "人材マッチングサービスのフロント開発",
     summary: "React/TypeScriptで候補者・営業向け画面を改善。UI実装と状態管理が中心。",
     rate: "70-90万円",
-    skills: "React / TypeScript / CSS",
+    skills: ["React", "TypeScript", "CSS"],
     remote: "フルリモート",
     stream: "1次請け"
   },
@@ -333,7 +337,7 @@ const projects = [
     title: "製造業向けクラウド基盤構築",
     summary: "AWS/Terraformで新規クラウド環境を設計。監視、権限、CI/CD整備を含む。",
     rate: "75-95万円",
-    skills: "AWS / Terraform / Linux",
+    skills: ["AWS", "Terraform", "Linux"],
     remote: "一部リモート",
     stream: "2次請け"
   }
@@ -905,7 +909,26 @@ function scrollToRegister() {
   font-size: 20px;
 }
 
-.projectFoot span {
+.skillBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skillBadges span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid #b8cff0;
+  border-radius: 999px;
+  background: #f4f8fe;
+  color: var(--primary-strong);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.projectFoot > span {
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
