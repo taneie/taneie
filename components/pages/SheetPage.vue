@@ -50,6 +50,7 @@
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">出力情報</h2>
       </div>
+      <!-- 本番運用時にリンクを環境のものに差し替えるよう修正（どこにファイル実体を置くか） -->
       <div :class="$style.panelBody">
         <FormInput
           label="共有用URL"

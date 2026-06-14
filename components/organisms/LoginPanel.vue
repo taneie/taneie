@@ -45,6 +45,7 @@
             <BaseButton type="submit" icon="user">ログイン</BaseButton>
           </form>
 
+          <!-- 本番運用時に削除する -->
           <div :class="$style.demoList">
             <button type="button" @click="startDemoLogin('freelancer')">
               <strong>求職者デモ</strong>
