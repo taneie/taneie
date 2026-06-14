@@ -24,6 +24,15 @@
             name="remote"
             :options="['', ...remoteOptions]"
           />
+          <label :class="$style.field">
+            スカウト対象案件（任意）
+            <select v-model="selectedJobId" :class="$style.control">
+              <option value="">案件を紐づけない</option>
+              <option v-for="job in state.jobs" :key="job.id" :value="job.id">
+                {{ job.title }}
+              </option>
+            </select>
+          </label>
           <div :class="$style.actions">
             <BaseButton type="submit" icon="search">検索</BaseButton>
             <BaseButton variant="secondary" @click="clearScoutFilter"
@@ -45,7 +54,7 @@
           v-for="freelancer in filteredFreelancers"
           :key="freelancer.id"
           :freelancer="freelancer"
-          @scout="sendScout"
+          @scout="sendScoutWithJob"
           @preview="selectPreview"
         />
         <div v-if="filteredFreelancers.length === 0" :class="$style.empty">
@@ -57,8 +66,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 const {
+  state,
   scoutFilters,
   filteredFreelancers,
   availabilityOptions,
@@ -67,6 +78,12 @@ const {
   sendScout,
   selectPreview,
 } = useTryangleFreelance();
+
+const selectedJobId = ref("");
+
+function sendScoutWithJob(freelancerId: string) {
+  void sendScout(freelancerId, selectedJobId.value || undefined);
+}
 </script>
 
 <style module>
@@ -128,6 +145,24 @@ const {
 
 .one {
   grid-template-columns: 1fr;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  color: #203853;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.control {
+  width: 100%;
+  border: 1px solid #c6d5e8;
+  border-radius: 6px;
+  padding: 10px 11px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
 }
 
 .actions {

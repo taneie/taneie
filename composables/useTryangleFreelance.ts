@@ -1593,7 +1593,7 @@ async function applyJob(jobId: string) {
   }
 }
 
-async function sendScout(freelancerId: string) {
+async function sendScout(freelancerId: string, jobId?: string) {
   if (currentRole.value !== "sales") {
     showToast("スカウトは営業アカウントで利用できます。");
     return;
@@ -1601,13 +1601,17 @@ async function sendScout(freelancerId: string) {
 
   const freelancer = getFreelancer(freelancerId);
   if (!freelancer) return;
+  const job = jobId ? getJob(jobId) : undefined;
 
   try {
     const message = await apiRequest<Message>("/messages", {
       method: "POST",
       body: JSON.stringify({
         freelancerProfileId: freelancer.id,
-        body: `${freelancer.role}向けの案件をご紹介したいです。稼働状況の確認をお願いします。`,
+        jobId: job?.id,
+        body: job
+          ? `「${job.title}」をご紹介したいです。${freelancer.role}のご経験と親和性が高いため、稼働状況の確認をお願いします。`
+          : `${freelancer.role}向けの案件をご紹介したいです。稼働状況の確認をお願いします。`,
         messageType: "scout",
       }),
     });
