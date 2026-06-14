@@ -391,6 +391,9 @@ textarea.control {
 .activeChatUser {
   border-color: var(--primary);
   box-shadow: 0 8px 18px rgba(29, 78, 137, 0.12);
+}
+
+.chatUserCard:hover {
   transform: translateY(-1px);
 }
 
