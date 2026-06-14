@@ -790,7 +790,12 @@ function scrollToRegister() {
   font-size: 22px;
 }
 
-.registerHead p,
+.registerHead p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
 
 .formGrid {
   display: grid;
@@ -1173,7 +1178,7 @@ function scrollToRegister() {
   }
 
   .registerPanel {
-    padding: 16px;
+    padding: 16px 16px 24px 16px;
   }
 
   .registerGrid {
