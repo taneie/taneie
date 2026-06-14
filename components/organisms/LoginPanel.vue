@@ -46,11 +46,11 @@
           </form>
 
           <div :class="$style.demoList">
-            <button type="button" @click="loginWithDemo('freelancer')">
+            <button type="button" @click="startDemoLogin('freelancer')">
               <strong>求職者デモ</strong>
               <span>freelancer@example.com</span>
             </button>
-            <button type="button" @click="loginWithDemo('sales')">
+            <button type="button" @click="startDemoLogin('sales')">
               <strong>営業デモ</strong>
               <span>sales@tryangle.jp</span>
             </button>
@@ -320,7 +320,14 @@ import { reactive, ref } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import type { RegisterInput } from "~/composables/useTryangleFreelance";
 
-const { login, loginWithDemo, register, markDirty, confirmDiscardChanges } = useTryangleFreelance();
+const {
+  login,
+  loginWithDemo,
+  register,
+  markDirty,
+  confirmDiscardChanges,
+  requestBrowserNotificationPermission,
+} = useTryangleFreelance();
 
 const heroImageSrc = "/images/lp-hero-engineer.png";
 const flowImageSrc = "/images/lp-flow-visual.png";
@@ -383,13 +390,20 @@ const projects = [
 
 async function submitLogin() {
   if (!(await confirmDiscardChanges())) return;
+  void requestBrowserNotificationPermission();
   login(loginForm.email, loginForm.password);
+}
+
+function startDemoLogin(role: "freelancer" | "sales") {
+  void requestBrowserNotificationPermission();
+  loginWithDemo(role);
 }
 
 function submitRegister() {
   if (!validateRegisterForm()) {
     return;
   }
+  void requestBrowserNotificationPermission();
 
   const name = `${registerForm.lastName} ${registerForm.firstName}`.trim();
   const nameKana = `${registerForm.lastNameKana} ${registerForm.firstNameKana}`.trim();

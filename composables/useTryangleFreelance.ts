@@ -829,6 +829,7 @@ async function refreshMessagesWithNotification() {
 
 function startChatPolling() {
   if (!import.meta.client || chatPollingTimer) return;
+  void refreshMessagesWithNotification();
   chatPollingTimer = setInterval(() => {
     void refreshMessagesWithNotification();
   }, 10000);
