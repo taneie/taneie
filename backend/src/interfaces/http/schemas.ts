@@ -90,12 +90,8 @@ const meetingStatus = z
   );
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(1).max(255),
-  nameKana: z.string().trim().min(1).max(255).optional(),
   email: z.string().trim().email().max(255),
   password: z.string().min(8).max(128),
-  phone: z.string().trim().max(50).optional(),
-  roleTitle: z.string().trim().max(255).optional(),
   privacyPolicyAccepted: z.literal(true),
 });
 

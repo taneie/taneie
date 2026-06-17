@@ -184,10 +184,7 @@ export interface ScoutFilters {
 }
 
 export interface RegisterInput {
-  name: string;
-  nameKana: string;
   email: string;
-  phone: string;
   role: string;
   password: string;
   passwordConfirm: string;
@@ -1340,8 +1337,8 @@ function loginWithAccount(account: Account) {
 
 async function register(values: RegisterInput) {
   const email = values.email.trim();
-  if (!values.name || !values.nameKana || !email || !values.password) {
-    showToast("氏名、ふりがな、メールアドレス、パスワードを入力してください。");
+  if (!email || !values.password) {
+    showToast("メールアドレス、パスワードを入力してください。");
     return;
   }
   if (values.password !== values.passwordConfirm) {
@@ -1355,12 +1352,8 @@ async function register(values: RegisterInput) {
     }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({
-        name: values.name,
-        nameKana: values.nameKana,
         email,
-        phone: values.phone,
         password: values.password,
-        roleTitle: values.role,
         privacyPolicyAccepted: true,
       }),
     });

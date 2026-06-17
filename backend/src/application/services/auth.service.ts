@@ -13,12 +13,8 @@ export class AuthService {
   constructor(private readonly db: PrismaClient) {}
 
   async register(input: {
-    name: string;
-    nameKana?: string;
     email: string;
     password: string;
-    phone?: string;
-    roleTitle?: string;
     policyVersion: string;
     ipAddress?: string;
     userAgent?: string;
@@ -35,17 +31,17 @@ export class AuthService {
     const passwordHash = await hashPassword(input.password);
     const user = await this.db.user.create({
       data: {
+        name: encryptText(""),
+        nameKana: null,
+        phone: null,
         role: "freelancer",
-        name: encryptText(input.name),
-        nameKana: input.nameKana ? encryptText(input.nameKana) : null,
         email: encryptText(input.email),
         emailHash: piiHash(input.email),
         passwordHash,
-        phone: input.phone ? encryptText(input.phone) : null,
         freelancerProfile: {
           create: {
+            roleTitle: null,
             publicCode: `tf-${randomUUID().slice(0, 8)}`,
-            roleTitle: input.roleTitle || null,
             lastUpdatedOn: new Date(),
           },
         },
