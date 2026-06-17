@@ -142,13 +142,24 @@ export class JobService {
 
   private buildScoutableJobWhere(
     profile: {
+      id: string;
       desiredRate: number | null;
       remoteType: string | null;
       skills: Array<{ skill: { name: string } }>;
     },
     input: ScoutableJobListInput,
   ) {
-    const filters: Prisma.JobWhereInput[] = [{ isActive: true }];
+    const filters: Prisma.JobWhereInput[] = [
+      { isActive: true },
+      {
+        messages: {
+          none: {
+            freelancerProfileId: profile.id,
+           messageType: "scout",
+          },
+        },
+      },
+    ];
 
     if (input.keyword) {
       filters.push({
