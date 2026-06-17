@@ -115,7 +115,7 @@ const {
 } = useTryangleFreelance();
 
 const registeredUsers = computed(
-  () => demoAccounts.length + state.value.accounts.length,
+  () => state.value.freelancers.length
 );
 const readyFreelancers = computed(
   () =>

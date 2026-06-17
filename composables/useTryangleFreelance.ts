@@ -372,6 +372,7 @@ const cloudSkillOptions = [
 
 const state = ref<TryangleState>(createSeedState());
 const JOB_PAGE_SIZE = 10;
+const JOB_APPLICATION_LIMIT = 5;
 
 const filters = ref<JobFilters>({
   keyword: "",
@@ -1128,6 +1129,12 @@ const canViewJobs = computed(
   () =>
     currentRole.value !== "freelancer" ||
     profileRequirementItems.value.every((item) => item.done),
+);
+
+const appliedJobCount = computed(() => state.value.applications.length);
+
+const canApplyMoreJobs = computed(
+  () => appliedJobCount.value < JOB_APPLICATION_LIMIT,
 );
 
 const filteredFreelancers = computed(() => {
@@ -2487,5 +2494,8 @@ export function useTryangleFreelance() {
     dismissChatBanner,
     requestBrowserNotificationPermission,
     today,
+    JOB_APPLICATION_LIMIT,
+    appliedJobCount,
+    canApplyMoreJobs,
   };
 }

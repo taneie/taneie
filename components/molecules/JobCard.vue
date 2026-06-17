@@ -115,12 +115,17 @@ import { computed } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import type { Job, Role } from "~/composables/useTryangleFreelance";
 
-const props = defineProps<{
-  job: Job;
-  role: Role | null;
-  applied: boolean;
-  canApplyMore: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    job: Job;
+    role: Role | null;
+    applied: boolean;
+    canApplyMore?: boolean;
+  }>(),
+  {
+    canApplyMore: true,
+  },
+);
 
 defineEmits<{
   apply: [jobId: string];
