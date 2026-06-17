@@ -115,16 +115,25 @@
 
             <div :class="$style.featureGrid">
               <article>
-                <strong>条件に合う案件を探しやすい</strong>
-                <p>キーワード・単価・スキルで素早く絞り込み</p>
+                <span :class="$style.featureIcon" aria-hidden="true">⌕</span>
+                <div :class="$style.featureBody">
+                  <strong>条件に合う案件を探しやすい</strong>
+                  <p>単価・スキルなどで素早く絞り込み</p>
+                </div>
               </article>
               <article>
-                <strong>営業担当とのやり取りを集約</strong>
-                <p>チャットと面談調整を1画面で管理</p>
+                <span :class="$style.featureIcon" aria-hidden="true">↔</span>
+                <div :class="$style.featureBody">
+                  <strong>営業担当とのやり取りを集約</strong>
+                  <p>チャットと面談調整を1画面で管理</p>
+                </div>
               </article>
               <article>
-                <strong>提案用プロフィールを整備</strong>
-                <p>スキル・稼働条件を段階的に登録</p>
+                <span :class="$style.featureIcon" aria-hidden="true">✓</span>
+                <div :class="$style.featureBody">
+                  <strong>提案用プロフィールを整備</strong>
+                  <p>スキル・稼働条件を段階的に登録</p>
+                </div>
               </article>
             </div>
           </section>
@@ -853,6 +862,68 @@ function scrollToRegister() {
   line-height: 1.7;
 }
 
+.featureGrid article {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  overflow: hidden;
+  padding: 18px;
+  border-color: rgba(185, 207, 235, 0.95);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98)),
+    #fff;
+}
+
+.featureGrid article::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  top: -38px;
+  width: 110px;
+  height: 110px;
+  border-radius: 999px;
+  background: rgba(29, 95, 211, 0.07);
+  pointer-events: none;
+}
+
+.featureIcon {
+  position: relative;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(169, 197, 237, 0.95);
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(29, 95, 211, 0.18);
+}
+
+.featureBody {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.featureBody strong {
+  display: block;
+  color: #0d2749;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.featureBody p {
+  margin: 9px 0 0;
+  color: var(--muted);
+  line-height: 1.85;
+}
+
 .visualSection {
   position: relative;
   display: grid;
@@ -1156,7 +1227,7 @@ function scrollToRegister() {
     font-size: 26px;
     font-weight: 900;
     line-height: 1.1;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.04em;
   }
 
   .stats dd {
@@ -1167,6 +1238,7 @@ function scrollToRegister() {
     font-size: 13px;
     font-weight: 800;
     line-height: 1.6;
+    margin-left: 6px;
   }
 
   .heroVisual img,
@@ -1224,6 +1296,31 @@ function scrollToRegister() {
   .projectGrid p {
     margin-top: 10px;
     line-height: 1.9;
+  }
+
+  .featureGrid article {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .featureIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 20px;
+    margin: auto 0;
+  }
+
+  .featureBody strong {
+    line-height: 1.45;
+  }
+
+  .featureBody p {
+    margin-top: 10px;
+    line-height: 1.9;
+    font-size: 14px;
   }
 
   .visualSection {
