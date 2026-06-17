@@ -177,6 +177,21 @@ export interface JobFilters {
   stream: string;
 }
 
+export interface JobListResponse {
+  items: Job[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+export interface JobPagination {
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
 export interface ScoutFilters {
   skill: string;
   availability: string;
@@ -185,7 +200,7 @@ export interface ScoutFilters {
 
 export interface RegisterInput {
   email: string;
-  role: string;
+  role?: string;
   password: string;
   passwordConfirm: string;
 }
@@ -346,6 +361,8 @@ const cloudSkillOptions = [
 ];
 
 const state = ref<TryangleState>(createSeedState());
+const JOB_PAGE_SIZE = 10;
+
 const filters = ref<JobFilters>({
   keyword: "",
   skill: "",
@@ -353,6 +370,13 @@ const filters = ref<JobFilters>({
   remote: "",
   stream: "",
 });
+const jobPagination = ref<JobPagination>({
+  total: 0,
+  limit: JOB_PAGE_SIZE,
+  offset: 0,
+  hasMore: false,
+});
+const jobsLoading = ref(false);
 const scoutFilters = ref<ScoutFilters>({
   skill: "",
   availability: "",
@@ -782,24 +806,31 @@ async function restoreSession() {
 
 async function loadWorkspace() {
   if (!state.value.auth) return;
-  const [jobs, applications, meetings, messages] = await Promise.all([
-    apiRequest<Job[]>("/jobs").catch(() => []),
+  const [applications, meetings, messages] = await Promise.all([
     apiRequest<Application[]>("/applications"),
     apiRequest<MeetingRequest[]>("/meeting-requests"),
     apiRequest<Message[]>("/messages"),
   ]);
 
-  state.value.jobs = jobs;
   state.value.applications = applications;
   state.value.meetingRequests = meetings;
   state.value.messages = messages;
   knownMessageIds = new Set(messages.map((message) => message.id));
 
   if (state.value.auth.role === "sales") {
-    const [freelancers, contactInquiries] = await Promise.all([
+    const [jobs, freelancers, contactInquiries] = await Promise.all([
+      apiRequest<Job[]>("/jobs").catch(() => []),
       apiRequest<Freelancer[]>("/freelancers"),
       apiRequest<ContactInquiry[]>("/contact-inquiries").catch(() => []),
     ]);
+
+    state.value.jobs = jobs;
+    jobPagination.value = {
+      total: jobs.length,
+      limit: jobs.length || JOB_PAGE_SIZE,
+      offset: 0,
+      hasMore: false,
+    };
     state.value.freelancers = freelancers;
     state.value.contactInquiries = contactInquiries;
   } else {
@@ -814,18 +845,21 @@ async function loadWorkspace() {
       >("/profile/me"),
       apiRequest<ContactInquiry[]>("/contact-inquiries").catch(() => []),
     ]);
+
     state.value.profile = {
       ...freelancerToProfile(profile),
       meetingCandidates: meetingCandidatesForProfile(profile.id),
     };
     state.value.freelancers = [profile];
     state.value.contactInquiries = contactInquiries;
+    await fetchJobsPage({ reset: true });
   }
 
   ensureChatSelection();
   if (state.value.activeView === "meeting") void markActiveChatAsRead();
   persist();
 }
+
 
 async function refreshMessagesWithNotification() {
   if (!state.value.auth || !accessToken) return;
@@ -1034,34 +1068,7 @@ const availableNavItems = computed(() => {
 
 const filteredJobs = computed(() => {
   if (currentRole.value === "freelancer" && !canViewJobs.value) return [];
-  const keyword = filters.value.keyword.toLowerCase();
-  const skill = filters.value.skill.toLowerCase();
-
-  return state.value.jobs
-    .filter((job) => job.active)
-    .filter(
-      (job) =>
-        !keyword ||
-        [job.title, job.client, job.summary]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword),
-    )
-    .filter(
-      (job) =>
-        !skill ||
-        [...job.required, ...job.nice].join(" ").toLowerCase().includes(skill),
-    )
-    .filter(
-      (job) => !filters.value.rate || job.rateMax >= Number(filters.value.rate),
-    )
-    .filter(
-      (job) => !filters.value.remote || job.remote === filters.value.remote,
-    )
-    .filter(
-      (job) => !filters.value.stream || job.stream === filters.value.stream,
-    )
-    .sort((a, b) => Number(b.sortFlag) - Number(a.sortFlag));
+  return state.value.jobs;
 });
 
 const profileRequirementItems = computed(() => {
@@ -1152,6 +1159,19 @@ const selectedFreelancer = computed<Freelancer>(() => {
 
 const currentFreelancerId = computed(
   () => currentUser.value?.freelancerId || state.value.profile.id,
+);
+
+const currentFreelancerApplicationCount = computed(() => {
+  const freelancerId = currentFreelancerId.value;
+  return state.value.applications.filter(
+    (application) => application.freelancerId === freelancerId,
+  ).length;
+});
+
+const canApplyMoreJobs = computed(
+  () =>
+    currentRole.value !== "freelancer" ||
+    currentFreelancerApplicationCount.value < 5,
 );
 
 const activeChatFreelancerId = computed(() => {
@@ -1305,7 +1325,7 @@ async function login(email: string, password: string) {
     await loadWorkspace();
     startChatPolling();
     void requestBrowserNotificationPermission();
-    showToast(`ログインしました。`);
+    showToast(`${roleLabel(result.user.role)}としてログインしました。`);
   } catch (error) {
     showToast(
       error instanceof Error
@@ -1558,8 +1578,73 @@ async function createJob(values: JobInput) {
   }
 }
 
-function clearJobFilter() {
+async function clearJobFilter() {
   filters.value = { keyword: "", skill: "", rate: "", remote: "", stream: "" };
+  await fetchJobsPage({ reset: true });
+}
+
+async function searchJobs() {
+  await fetchJobsPage({ reset: true });
+}
+
+async function loadMoreJobs() {
+  if (jobsLoading.value || !jobPagination.value.hasMore) return;
+  await fetchJobsPage({ reset: false });
+}
+
+async function fetchJobsPage({ reset }: { reset: boolean }) {
+  if (currentRole.value === "freelancer" && !canViewJobs.value) {
+    state.value.jobs = [];
+    jobPagination.value = {
+      total: 0,
+      limit: JOB_PAGE_SIZE,
+      offset: 0,
+      hasMore: false,
+    };
+    return;
+  }
+
+  const offset = reset ? 0 : state.value.jobs.length;
+  jobsLoading.value = true;
+  try {
+    const query = buildJobQuery(offset);
+    const result = await apiRequest<JobListResponse>(`/jobs?${query}`);
+    state.value.jobs = reset ? result.items : [...state.value.jobs, ...result.items];
+    jobPagination.value = {
+      total: result.total,
+      limit: result.limit,
+      offset: result.offset,
+      hasMore: result.hasMore,
+    };
+  } catch (error) {
+    if (reset) {
+      state.value.jobs = [];
+      jobPagination.value = {
+        total: 0,
+        limit: JOB_PAGE_SIZE,
+        offset: 0,
+        hasMore: false,
+      };
+    }
+    showToast(error instanceof Error ? error.message : "案件一覧の取得に失敗しました。");
+  } finally {
+    jobsLoading.value = false;
+  }
+}
+
+function buildJobQuery(offset: number) {
+  const params = new URLSearchParams();
+  params.set("limit", String(JOB_PAGE_SIZE));
+  params.set("offset", String(offset));
+
+  const values = filters.value;
+  if (values.keyword.trim()) params.set("keyword", values.keyword.trim());
+  if (values.skill.trim()) params.set("skill", values.skill.trim());
+  if (values.rate) params.set("rate", values.rate);
+  if (values.remote) params.set("remote", values.remote);
+  if (values.stream) params.set("stream", values.stream);
+
+  return params.toString();
 }
 
 function clearScoutFilter() {
@@ -1572,6 +1657,10 @@ async function applyJob(jobId: string) {
     return;
   }
   if (hasApplied(jobId)) return;
+  if (!canApplyMoreJobs.value) {
+    showToast("応募できる案件は5件までです。");
+    return;
+  }
 
   try {
     const application = await apiRequest<Application>("/applications", {
@@ -1580,7 +1669,7 @@ async function applyJob(jobId: string) {
     });
     state.value.applications.unshift(application);
     persist();
-    showToast("応募しました。営業管理に反映されています。");
+    showToast("応募しました。");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "応募に失敗しました。");
   }
@@ -2214,6 +2303,8 @@ export function useTryangleFreelance() {
     state,
     filters,
     scoutFilters,
+    jobPagination,
+    jobsLoading,
     hasUnsavedChanges,
     isLoading,
     toastMessage,
@@ -2242,6 +2333,8 @@ export function useTryangleFreelance() {
     filteredFreelancers,
     selectedFreelancer,
     currentFreelancerId,
+    currentFreelancerApplicationCount,
+    canApplyMoreJobs,
     activeChatFreelancerId,
     chatFreelancers,
     activeChatMessages,
@@ -2264,6 +2357,8 @@ export function useTryangleFreelance() {
     resetProfile,
     createJob,
     clearJobFilter,
+    searchJobs,
+    loadMoreJobs,
     clearScoutFilter,
     applyJob,
     sendScout,

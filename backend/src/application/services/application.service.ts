@@ -31,6 +31,34 @@ export class ApplicationService {
     const profile = await this.db.freelancerProfile.findUniqueOrThrow({
       where: { userId },
     });
+
+    const existingApplication = await this.db.application.findUnique({
+      where: {
+        jobId_freelancerProfileId: {
+          jobId,
+          freelancerProfileId: profile.id,
+        },
+      },
+    });
+    if (existingApplication) {
+      throw new AppError(
+        409,
+        "この案件にはすでに応募済みです。",
+        "APPLICATION_ALREADY_EXISTS",
+      );
+    }
+
+    const applicationCount = await this.db.application.count({
+      where: { freelancerProfileId: profile.id },
+    });
+    if (applicationCount >= 5) {
+      throw new AppError(
+        400,
+        "応募できる案件は5件までです。",
+        "APPLICATION_LIMIT_REACHED",
+      );
+    }
+
     const application = await this.db.application
       .create({
         data: {

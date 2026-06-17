@@ -32,6 +32,22 @@ export interface JobInput {
   isPinned: boolean;
 }
 
+export interface JobListInput {
+  keyword?: string;
+  skill?: string;
+  rate?: number;
+  remote?: string;
+  stream?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface FreelancerJobMatchCondition {
+  desiredRate?: number | null;
+  remoteType?: "full_remote" | "hybrid" | "onsite" | null;
+  skillNames: string[];
+}
+
 export interface ProfileInput {
   name?: string;
   nameKana?: string;

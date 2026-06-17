@@ -7,7 +7,11 @@ import {
   validateBody,
   type AuthedRequest,
 } from "../middleware.js";
-import { createJobSchema, updateJobFlagsSchema } from "../schemas.js";
+import {
+  createJobSchema,
+  listJobsQuerySchema,
+  updateJobFlagsSchema,
+} from "../schemas.js";
 import { routeParam } from "./helpers.js";
 
 export function registerJobRoutes(app: Express, jobService: JobService) {
@@ -15,7 +19,8 @@ export function registerJobRoutes(app: Express, jobService: JobService) {
     "/api/jobs",
     requireAuth,
     asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(await jobService.list(req.auth));
+      const query = listJobsQuerySchema.parse(req.query);
+      res.json(await jobService.list(req.auth, query));
     }),
   );
 

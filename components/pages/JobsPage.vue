@@ -35,7 +35,7 @@
         <h2 :class="$style.panelTitle">検索条件</h2>
       </div>
       <div :class="$style.panelBody">
-        <form :class="[$style.formGrid, $style.one]" @submit.prevent>
+        <form :class="[$style.formGrid, $style.one]" @submit.prevent="searchJobs">
           <FormInput
             v-model="filters.keyword"
             label="キーワード"
@@ -72,7 +72,10 @@
 
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">案件一覧 {{ filteredJobs.length }}件</h2>
+        <h2 :class="$style.panelTitle">案件一覧 {{ jobPagination.total }}件</h2>
+        <span v-if="filteredJobs.length" :class="$style.resultCount">
+          {{ filteredJobs.length }}件表示中
+        </span>
       </div>
       <div :class="[$style.panelBody, $style.cardList]">
         <JobCard
@@ -81,32 +84,76 @@
           :job="job"
           :role="currentRole"
           :applied="hasApplied(job.id)"
+          :can-apply-more="canApplyMoreJobs"
           @apply="applyJob"
           @open-admin="setView('admin')"
         />
-        <div v-if="filteredJobs.length === 0" :class="$style.empty">
+        <div v-if="filteredJobs.length === 0 && !jobsLoading" :class="$style.empty">
           条件に合う案件がありません。
         </div>
+        <div ref="loadMoreTrigger" :class="$style.loadMoreSentinel" aria-hidden="true" />
+        <div v-if="jobsLoading" :class="$style.loadingMore">
+          案件を読み込んでいます...
+        </div>
+        <BaseButton
+          v-else-if="jobPagination.hasMore"
+          :class="$style.loadMoreButton"
+          variant="secondary"
+          @click="loadMoreJobs"
+        >
+          さらに10件表示
+        </BaseButton>
       </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+
 const {
   filters,
   filteredJobs,
+  jobPagination,
+  jobsLoading,
   currentRole,
   canViewJobs,
   profileRequirementItems,
   flowOptions,
   remoteOptions,
   clearJobFilter,
+  searchJobs,
+  loadMoreJobs,
   hasApplied,
+  canApplyMoreJobs,
   applyJob,
   setView,
 } = useTryangleFreelance();
+
+const loadMoreTrigger = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
+
+onMounted(() => {
+  if (typeof IntersectionObserver === "undefined") return;
+
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry?.isIntersecting && jobPagination.value.hasMore && !jobsLoading.value) {
+        void loadMoreJobs();
+      }
+    },
+    { rootMargin: "240px 0px" },
+  );
+
+  if (loadMoreTrigger.value) {
+    observer.observe(loadMoreTrigger.value);
+  }
+});
+
+onBeforeUnmount(() => {
+  observer?.disconnect();
+});
 </script>
 
 <style module>
@@ -154,6 +201,18 @@ const {
   overflow-wrap: anywhere;
 }
 
+.resultCount {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .panelBody {
   min-width: 0;
   max-width: 100%;
@@ -184,6 +243,28 @@ const {
   border-radius: 8px;
   background: #fbfdff;
   text-align: center;
+}
+
+.loadMoreSentinel {
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
+}
+
+.loadingMore {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdff;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.loadMoreButton {
+  justify-self: center;
+  min-width: min(240px, 100%);
 }
 
 .lockPanel {
@@ -219,60 +300,53 @@ const {
 
 .requirementList li {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--line);
   color: #263f63;
-}
-
-.requirementList span {
-  min-width: 56px;
-  border-radius: 999px;
-  padding: 3px 8px;
-  text-align: center;
-  font-size: 12px;
   font-weight: 800;
 }
 
+.requirementList span {
+  min-width: 58px;
+  text-align: center;
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 11px;
+}
+
 .done span {
-  background: #d7f4ea;
-  color: #08705d;
+  background: #1b8754;
 }
 
 .pending span {
-  background: #fff0d5;
-  color: #8a5a00;
+  background: #c1741f;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 980px) {
   .two {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 620px) {
+  .panelHeader,
   .panelBody,
-  .panelHeader {
-    padding: 12px;
-  }
-
-  .panelHeader {
-    align-items: stretch;
-  }
-
-  .panelHeader button {
-    width: 100%;
-  }
-
-  .formGrid,
-  .actions {
-    grid-template-columns: 1fr;
+  .lockPanel {
+    padding: 14px;
   }
 
   .actions {
     display: grid;
+    grid-template-columns: 1fr;
   }
 
-  .actions button {
+  .actions button,
+  .loadMoreButton {
     width: 100%;
   }
 }

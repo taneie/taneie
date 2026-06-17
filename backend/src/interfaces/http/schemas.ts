@@ -100,6 +100,17 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+
+export const listJobsQuerySchema = z.object({
+  keyword: z.string().trim().optional(),
+  skill: z.string().trim().optional(),
+  rate: z.coerce.number().int().min(0).optional(),
+  remote: z.string().trim().optional(),
+  stream: z.string().trim().optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
 export const createJobSchema = z
   .object({
     title: z.string().trim().min(1).max(255),
