@@ -111,6 +111,10 @@ export const listJobsQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
 });
 
+export const listScoutableJobsQuerySchema = z.object({
+  keyword: z.string().trim().optional(),
+});
+
 export const createJobSchema = z
   .object({
     title: z.string().trim().min(1).max(255),
@@ -170,15 +174,25 @@ export const updateMeetingStatusSchema = z.object({
   status: meetingStatus,
 });
 
-export const sendMessageSchema = z.object({
-  freelancerProfileId: z.string().uuid().optional(),
-  receiverUserId: z.string().uuid().optional(),
-  jobId: z.string().uuid().optional(),
-  body: z.string().trim().min(1),
-  messageType: z
-    .enum(["chat", "scout", "alive_check", "system"])
-    .default("chat"),
-});
+export const sendMessageSchema = z
+  .object({
+    freelancerProfileId: z.string().uuid().optional(),
+    receiverUserId: z.string().uuid().optional(),
+    jobId: z.string().uuid().optional(),
+    body: z.string().trim().min(1),
+    messageType: z
+      .enum(["chat", "scout", "alive_check", "system"])
+      .default("chat"),
+  })
+  .superRefine((value, ctx) => {
+    if (value.messageType === "scout" && !value.jobId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["jobId"],
+        message: "スカウトには案件の紐づけが必要です。",
+      });
+    }
+  });
 
 export const markMessagesReadSchema = z.object({
   freelancerProfileId: z.string().uuid().optional(),

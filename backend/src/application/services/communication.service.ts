@@ -92,6 +92,23 @@ export class CommunicationService {
       messageType?: "chat" | "scout" | "alive_check" | "system";
     },
   ) {
+    if (input.messageType === "scout") {
+      if (context.role !== "sales") {
+        throw new AppError(403, "スカウトは営業アカウントで利用できます。", "FORBIDDEN");
+      }
+      if (!input.jobId) {
+        throw new AppError(400, "スカウトには案件の紐づけが必要です。", "SCOUT_JOB_REQUIRED");
+      }
+
+      const job = await this.db.job.findFirst({
+        where: { id: input.jobId, isActive: true },
+        select: { id: true },
+      });
+      if (!job) {
+        throw new AppError(404, "スカウトに紐づける案件が見つかりません。", "JOB_NOT_FOUND");
+      }
+    }
+
     const profile =
       context.role === "sales"
         ? await this.db.freelancerProfile.findUniqueOrThrow({

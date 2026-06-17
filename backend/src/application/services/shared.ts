@@ -42,10 +42,8 @@ export interface JobListInput {
   offset?: number;
 }
 
-export interface FreelancerJobMatchCondition {
-  desiredRate?: number | null;
-  remoteType?: "full_remote" | "hybrid" | "onsite" | null;
-  skillNames: string[];
+export interface ScoutableJobListInput {
+  keyword?: string;
 }
 
 export interface ProfileInput {

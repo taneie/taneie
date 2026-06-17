@@ -1,13 +1,13 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
-import type { AuthContext } from "../../domain/types.js";
+import { AppError, type AuthContext } from "../../domain/types.js";
 import { labelToRemoteType, labelToStreamType } from "../../domain/types.js";
 import { mapJob } from "../mappers.js";
 import {
   assertFreelancerCanViewJobs,
   jobInclude,
-  type FreelancerJobMatchCondition,
   type JobInput,
   type JobListInput,
+  type ScoutableJobListInput,
   upsertSkills,
 } from "./shared.js";
 
@@ -17,14 +17,11 @@ export class JobService {
   constructor(private readonly db: PrismaClient) {}
 
   async list(context?: AuthContext, input: JobListInput = {}) {
-    let matchCondition: FreelancerJobMatchCondition | undefined;
-
     if (context?.role === "freelancer") {
       await assertFreelancerCanViewJobs(this.db, context.userId);
-      matchCondition = await this.findFreelancerJobMatchCondition(context.userId);
     }
 
-    const where = this.buildListWhere(context, input, matchCondition);
+    const where = this.buildListWhere(context, input);
     const orderBy = [{ isPinned: "desc" as const }, { createdAt: "desc" as const }];
 
     if (input.limit === undefined && input.offset === undefined) {
@@ -56,6 +53,35 @@ export class JobService {
       offset,
       hasMore: offset + jobs.length < total,
     };
+  }
+
+  async listScoutableForFreelancer(
+    context: AuthContext,
+    freelancerProfileId: string,
+    input: ScoutableJobListInput = {},
+  ) {
+    if (context.role !== "sales") {
+      throw new AppError(403, "スカウト案件の検索は営業アカウントで利用できます。", "FORBIDDEN");
+    }
+
+    const profile = await this.db.freelancerProfile.findUnique({
+      where: { id: freelancerProfileId },
+      include: { skills: { include: { skill: true } } },
+    });
+
+    if (!profile) {
+      throw new AppError(404, "候補者が見つかりません。", "FREELANCER_PROFILE_NOT_FOUND");
+    }
+
+    const where = this.buildScoutableJobWhere(profile, input);
+    const jobs = await this.db.job.findMany({
+      where,
+      include: jobInclude,
+      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+      take: 30,
+    });
+
+    return jobs.map(mapJob);
   }
 
   async create(input: JobInput, createdBy: string) {
@@ -114,53 +140,57 @@ export class JobService {
     return mapJob(job);
   }
 
-  private async findFreelancerJobMatchCondition(userId: string) {
-    const profile = await this.db.freelancerProfile.findUnique({
-      where: { userId },
-      include: { skills: { include: { skill: true } } },
-    });
+  private buildScoutableJobWhere(
+    profile: {
+      desiredRate: number | null;
+      remoteType: string | null;
+      skills: Array<{ skill: { name: string } }>;
+    },
+    input: ScoutableJobListInput,
+  ) {
+    const filters: Prisma.JobWhereInput[] = [{ isActive: true }];
 
-    return {
-      desiredRate: profile?.desiredRate ?? undefined,
-      remoteType: profile?.remoteType ?? undefined,
-      skillNames:
-        profile?.skills
-          .map((item) => item.skill.name.trim())
-          .filter(Boolean) ?? [],
-    } satisfies FreelancerJobMatchCondition;
+    if (input.keyword) {
+      filters.push({
+        OR: [
+          { title: { contains: input.keyword, mode: "insensitive" } },
+          { summary: { contains: input.keyword, mode: "insensitive" } },
+          {
+            client: {
+              name: { contains: input.keyword, mode: "insensitive" },
+            },
+          },
+        ],
+      });
+    }
+
+    if (profile.desiredRate) {
+      filters.push({ rateMax: { gte: profile.desiredRate } });
+    }
+
+    if (profile.remoteType) {
+      filters.push({ remoteType: profile.remoteType as never });
+    }
+
+    const skillNames = profile.skills.map((item) => item.skill.name).filter(Boolean);
+    if (skillNames.length) {
+      filters.push({
+        skills: {
+          some: {
+            skill: { name: { in: skillNames } },
+          },
+        },
+      });
+    }
+
+    return { AND: filters };
   }
 
-  private buildListWhere(
-    context: AuthContext | undefined,
-    input: JobListInput,
-    matchCondition?: FreelancerJobMatchCondition,
-  ) {
+  private buildListWhere(context: AuthContext | undefined, input: JobListInput) {
     const filters: Prisma.JobWhereInput[] = [];
 
     if (context?.role !== "sales") {
       filters.push({ isActive: true });
-    }
-
-    if (context?.role === "freelancer" && matchCondition) {
-      if (matchCondition.desiredRate) {
-        filters.push({ rateMax: { gte: matchCondition.desiredRate } });
-      }
-
-      if (matchCondition.remoteType) {
-        filters.push({ remoteType: matchCondition.remoteType });
-      }
-
-      if (matchCondition.skillNames.length) {
-        filters.push({
-          skills: {
-            some: {
-              skill: {
-                name: { in: matchCondition.skillNames, mode: "insensitive" },
-              },
-            },
-          },
-        });
-      }
     }
 
     if (input.keyword) {

@@ -10,11 +10,28 @@ import {
 import {
   createJobSchema,
   listJobsQuerySchema,
+  listScoutableJobsQuerySchema,
   updateJobFlagsSchema,
 } from "../schemas.js";
 import { routeParam } from "./helpers.js";
 
 export function registerJobRoutes(app: Express, jobService: JobService) {
+  app.get(
+    "/api/jobs/scoutable/:freelancerProfileId",
+    requireAuth,
+    requireRole("sales"),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const query = listScoutableJobsQuerySchema.parse(req.query);
+      res.json(
+        await jobService.listScoutableForFreelancer(
+          req.auth!,
+          routeParam(req.params.freelancerProfileId),
+          query,
+        ),
+      );
+    }),
+  );
+
   app.get(
     "/api/jobs",
     requireAuth,
