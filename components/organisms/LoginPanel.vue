@@ -293,24 +293,12 @@ const loginForm = reactive({
   password: ""
 });
 
-const registerForm = reactive<
-  Omit<RegisterInput, "name" | "nameKana"> & {
-    lastName: string;
-    firstName: string;
-    lastNameKana: string;
-    firstNameKana: string;
-  }
->({
-  lastName: "",
-  firstName: "",
-  lastNameKana: "",
-  firstNameKana: "",
+const registerForm = reactive({
   email: "",
-  phone: "",
   role: "",
   password: "",
   passwordConfirm: ""
-});
+})
 
 const projects = [
   {
@@ -357,10 +345,7 @@ function submitRegister() {
   void requestBrowserNotificationPermission();
 
   register({
-    name: "",
-    nameKana: "",
     email: registerForm.email,
-    phone: "",
     role: registerForm.role,
     password: registerForm.password,
     passwordConfirm: registerForm.passwordConfirm
