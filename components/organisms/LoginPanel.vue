@@ -68,7 +68,7 @@
               <p :class="$style.eyebrow">フリーランスエンジニア向け案件マッチング</p>
               <h1>希望条件とスキルをもとに、営業担当が最適な案件提案まで伴走します。</h1>
               <p :class="$style.heroLead">
-                TRYANGLE FREELANCEは、プロフィール登録、案件検索、応募、面談調整、チャットまでを一つにつなげたマッチングシステムです。
+                マージン開示で高単価。あなたのスキルに最適な条件を最速提案。
               </p>
 
               <div :class="$style.heroActions">
@@ -110,21 +110,21 @@
           <section id="features" :class="$style.infoSection">
             <div :class="$style.sectionHead">
               <span>FEATURES</span>
-              <h2>案件探しの手間を減らす、TRYANGLEの仕組み</h2>
+              <h2>最短1分で応募まで。TRYANGLEが案件探しを自動化。</h2>
             </div>
 
             <div :class="$style.featureGrid">
               <article>
                 <strong>条件に合う案件を探しやすい</strong>
-                <p>キーワード、スキル、単価、リモート、商流で絞り込み、優先案件からすぐ応募できます。</p>
+                <p>キーワード・単価・スキルで素早く絞り込み</p>
               </article>
               <article>
                 <strong>営業担当とのやり取りを集約</strong>
-                <p>面談候補とチャットを同じ画面で管理し、応募後の調整をスムーズに進められます。</p>
+                <p>チャットと面談調整を1画面で管理</p>
               </article>
               <article>
                 <strong>提案用プロフィールを整備</strong>
-                <p>スキル、稼働条件、レジュメ、面談候補を段階的に登録し、提案準備を整えます。</p>
+                <p>スキル・稼働条件を段階的に登録</p>
               </article>
             </div>
           </section>
@@ -158,7 +158,7 @@
                 <h3>{{ project.title }}</h3>
                 <p>{{ project.summary }}</p>
                 <div :class="$style.projectFoot">
-                  <strong>{{ project.rate }}</strong>
+                  <span>月額</span><strong>{{ project.rate }}</strong>
                   <div :class="$style.skillBadges" aria-label="スキルセット">
                     <span v-for="skill in project.skills" :key="skill">
                       {{ skill }}
@@ -178,15 +178,15 @@
             <ol :class="$style.flowList">
               <li>
                 <strong>プロフィール入力</strong>
-                <p>基本情報、スキル、希望条件、レジュメを登録します。</p>
+                <p>基本情報・希望条件などを登録。</p>
               </li>
               <li>
                 <strong>案件検索・応募</strong>
-                <p>公開案件を確認し、条件に合う案件へ応募します。</p>
+                <p>条件に合う案件へ応募。</p>
               </li>
               <li>
                 <strong>面談調整</strong>
-                <p>営業担当と候補日や確認事項をチャットで調整します。</p>
+                <p>候補日を設定、チャットで調整。</p>
               </li>
             </ol>
           </section>
@@ -205,40 +205,6 @@
             @submit.prevent="submitRegister"
           >
             <FormInput
-              v-model="registerForm.lastName"
-              label="姓"
-              name="lastName"
-              autocomplete="family-name"
-              required
-              :error="registerErrors.lastName"
-              @update:model-value="markDirty"
-            />
-            <FormInput
-              v-model="registerForm.firstName"
-              label="名"
-              name="firstName"
-              autocomplete="given-name"
-              required
-              :error="registerErrors.firstName"
-              @update:model-value="markDirty"
-            />
-            <FormInput
-              v-model="registerForm.lastNameKana"
-              label="姓（かな）"
-              name="lastNameKana"
-              required
-              :error="registerErrors.lastNameKana"
-              @update:model-value="markDirty"
-            />
-            <FormInput
-              v-model="registerForm.firstNameKana"
-              label="名（かな）"
-              name="firstNameKana"
-              required
-              :error="registerErrors.firstNameKana"
-              @update:model-value="markDirty"
-            />
-            <FormInput
               v-model="registerForm.email"
               label="メールアドレス"
               name="email"
@@ -246,19 +212,6 @@
               autocomplete="email"
               required
               :error="registerErrors.email"
-              @update:model-value="markDirty"
-            />
-            <FormInput
-              v-model="registerForm.phone"
-              label="電話番号"
-              name="phone"
-              @update:model-value="markDirty"
-            />
-            <FormInput
-              v-model="registerForm.role"
-              label="職種"
-              name="role"
-              placeholder="バックエンドエンジニア"
               @update:model-value="markDirty"
             />
             <FormInput
@@ -296,7 +249,7 @@
                 {{ registerErrors.privacyAccepted }}
               </small>
             </label>
-            <BaseButton type="submit" icon="user">会員登録して始める</BaseButton>
+            <BaseButton :class="$style.sendButton" type="submit" icon="user">会員登録して始める</BaseButton>
           </form>
 
         </aside>
@@ -403,14 +356,11 @@ function submitRegister() {
   }
   void requestBrowserNotificationPermission();
 
-  const name = `${registerForm.lastName} ${registerForm.firstName}`.trim();
-  const nameKana = `${registerForm.lastNameKana} ${registerForm.firstNameKana}`.trim();
-
   register({
-    name,
-    nameKana,
+    name: "",
+    nameKana: "",
     email: registerForm.email,
-    phone: registerForm.phone,
+    phone: "",
     role: registerForm.role,
     password: registerForm.password,
     passwordConfirm: registerForm.passwordConfirm
@@ -422,18 +372,6 @@ function validateRegisterForm() {
     delete registerErrors[key];
   });
 
-  if (!registerForm.lastName.trim()) {
-    registerErrors.lastName = "姓を入力してください。";
-  }
-  if (!registerForm.firstName.trim()) {
-    registerErrors.firstName = "名を入力してください。";
-  }
-  if (!registerForm.lastNameKana.trim()) {
-    registerErrors.lastNameKana = "姓のふりがなを入力してください。";
-  }
-  if (!registerForm.firstNameKana.trim()) {
-    registerErrors.firstNameKana = "名のふりがなを入力してください。";
-  }
   if (!registerForm.email.trim()) {
     registerErrors.email = "メールアドレスを入力してください。";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email.trim())) {
@@ -767,7 +705,7 @@ function scrollToRegister() {
 }
 
 .registerPanel {
-  padding: 18px;
+  padding: 24px 18px 32px 18px;
   border: 1px solid rgba(215, 224, 236, 0.9);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.88);
@@ -863,6 +801,10 @@ function scrollToRegister() {
 .privacyConsentError {
   border-color: #d83f4b;
   background: #fff7f7;
+}
+
+.sendButton {
+  margin: 10px 0;
 }
 
 .infoSection,
@@ -986,8 +928,8 @@ function scrollToRegister() {
   align-items: center;
   border-radius: 999px;
   padding: 0 8px;
-  background: var(--primary-weak);
-  color: var(--primary);
+  background: var(--primary-strong);
+  color: var(--soft);
   font-size: 12px;
   font-weight: 800;
 }
@@ -1000,7 +942,10 @@ function scrollToRegister() {
 
 .projectFoot {
   display: grid;
-  gap: 4px;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 6px;
+  row-gap: 4px;
+  align-items: center;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
@@ -1009,12 +954,19 @@ function scrollToRegister() {
 .projectFoot strong {
   color: var(--primary-strong);
   font-size: 20px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .skillBadges {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  padding-top: 12px;
+}
+
+.projectFoot .skillBadges {
+  grid-column: 1 / -1;
 }
 
 .skillBadges span {
@@ -1034,6 +986,8 @@ function scrollToRegister() {
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .flowList {
@@ -1154,13 +1108,80 @@ function scrollToRegister() {
     padding: 22px 12px 40px;
   }
 
-  .stats {
-    grid-template-columns: 1fr;
+  .heroContent h1 {
+    line-height: 1.14;
+  }
+
+  .heroLead {
+    margin-top: 18px;
+    line-height: 1.9;
   }
 
   .heroActions {
     display: grid;
     grid-template-columns: 1fr;
+    margin-top: 22px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 26px;
+  }
+
+  .stats div {
+    position: relative;
+    overflow: hidden;
+    padding: 18px 18px 16px 20px;
+    border-color: rgba(185, 207, 235, 0.95);
+    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98)),
+      #fff;
+    box-shadow: 0 12px 28px rgba(29, 78, 137, 0.08);
+  }
+
+  .stats div::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 4px;
+    border-radius: 0 999px 999px 0;
+    background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+  }
+
+  .stats div::after {
+    content: "";
+    position: absolute;
+    right: -28px;
+    top: -34px;
+    width: 92px;
+    height: 92px;
+    border-radius: 999px;
+    background: rgba(29, 95, 211, 0.08);
+    pointer-events: none;
+  }
+
+  .stats dt {
+    position: relative;
+    z-index: 1;
+    color: var(--primary-strong);
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .stats dd {
+    position: relative;
+    z-index: 1;
+    margin-top: 8px;
+    color: #4f6279;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.6;
   }
 
   .heroVisual img,
@@ -1178,6 +1199,177 @@ function scrollToRegister() {
     justify-content: flex-start;
   }
 
+  .infoSection,
+  .visualSection,
+  .projectsSection,
+  .flowSection {
+    margin-top: 42px;
+  }
+
+  .sectionHead {
+    margin-bottom: 22px;
+  }
+
+  .sectionHead span,
+  .visualText span {
+    letter-spacing: 0.04em;
+  }
+
+  .sectionHead h2 {
+    margin-top: 7px;
+    line-height: 1.3;
+  }
+
+  .featureGrid,
+  .projectGrid {
+    gap: 18px;
+  }
+
+  .featureGrid article,
+  .projectGrid article {
+    padding: 18px;
+  }
+
+  .featureGrid strong {
+    display: block;
+    line-height: 1.45;
+  }
+
+  .featureGrid p,
+  .projectGrid p {
+    margin-top: 10px;
+    line-height: 1.9;
+  }
+
+  .visualSection {
+    gap: 20px;
+  }
+
+  .visualText {
+    padding: 0 18px 20px;
+  }
+
+  .visualText h2 {
+    margin-top: 8px;
+    line-height: 1.3;
+  }
+
+  .visualText p {
+    margin-top: 13px;
+    line-height: 1.95;
+  }
+
+  .projectMeta {
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+
+  .projectGrid h3 {
+    line-height: 1.45;
+  }
+
+  .projectFoot {
+    row-gap: 6px;
+    align-items: center;
+    margin-top: 18px;
+    padding-top: 14px;
+  }
+
+  .projectFoot strong,
+  .projectFoot > span {
+    line-height: 1;
+  }
+
+  .skillBadges {
+    gap: 7px;
+    padding-top: 12px;
+  }
+
+  .flowSection {
+    margin-top: 48px;
+  }
+
+  .flowSection .sectionHead {
+    margin-bottom: 24px;
+  }
+
+  .flowList {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 4px 0 4px;
+    list-style: none;
+  }
+
+  .flowList::before {
+    content: "";
+    position: absolute;
+    left: 32px;
+    top: 26px;
+    bottom: 26px;
+    width: 2px;
+    border-radius: 999px;
+    background: linear-gradient(
+      180deg,
+      rgba(29, 95, 211, 0.95),
+      rgba(29, 95, 211, 0.34)
+    );
+    pointer-events: none;
+  }
+
+  .flowList li {
+    position: relative;
+    min-width: 0;
+    padding: 20px 18px 20px 70px;
+    border: 1px solid rgba(185, 207, 235, 0.95);
+    border-radius: 12px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98)),
+      #fff;
+    box-shadow: 0 12px 28px rgba(29, 78, 137, 0.08);
+    counter-increment: flow;
+  }
+
+  .flowList li + li {
+    margin-top: 16px;
+  }
+
+  .flowList li::before {
+    content: counter(flow);
+    position: absolute;
+    left: 18px;
+    top: 20px;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border: 3px solid #fff;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow:
+      0 0 0 1px rgba(29, 95, 211, 0.18),
+      0 8px 18px rgba(29, 95, 211, 0.24);
+  }
+
+  .flowList strong {
+    display: block;
+    color: #0d2749;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+  .flowList p {
+    margin-top: 10px;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+
   .registerPanel {
     padding: 16px 16px 24px 16px;
   }
@@ -1190,10 +1382,6 @@ function scrollToRegister() {
   .registerGrid > :nth-last-child(2),
   .registerGrid > :last-child {
     grid-column: auto;
-  }
-
-  .visualText {
-    padding: 0 16px 16px;
   }
 
   .landingFooter {
