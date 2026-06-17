@@ -55,29 +55,16 @@
           @submit.prevent="saveBasic"
         >
           <FormInput
-            v-model="basic.lastName"
-            label="姓"
-            name="lastName"
-            autocomplete="family-name"
-            @update:model-value="markDirty"
-          />
-          <FormInput
-            v-model="basic.firstName"
-            label="名"
-            name="firstName"
+            v-model="basic.name"
+            label="お名前"
+            name="name"
             autocomplete="given-name"
             @update:model-value="markDirty"
           />
           <FormInput
-            v-model="basic.lastNameKana"
-            label="セイ"
-            name="lastNameKana"
-            @update:model-value="markDirty"
-          />
-          <FormInput
-            v-model="basic.firstNameKana"
-            label="メイ"
-            name="firstNameKana"
+            v-model="basic.nameKana"
+            label="お名前（ふりがな）"
+            name="nameKana"
             @update:model-value="markDirty"
           />
           <FormInput
@@ -339,10 +326,8 @@ const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候�
 const profile = computed(() => state.value.profile);
 
 const basic = reactive({
-  lastName: "",
-  firstName: "",
-  lastNameKana: "",
-  firstNameKana: "",
+  name: "",
+  nameKana: "",
   email: "",
   phone: "",
   role: "",
@@ -387,13 +372,9 @@ watch(() => [state.value.profile.id, state.value.wizardStep], hydrateForms, {
 
 function hydrateForms() {
   const p = state.value.profile;
-  const [lastName, firstName] = splitProfileName(p.name);
-  const [lastNameKana, firstNameKana] = splitProfileName(p.nameKana);
   Object.assign(basic, {
-    lastName,
-    firstName,
-    lastNameKana,
-    firstNameKana,
+    name: p.name,
+    nameKana: p.nameKana,
     email: p.email,
     phone: p.phone,
     role: p.role,
@@ -462,8 +443,8 @@ function removeMeetingCandidate(index: number) {
 
 function saveBasic() {
   saveProfileBasic({
-    name: joinProfileName(basic.lastName, basic.firstName),
-    nameKana: joinProfileName(basic.lastNameKana, basic.firstNameKana),
+    name: basic.name,
+    nameKana: basic.nameKana,
     email: basic.email,
     phone: basic.phone,
     role: basic.role,
@@ -495,19 +476,6 @@ function toDateTimeLocal(value = "") {
   return value.trim().replace(" ", "T").slice(0, 16);
 }
 
-function splitProfileName(name = "") {
-  const normalized = name.trim().replace(/\s+/g, " ");
-  if (!normalized) return ["", ""];
-  const [lastName, ...rest] = normalized.split(" ");
-  return [lastName, rest.join(" ")];
-}
-
-function joinProfileName(lastName: string, firstName: string) {
-  return [lastName, firstName]
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .join(" ");
-}
 </script>
 
 <style module>
