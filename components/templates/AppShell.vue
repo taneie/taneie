@@ -76,5 +76,9 @@ watch(
   .panelBody {
     padding: 12px;
   }
+
+  .appShell {
+    margin-bottom: 40px;
+  }
 }
 </style>

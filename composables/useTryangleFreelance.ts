@@ -1305,7 +1305,7 @@ async function login(email: string, password: string) {
     await loadWorkspace();
     startChatPolling();
     void requestBrowserNotificationPermission();
-    showToast(`${roleLabel(result.user.role)}としてログインしました。`);
+    showToast(`ログインしました。`);
   } catch (error) {
     showToast(
       error instanceof Error
