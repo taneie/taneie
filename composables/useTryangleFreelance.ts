@@ -1,267 +1,91 @@
 import { computed, ref } from "vue";
-
-export type Role = "freelancer" | "sales";
-export type ViewKey =
-  | "dashboard"
-  | "profile"
-  | "jobs"
-  | "admin"
-  | "scout"
-  | "meeting"
-  | "sheet"
-  | "contact";
-export type AuthMode = "login" | "register";
-export type ApplicationStatus = "選考中" | "面談待ち" | "成約" | "見送り";
-export type IconName =
-  | "briefcase"
-  | "user"
-  | "search"
-  | "chart"
-  | "send"
-  | "calendar"
-  | "shield"
-  | "plus"
-  | "print";
-
-export interface NavItem {
-  view: ViewKey;
-  icon: IconName;
-  label: string;
-  roles: Role[];
-}
-
-export interface Account {
-  email: string;
-  password: string;
-  role: Role;
-  name: string;
-  startView: ViewKey;
-  freelancerId?: string;
-}
-
-export interface AuthUser {
-  email: string;
-  role: Role;
-  name: string;
-  freelancerId?: string;
-  loggedInAt: string;
-}
-
-export interface Profile {
-  id: string;
-  name: string;
-  nameKana: string;
-  email: string;
-  phone: string;
-  role: string;
-  languages: string;
-  db: string;
-  frameworks: string;
-  cloud: string;
-  otherSkills: string;
-  years: string;
-  desiredRate: string;
-  startDate: string;
-  workRate: string;
-  remote: string;
-  availability: string;
-  resumeName: string;
-  resumeType: string;
-  resumeSize: string;
-  meetingCandidates: string[];
-  pledgeAccepted: boolean;
-  pledgedAt: string;
-  initialMeetingCompleted: boolean;
-  initialMeetingCompletedAt: string;
-  lastUpdated: string;
-}
-
-export interface Freelancer {
-  id: string;
-  name: string;
-  role: string;
-  skills: string[];
-  desiredRate: number;
-  workRate: string;
-  remote: string;
-  availability: string;
-  lastUpdated: string;
-  resumeName: string;
-  pledgedAt?: string;
-  initialMeetingCompleted?: boolean;
-  initialMeetingCompletedAt?: string;
-}
-
-export interface Job {
-  id: string;
-  title: string;
-  client: string;
-  summary: string;
-  required: string[];
-  nice: string[];
-  rateMin: number;
-  rateMax: number;
-  marginRate: number;
-  stream: string;
-  remote: string;
-  sortFlag: boolean;
-  active: boolean;
-}
-
-export interface Application {
-  id: string;
-  jobId: string;
-  freelancerId: string;
-  status: ApplicationStatus;
-  appliedAt: string;
-}
-
-export interface Message {
-  id: string;
-  freelancerId: string;
-  jobId?: string;
-  messageType?: "chat" | "scout" | "alive_check" | "system";
-  from: string;
-  to: string;
-  body: string;
-  at: string;
-  readAt?: string;
-  channel: "sales" | "freelancer";
-}
-
-export interface MeetingRequest {
-  id: string;
-  freelancerId: string;
-  applicationId?: string;
-  jobId?: string;
-  candidate: string;
-  status: "候補" | "確定" | "再調整";
-}
-
-export interface ContactInquiry {
-  id: string;
-  inquiryType: string;
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  body: string;
-  status: string;
-  createdAt: string;
-  answerBody: string;
-  answeredAt: string;
-  answererName: string;
-}
-
-export interface AliveCheck {
-  id: string;
-  count: number;
-  at: string;
-}
-
-export interface TryangleState {
-  auth: AuthUser | null;
-  authMode: AuthMode;
-  accounts: Account[];
-  activeView: ViewKey;
-  wizardStep: number;
-  selectedFreelancerId: string;
-  previewFreelancerId: string;
-  profile: Profile;
-  freelancers: Freelancer[];
-  jobs: Job[];
-  applications: Application[];
-  messages: Message[];
-  meetingRequests: MeetingRequest[];
-  contactInquiries: ContactInquiry[];
-  aliveChecks: AliveCheck[];
-}
-
-export interface JobFilters {
-  keyword: string;
-  skill: string;
-  rate: string;
-  remote: string;
-  stream: string;
-}
-
-export interface JobListResponse {
-  items: Job[];
-  total: number;
-  limit: number;
-  offset: number;
-  hasMore: boolean;
-}
-
-export interface JobPagination {
-  total: number;
-  limit: number;
-  offset: number;
-  hasMore: boolean;
-}
-
-export interface ScoutFilters {
-  skill: string;
-  availability: string;
-  remote: string;
-}
-
-export interface ScoutJobPickerState {
-  open: boolean;
-  freelancerId: string;
-  freelancerName: string;
-  keyword: string;
-  jobs: Job[];
-  selectedJobId: string;
-  loading: boolean;
-}
-
-export interface RegisterInput {
-  email: string;
-  role: string;
-  password: string;
-  passwordConfirm: string;
-}
-
-export interface ProfileTermsInput {
-  desiredRate: string;
-  startDate: string;
-  workRate: string;
-  remote: string;
-  availability: string;
-  resume?: File | null;
-}
-
-export interface JobInput {
-  title: string;
-  client: string;
-  summary: string;
-  required: string;
-  nice: string;
-  rateMin: string | number;
-  rateMax: string | number;
-  marginRate: string | number;
-  stream: string;
-  remote: string;
-  sortFlag: boolean;
-}
-
-export interface ContactInquiryInput {
-  inquiryType: string;
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  body: string;
-}
-
-type ApiRequestOptions = RequestInit & {
-  silent?: boolean;
-};
-
-const STORAGE_KEY = "tryangle-freelance-state-v1";
-const TOKEN_KEY = "tryangle-freelance-token";
-const API_BASE_FALLBACK = "http://127.0.0.1:8787/api";
+import {
+  API_BASE_FALLBACK,
+  JOB_APPLICATION_LIMIT,
+  JOB_PAGE_SIZE,
+  STORAGE_KEY,
+  TOKEN_KEY,
+  availabilityOptions,
+  cloudSkillOptions,
+  dbSkillOptions,
+  defaultViewByRole,
+  demoAccounts,
+  flowOptions,
+  frameworkSkillOptions,
+  languageSkillOptions,
+  navItems,
+  remoteOptions,
+  statuses,
+} from "./tryangle/constants";
+import { blankProfile, createSeedState } from "./tryangle/state";
+import type {
+  Account,
+  ApiRequestOptions,
+  Application,
+  ApplicationStatus,
+  AuthMode,
+  ContactInquiry,
+  ContactInquiryInput,
+  Freelancer,
+  Job,
+  JobFilters,
+  JobInput,
+  JobListResponse,
+  JobPagination,
+  MeetingRequest,
+  Message,
+  Profile,
+  ProfileTermsInput,
+  RegisterInput,
+  Role,
+  ScoutFilters,
+  ScoutJobPickerState,
+  TryangleState,
+  ViewKey,
+} from "./tryangle/types";
+import {
+  availabilityClass,
+  availabilityRank,
+  categorizeSkills,
+  clone,
+  maskName,
+  nowLabel,
+  profileSkillList,
+  sleep,
+  splitCsv,
+  streamTone,
+  today,
+  toApiDateTime,
+} from "./tryangle/utils";
+export type {
+  Account,
+  AliveCheck,
+  ApiRequestOptions,
+  Application,
+  ApplicationStatus,
+  AuthMode,
+  AuthUser,
+  ContactInquiry,
+  ContactInquiryInput,
+  Freelancer,
+  IconName,
+  Job,
+  JobFilters,
+  JobInput,
+  JobListResponse,
+  JobPagination,
+  MeetingRequest,
+  Message,
+  NavItem,
+  Profile,
+  ProfileTermsInput,
+  RegisterInput,
+  Role,
+  ScoutFilters,
+  ScoutJobPickerState,
+  TryangleState,
+  ViewKey,
+} from "./tryangle/types";
 
 function getApiBase() {
   const runtimeConfig = useRuntimeConfig();
@@ -269,118 +93,7 @@ function getApiBase() {
   return String(runtimeConfig.public.apiBase || API_BASE_FALLBACK).replace(/\/$/, "");
 }
 
-const navItems: NavItem[] = [
-  {
-    view: "dashboard",
-    icon: "chart",
-    label: "ダッシュボード",
-    roles: ["sales"],
-  },
-  {
-    view: "profile",
-    icon: "user",
-    label: "プロフィール",
-    roles: ["freelancer"],
-  },
-  { view: "jobs", icon: "search", label: "案件検索", roles: ["freelancer"] },
-  { view: "admin", icon: "briefcase", label: "営業管理", roles: ["sales"] },
-  { view: "scout", icon: "send", label: "スカウト", roles: ["sales"] },
-  {
-    view: "meeting",
-    icon: "calendar",
-    label: "面談・チャット",
-    roles: ["freelancer", "sales"],
-  },
-  {
-    view: "sheet",
-    icon: "shield",
-    label: "匿名スキルシート",
-    roles: ["freelancer"],
-  },
-  {
-    view: "contact",
-    icon: "send",
-    label: "問い合わせ",
-    roles: ["freelancer", "sales"],
-  },
-];
-
-const demoAccounts: Account[] = [
-  {
-    email: "freelancer@example.com",
-    password: "freelance123",
-    role: "freelancer",
-    name: "山田 太郎",
-    startView: "jobs",
-    freelancerId: "fr-current",
-  },
-  {
-    email: "sales@tryangle.jp",
-    password: "sales123",
-    role: "sales",
-    name: "TRYANGLE 営業",
-    startView: "dashboard",
-  },
-];
-
-const defaultViewByRole: Record<Role, ViewKey> = {
-  freelancer: "jobs",
-  sales: "dashboard",
-};
-
-const statuses: ApplicationStatus[] = ["選考中", "面談待ち", "成約", "見送り"];
-const flowOptions = ["エンド直", "1次請け", "2次請け", "その他"];
-const remoteOptions = ["フルリモート", "一部リモート", "常駐"];
-const availabilityOptions = [
-  "即稼働可",
-  "2026年7月から空き予定",
-  "現在は案件停止中",
-];
-const languageSkillOptions = [
-  "Java",
-  "TypeScript",
-  "JavaScript",
-  "Python",
-  "PHP",
-  "Ruby",
-  "Go",
-  "C#",
-  "Kotlin",
-  "Swift",
-];
-const dbSkillOptions = [
-  "PostgreSQL",
-  "MySQL",
-  "Oracle",
-  "SQL Server",
-  "MongoDB",
-  "Redis",
-  "DynamoDB",
-];
-const frameworkSkillOptions = [
-  "Spring Boot",
-  "React",
-  "Vue.js",
-  "Nuxt.js",
-  "Next.js",
-  "Laravel",
-  "Ruby on Rails",
-  "Django",
-  "Express",
-];
-const cloudSkillOptions = [
-  "AWS",
-  "GCP",
-  "Azure",
-  "Firebase",
-  "Cloudflare",
-  "Vercel",
-  "Heroku",
-];
-
 const state = ref<TryangleState>(createSeedState());
-const JOB_PAGE_SIZE = 10;
-const JOB_APPLICATION_LIMIT = 5;
 
 const filters = ref<JobFilters>({
   keyword: "",
@@ -468,10 +181,6 @@ function beginLoading() {
   };
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function scrollToPageTop() {
   if (!import.meta.client) return;
   requestAnimationFrame(() => {
@@ -479,194 +188,6 @@ function scrollToPageTop() {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   });
-}
-
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
-
-function createSeedState(): TryangleState {
-  return {
-    auth: null,
-    authMode: "login",
-    accounts: [],
-    activeView: "dashboard",
-    wizardStep: 1,
-    selectedFreelancerId: "fr-current",
-    previewFreelancerId: "",
-    profile: blankProfile("fr-current"),
-    freelancers: [
-      {
-        id: "fr-001",
-        name: "山田 太郎",
-        role: "バックエンドエンジニア",
-        skills: ["Java", "TypeScript", "Spring Boot", "React", "PostgreSQL"],
-        desiredRate: 85,
-        workRate: "週5",
-        remote: "フルリモート",
-        availability: "2026年7月から空き予定",
-        lastUpdated: "2026-06-04",
-        resumeName: "職務経歴書_山田太郎.pdf",
-      },
-      {
-        id: "fr-002",
-        name: "佐藤 美咲",
-        role: "フロントエンドエンジニア",
-        skills: ["React", "Vue", "TypeScript", "Figma"],
-        desiredRate: 78,
-        workRate: "週4",
-        remote: "フルリモート",
-        availability: "即稼働可",
-        lastUpdated: "2026-06-03",
-        resumeName: "skill_sheet_sato.docx",
-      },
-      {
-        id: "fr-003",
-        name: "鈴木 健",
-        role: "インフラ・SRE",
-        skills: ["AWS", "Terraform", "Kubernetes", "Go"],
-        desiredRate: 92,
-        workRate: "週5",
-        remote: "一部リモート",
-        availability: "即稼働可",
-        lastUpdated: "2026-05-12",
-        resumeName: "resume_suzuki.pdf",
-      },
-    ],
-    jobs: [
-      {
-        id: "job-001",
-        title: "金融SaaSのバックエンド刷新",
-        client: "FinTech事業会社",
-        summary:
-          "Java/Spring Bootで既存決済基盤を刷新。設計から実装、テストまで担当。",
-        required: ["Java", "Spring Boot", "PostgreSQL", "API設計"],
-        nice: ["AWS", "React"],
-        rateMin: 80,
-        rateMax: 100,
-        marginRate: 12,
-        stream: "エンド直",
-        remote: "一部リモート",
-        sortFlag: true,
-        active: true,
-      },
-      {
-        id: "job-002",
-        title: "人材マッチングサービスのフロント開発",
-        client: "HRTechスタートアップ",
-        summary:
-          "React/TypeScriptで候補者・営業向け画面を改善。UI実装と状態管理が中心。",
-        required: ["React", "TypeScript", "CSS"],
-        nice: ["Next.js", "Figma"],
-        rateMin: 70,
-        rateMax: 90,
-        marginRate: 10,
-        stream: "1次請け",
-        remote: "フルリモート",
-        sortFlag: true,
-        active: true,
-      },
-      {
-        id: "job-003",
-        title: "製造業向けクラウド基盤構築",
-        client: "大手SIer",
-        summary:
-          "AWS/Terraformで新規クラウド環境を設計。監視、権限、CI/CD整備を含む。",
-        required: ["AWS", "Terraform", "Linux"],
-        nice: ["Kubernetes", "Go"],
-        rateMin: 75,
-        rateMax: 95,
-        marginRate: 15,
-        stream: "2次請け",
-        remote: "一部リモート",
-        sortFlag: false,
-        active: true,
-      },
-    ],
-    applications: [
-      {
-        id: "app-001",
-        jobId: "job-001",
-        freelancerId: "fr-001",
-        status: "面談待ち",
-        appliedAt: "2026-06-04",
-      },
-      {
-        id: "app-002",
-        jobId: "job-002",
-        freelancerId: "fr-002",
-        status: "選考中",
-        appliedAt: "2026-06-03",
-      },
-    ],
-    messages: [
-      {
-        id: "msg-001",
-        freelancerId: "fr-001",
-        from: "営業",
-        to: "山田 太郎",
-        body: "金融SaaS案件について、初回面談候補を確認しました。",
-        at: "2026-06-04 11:20",
-        channel: "sales",
-      },
-      {
-        id: "msg-002",
-        freelancerId: "fr-001",
-        from: "山田 太郎",
-        to: "営業",
-        body: "6月10日午前で調整可能です。職務経歴書も更新しました。",
-        at: "2026-06-04 11:36",
-        channel: "freelancer",
-      },
-    ],
-    meetingRequests: [
-      {
-        id: "meet-001",
-        freelancerId: "fr-001",
-        candidate: "2026-06-10 10:00",
-        status: "候補",
-      },
-      {
-        id: "meet-002",
-        freelancerId: "fr-001",
-        candidate: "2026-06-11 15:00",
-        status: "候補",
-      },
-    ],
-    contactInquiries: [],
-    aliveChecks: [],
-  };
-}
-
-function blankProfile(id = "fr-current"): Profile {
-  return {
-    id,
-    name: "",
-    nameKana: "",
-    email: "",
-    phone: "",
-    role: "",
-    languages: "",
-    db: "",
-    frameworks: "",
-    cloud: "",
-    otherSkills: "",
-    years: "",
-    desiredRate: "",
-    startDate: "",
-    workRate: "",
-    remote: "",
-    availability: "",
-    resumeName: "",
-    resumeType: "",
-    resumeSize: "",
-    meetingCandidates: [],
-    pledgeAccepted: false,
-    pledgedAt: "",
-    initialMeetingCompleted: false,
-    initialMeetingCompletedAt: "",
-    lastUpdated: "",
-  };
 }
 
 function init() {
@@ -2305,96 +1826,6 @@ function estimateRate() {
 
 function roleLabel(role = currentRole.value) {
   return role === "sales" ? "営業" : "求職者";
-}
-
-function availabilityClass(value = "") {
-  if (value === "即稼働可") return "ready";
-  if (value.includes("空き予定")) return "soon";
-  return "pause";
-}
-
-function streamTone(value = "") {
-  if (value === "エンド直") return "teal";
-  if (value === "1次請け") return "blue";
-  return "amber";
-}
-
-function availabilityRank(freelancer: Freelancer) {
-  if (freelancer.availability === "即稼働可") return 3;
-  if (freelancer.availability?.includes("空き予定")) return 2;
-  return 1;
-}
-
-function splitCsv(value: string | number | null | undefined) {
-  return String(value || "")
-    .split(/[,、\n]/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function profileSkillList(
-  profile: Pick<
-    Profile,
-    "languages" | "db" | "frameworks" | "cloud" | "otherSkills"
-  >,
-) {
-  return [
-    ...splitCsv(profile.languages),
-    ...splitCsv(profile.frameworks),
-    ...splitCsv(profile.db),
-    ...splitCsv(profile.cloud),
-    ...splitCsv(profile.otherSkills),
-  ];
-}
-
-function categorizeSkills(skills: string[]) {
-  const result = {
-    languages: [] as string[],
-    db: [] as string[],
-    frameworks: [] as string[],
-    cloud: [] as string[],
-    other: [] as string[],
-  };
-  skills.forEach((skill) => {
-    if (languageSkillOptions.includes(skill)) result.languages.push(skill);
-    else if (dbSkillOptions.includes(skill)) result.db.push(skill);
-    else if (frameworkSkillOptions.includes(skill))
-      result.frameworks.push(skill);
-    else if (cloudSkillOptions.includes(skill)) result.cloud.push(skill);
-    else result.other.push(skill);
-  });
-  return result;
-}
-
-function maskName(name: string) {
-  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "匿名";
-  return `${parts.map((part) => part[0]).join(".")}.`;
-}
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function nowLabel() {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function toApiDateTime(value: string) {
-  const normalized = value.trim().replace(" ", "T");
-  if (/Z$|[+-]\d\d:\d\d$/.test(normalized)) return normalized;
-  return normalized.length === 16
-    ? `${normalized}:00+09:00`
-    : `${normalized}+09:00`;
-}
-
-function uid(prefix: string) {
-  const random =
-    globalThis.crypto?.randomUUID?.().slice(0, 8) ||
-    Math.random().toString(36).slice(2, 10);
-  return `${prefix}-${random}`;
 }
 
 function markDirty() {
