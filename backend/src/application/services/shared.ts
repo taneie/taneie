@@ -59,6 +59,7 @@ export interface ProfileInput {
   availabilityStatus?: "ready" | "scheduled" | "paused";
   availabilityNote?: string;
   pledgeAccepted?: boolean;
+  initialMeetingCompleted?: boolean;
   skills?: string[];
 }
 

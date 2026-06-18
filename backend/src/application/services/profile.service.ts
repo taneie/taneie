@@ -91,4 +91,20 @@ export class ProfileService {
     });
     return mapFreelancer(updated);
   }
+
+  async updateInitialMeetingCompleted(
+    freelancerProfileId: string,
+    completed: boolean,
+  ) {
+    const profile = await this.db.freelancerProfile.update({
+      where: { id: freelancerProfileId },
+      data: {
+        initialMeetingCompleted: completed,
+        initialMeetingCompletedAt: completed ? new Date() : null,
+      },
+      include: freelancerInclude,
+    });
+    return mapFreelancer(profile);
+  }
+
 }

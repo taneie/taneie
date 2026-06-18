@@ -124,6 +124,8 @@ model FreelancerProfile {
   availabilityStatus AvailabilityStatus? @map("availability_status")
   availabilityNote   String?             @map("availability_note") @db.VarChar(255)
   pledgedAt          DateTime?           @map("pledged_at") @db.Timestamptz(6)
+  initialMeetingCompleted   Boolean     @default(false) @map("initial_meeting_completed")
+  initialMeetingCompletedAt DateTime?   @map("initial_meeting_completed_at") @db.Timestamptz(6)
   lastUpdatedOn      DateTime?           @map("last_updated_on") @db.Date
   createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)

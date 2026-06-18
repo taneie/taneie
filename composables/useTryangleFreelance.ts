@@ -71,6 +71,8 @@ export interface Profile {
   meetingCandidates: string[];
   pledgeAccepted: boolean;
   pledgedAt: string;
+  initialMeetingCompleted: boolean;
+  initialMeetingCompletedAt: string;
   lastUpdated: string;
 }
 
@@ -86,6 +88,8 @@ export interface Freelancer {
   lastUpdated: string;
   resumeName: string;
   pledgedAt?: string;
+  initialMeetingCompleted?: boolean;
+  initialMeetingCompletedAt?: string;
 }
 
 export interface Job {
@@ -652,6 +656,8 @@ function blankProfile(id = "fr-current"): Profile {
     meetingCandidates: [],
     pledgeAccepted: false,
     pledgedAt: "",
+    initialMeetingCompleted: false,
+    initialMeetingCompletedAt: "",
     lastUpdated: "",
   };
 }
@@ -1051,6 +1057,8 @@ function freelancerToProfile(
     resumeName: freelancer.resumeName || "",
     pledgeAccepted: Boolean(freelancer.pledgedAt),
     pledgedAt: freelancer.pledgedAt || "",
+    initialMeetingCompleted: Boolean(freelancer.initialMeetingCompleted),
+    initialMeetingCompletedAt: freelancer.initialMeetingCompletedAt || "",
     lastUpdated: freelancer.lastUpdated || "",
   };
 }
@@ -1388,6 +1396,7 @@ async function register(values: RegisterInput) {
       body: JSON.stringify({
         email,
         password: values.password,
+        roleTitle: values.role,
         privacyPolicyAccepted: true,
       }),
     });
@@ -1679,7 +1688,7 @@ async function applyJob(jobId: string) {
     });
     state.value.applications.unshift(application);
     persist();
-    showToast("応募しました。");
+    showToast("応募しました。営業管理に反映されています。");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "応募に失敗しました。");
   }

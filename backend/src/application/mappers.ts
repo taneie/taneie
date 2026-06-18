@@ -24,11 +24,7 @@ type JobWithRelations = Job & {
   skills: Array<JobSkill & { skill: Skill }>;
 };
 
-type FreelancerWithRelations = FreelancerProfile & {
-  user: User;
-  skills: Array<FreelancerSkill & { skill: Skill }>;
-  resumes: Resume[];
-};
+type FreelancerWithRelations = FreelancerProfile & { initialMeetingCompleted: boolean; initialMeetingCompletedAt: Date | null; user: User; skills: Array<FreelancerSkill & { skill: Skill }>; resumes: Resume[]; };
 
 type ApplicationWithRelations = Application & {
   job: JobWithRelations;
@@ -106,6 +102,8 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
       profile.availabilityNote,
     ),
     pledgedAt: profile.pledgedAt?.toISOString() || "",
+    initialMeetingCompleted: profile.initialMeetingCompleted,
+    initialMeetingCompletedAt: profile.initialMeetingCompletedAt?.toISOString() || "",
     lastUpdated: profile.lastUpdatedOn?.toISOString().slice(0, 10) || "",
     resumeName: decryptText(latestResume?.originalFilename) || "",
     publicCode: profile.publicCode,

@@ -8,7 +8,8 @@ import {
   validateBody,
   type AuthedRequest,
 } from "../middleware.js";
-import { updateProfileSchema } from "../schemas.js";
+import { updateInitialMeetingSchema, updateProfileSchema } from "../schemas.js";
+import { routeParam } from "./helpers.js";
 
 export function registerProfileRoutes(
   app: Express,
@@ -46,6 +47,21 @@ export function registerProfileRoutes(
     validateBody(updateProfileSchema),
     asyncHandler<AuthedRequest>(async (req, res) => {
       res.json(await profileService.updateCurrent(req.auth!.userId, req.body));
+    }),
+  );
+
+  app.patch(
+    "/api/freelancers/:id/initial-meeting",
+    requireAuth,
+    requireRole("sales"),
+    validateBody(updateInitialMeetingSchema),
+    asyncHandler(async (req, res) => {
+      res.json(
+        await profileService.updateInitialMeetingCompleted(
+          routeParam(req.params.id),
+          req.body.completed,
+        ),
+      );
     }),
   );
 }

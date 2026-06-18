@@ -155,6 +155,10 @@ export const updateProfileSchema = z.object({
   skills: z.array(z.string().trim().min(1)).optional(),
 });
 
+export const updateInitialMeetingSchema = z.object({
+  completed: z.boolean(),
+});
+
 export const applySchema = z.object({
   jobId: z.string().uuid(),
 });
