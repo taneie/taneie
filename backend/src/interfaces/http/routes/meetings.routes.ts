@@ -28,6 +28,7 @@ export function registerMeetingRoutes(
           id: meeting.id,
           freelancerId: meeting.freelancerProfileId,
           applicationId: meeting.applicationId,
+          jobId: meeting.application?.jobId,
           candidate: meeting.candidateAt.toISOString(),
           status: getKeyByValue(labelToMeetingStatus, meeting.status),
         })),

@@ -119,6 +119,8 @@ export interface Application {
 export interface Message {
   id: string;
   freelancerId: string;
+  jobId?: string;
+  messageType?: "chat" | "scout" | "alive_check" | "system";
   from: string;
   to: string;
   body: string;
@@ -130,6 +132,8 @@ export interface Message {
 export interface MeetingRequest {
   id: string;
   freelancerId: string;
+  applicationId?: string;
+  jobId?: string;
   candidate: string;
   status: "候補" | "確定" | "再調整";
 }

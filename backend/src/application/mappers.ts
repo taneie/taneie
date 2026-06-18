@@ -128,6 +128,7 @@ export function mapMessage(
   return {
     id: message.id,
     freelancerId: message.freelancerProfileId,
+    jobId: message.jobId || "",
     from: decryptText(message.sender.name),
     to: decryptText(message.receiver?.name),
     body: decryptText(message.body),

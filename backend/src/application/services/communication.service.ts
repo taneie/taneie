@@ -18,6 +18,7 @@ export class CommunicationService {
         : { freelancerProfile: { userId: context.userId } };
     return this.db.meetingRequest.findMany({
       where,
+      include: { application: { select: { jobId: true } } },
       orderBy: { candidateAt: "asc" },
     });
   }
