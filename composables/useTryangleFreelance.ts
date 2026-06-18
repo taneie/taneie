@@ -1546,7 +1546,7 @@ async function updateMeetingStatus(
   const item = state.value.meetingRequests.find(
     (meeting) => meeting.id === meetingId,
   );
-  if (!item) return;
+  if (!item) return false;
   try {
     await apiRequest(`/meeting-requests/${meetingId}/status`, {
       method: "PATCH",
@@ -1555,8 +1555,10 @@ async function updateMeetingStatus(
     item.status = status;
     persist();
     showToast("面談ステータスを更新しました。");
+    return true;
   } catch (error) {
     showToast(error instanceof Error ? error.message : "更新に失敗しました。");
+    return false;
   }
 }
 

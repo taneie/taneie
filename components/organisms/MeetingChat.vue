@@ -292,8 +292,17 @@ function onApplicationChange(event: Event) {
   selectMeetingApplication((event.target as HTMLSelectElement).value);
 }
 
+function meetingCandidateText(meetingId: string) {
+  const meeting = activeMeetingRequests.value.find(
+    (item) => item.id === meetingId,
+  );
+  return meeting ? displayDateTime(meeting.candidate) : "選択した候補日";
+}
+
 async function confirmMeeting(meetingId: string) {
-  await updateMeetingStatus(meetingId, "確定");
+  const candidateText = meetingCandidateText(meetingId);
+  if (!(await updateMeetingStatus(meetingId, "確定"))) return;
+  await sendMessage(`${candidateText} の面談候補を確定しました。`);
   if (
     currentRole.value === "sales" &&
     meetingThreadMode.value === "initial" &&
@@ -305,7 +314,11 @@ async function confirmMeeting(meetingId: string) {
 }
 
 async function startReschedule(meetingId: string) {
-  await updateMeetingStatus(meetingId, "再調整");
+  const candidateText = meetingCandidateText(meetingId);
+  if (!(await updateMeetingStatus(meetingId, "再調整"))) return;
+  await sendMessage(
+    `${candidateText} の面談候補は再調整でお願いします。別候補日をお送りします。`,
+  );
   rescheduleMeetingId.value = meetingId;
   candidates.value = [""];
 }
@@ -318,7 +331,16 @@ async function submitMeeting() {
     await addMeeting("");
     return;
   }
+  const isSalesReschedule =
+    currentRole.value === "sales" && Boolean(rescheduleMeetingId.value);
   await Promise.all(values.map((candidate) => addMeeting(candidate)));
+  if (isSalesReschedule) {
+    await sendMessage(
+      `リスケ候補日を送信しました。\n${values
+        .map((candidate) => `・${displayDateTime(candidate)}`)
+        .join("\n")}`,
+    );
+  }
   candidates.value = [""];
   rescheduleMeetingId.value = "";
 }
