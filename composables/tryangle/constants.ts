@@ -19,7 +19,12 @@ export const navItems: NavItem[] = [
     label: "プロフィール",
     roles: ["freelancer"],
   },
-  { view: "jobs", icon: "search", label: "案件検索", roles: ["freelancer"] },
+  {
+    view: "jobs",
+    icon: "search",
+    label: "案件検索",
+    roles: ["freelancer", "sales"],
+  },
   { view: "admin", icon: "briefcase", label: "営業管理", roles: ["sales"] },
   { view: "scout", icon: "send", label: "スカウト", roles: ["sales"] },
   {
