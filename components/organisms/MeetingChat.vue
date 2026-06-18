@@ -83,26 +83,13 @@
           初回面談が完了すると、案件ごとの面談候補とチャットを利用できます。
         </div>
 
-        <div
-          v-if="
-            currentRole === 'sales' &&
-            meetingThreadMode === 'initial' &&
-            !selectedFreelancer.initialMeetingCompleted
-          "
-          :class="$style.actions"
-        >
-          <BaseButton icon="calendar" @click="completeInitialMeeting">
-            初回面談を完了にする
-          </BaseButton>
-        </div>
-
         <form
           v-if="canShowMeetingForm"
           :class="$style.formGrid"
           @submit.prevent="submitMeeting"
         >
           <div :class="$style.field">
-            <span>候補日時</span>
+            <span>{{ meetingFormLabel }}</span>
             <div :class="$style.dateRows">
               <div
                 v-for="(_, index) in candidates"
@@ -146,13 +133,13 @@
             <div v-if="currentRole === 'sales'" :class="$style.actions">
               <BaseButton
                 variant="secondary"
-                @click="updateMeetingStatus(meeting.id, '確定')"
+                @click="confirmMeeting(meeting.id)"
                 >確定</BaseButton
               >
               <BaseButton
                 variant="secondary"
-                @click="updateMeetingStatus(meeting.id, '再調整')"
-                >再調整</BaseButton
+                @click="startReschedule(meeting.id)"
+                >リスケ</BaseButton
               >
             </div>
           </div>
@@ -258,6 +245,7 @@ const {
 
 const candidates = ref<string[]>([""]);
 const body = ref("");
+const rescheduleMeetingId = ref("");
 const selectedJobTitle = computed(() =>
   meetingThreadMode.value === "job" && activeMeetingApplication.value
     ? jobTitle(activeMeetingApplication.value.jobId)
@@ -274,7 +262,12 @@ const emptyChatText = computed(() =>
     : "初回面談のメッセージはまだありません。",
 );
 const canShowMeetingForm = computed(
-  () => currentRole.value !== "sales" && meetingThreadMode.value === "job",
+  () =>
+    (currentRole.value === "sales" && Boolean(rescheduleMeetingId.value)) ||
+    (currentRole.value !== "sales" && meetingThreadMode.value === "job"),
+);
+const meetingFormLabel = computed(() =>
+  currentRole.value === "sales" ? "リスケ候補日時" : "候補日時",
 );
 
 function isOwnMessage(message: Message) {
@@ -296,9 +289,22 @@ function onApplicationChange(event: Event) {
   selectMeetingApplication((event.target as HTMLSelectElement).value);
 }
 
-function completeInitialMeeting() {
-  if (!activeChatFreelancerId.value) return;
-  void updateInitialMeetingCompleted(activeChatFreelancerId.value, true);
+async function confirmMeeting(meetingId: string) {
+  await updateMeetingStatus(meetingId, "確定");
+  if (
+    currentRole.value === "sales" &&
+    meetingThreadMode.value === "initial" &&
+    activeChatFreelancerId.value
+  ) {
+    await updateInitialMeetingCompleted(activeChatFreelancerId.value, true);
+  }
+  if (rescheduleMeetingId.value === meetingId) rescheduleMeetingId.value = "";
+}
+
+async function startReschedule(meetingId: string) {
+  await updateMeetingStatus(meetingId, "再調整");
+  rescheduleMeetingId.value = meetingId;
+  candidates.value = [""];
 }
 
 async function submitMeeting() {
@@ -311,6 +317,7 @@ async function submitMeeting() {
   }
   await Promise.all(values.map((candidate) => addMeeting(candidate)));
   candidates.value = [""];
+  rescheduleMeetingId.value = "";
 }
 
 function addCandidate() {
@@ -345,6 +352,7 @@ watch(
     activeFreelancerApplications.value.length,
   ],
   () => {
+    rescheduleMeetingId.value = "";
     if (!canUseJobMeeting.value || !activeFreelancerApplications.value.length) {
       setMeetingThreadMode("initial");
       return;
