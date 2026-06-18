@@ -144,6 +144,7 @@
             </div>
             <div v-if="currentRole === 'sales'" :class="$style.actions">
               <BaseButton
+                v-if="meeting.status !== '確定'"
                 variant="secondary"
                 @click="confirmMeeting(meeting.id)"
                 >確定</BaseButton
@@ -314,10 +315,24 @@ function meetingCandidateText(meetingId: string) {
   return meeting ? displayDateTime(meeting.candidate) : "選択した候補日";
 }
 
+function buildMeetingConfirmMessage(candidateText: string) {
+  if (meetingThreadMode.value === "job") {
+    return `${candidateText} の案件面談を確定しました。\n利用ツール: オンライン面談URLは追ってこのチャットで共有します。\n事前準備: 案件概要とご経歴の接点を確認しておいてください。\n当日の流れ: 条件確認、案件説明、質疑応答の順で進めます。`;
+  }
+  return `${candidateText} の初回面談を確定しました。\n利用ツール: オンライン面談URLは追ってこのチャットで共有します。\n事前準備: 職務経歴書、希望条件、稼働開始時期を確認しておいてください。\n当日の流れ: ご経歴確認、希望条件のすり合わせ、今後の案件紹介方針の順で進めます。`;
+}
+
+function buildMeetingRescheduleMessage(candidateText: string) {
+  if (meetingThreadMode.value === "job") {
+    return `${candidateText} の案件面談は再調整でお願いします。\n利用ツール: オンライン面談を予定しています。\n事前準備: 候補日時をいくつかご共有ください。案件概要と確認事項もあわせて整理します。\n当日の流れ: 条件確認、案件説明、質疑応答の順で進めます。`;
+  }
+  return `${candidateText} の初回面談は再調整でお願いします。\n利用ツール: オンライン面談を予定しています。\n事前準備: 候補日時をいくつかご共有ください。職務経歴書、希望条件、稼働開始時期も確認できるようにします。\n当日の流れ: ご経歴確認、希望条件のすり合わせ、今後の案件紹介方針の順で進めます。`;
+}
+
 async function confirmMeeting(meetingId: string) {
   const candidateText = meetingCandidateText(meetingId);
   if (!(await updateMeetingStatus(meetingId, "確定"))) return;
-  await sendMessage(`${candidateText} の面談候補を確定しました。`);
+  await sendMessage(buildMeetingConfirmMessage(candidateText));
   if (rescheduleMeetingId.value === meetingId) rescheduleMeetingId.value = "";
 }
 
@@ -334,9 +349,7 @@ async function completeInitialMeeting() {
 async function startReschedule(meetingId: string) {
   const candidateText = meetingCandidateText(meetingId);
   if (!(await updateMeetingStatus(meetingId, "再調整"))) return;
-  await sendMessage(
-    `${candidateText} の面談候補は再調整でお願いします。別候補日をお送りします。`,
-  );
+  await sendMessage(buildMeetingRescheduleMessage(candidateText));
   rescheduleMeetingId.value = meetingId;
   candidates.value = [""];
 }
