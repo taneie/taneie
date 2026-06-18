@@ -107,9 +107,18 @@
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">応募ステータス</h2>
+        <label :class="$style.filterField">
+          ステータス
+          <select v-model="applicationStatusFilter" :class="$style.filterControl">
+            <option value="">すべて</option>
+            <option v-for="status in statuses" :key="status" :value="status">
+              {{ status }}
+            </option>
+          </select>
+        </label>
       </div>
       <div :class="$style.panelBody">
-        <SelectionKanban />
+        <SelectionKanban :applications="filteredApplications" />
       </div>
     </section>
   </div>
@@ -119,7 +128,7 @@
       <h2 :class="$style.panelTitle">応募者一覧・レジュメ</h2>
     </div>
     <div :class="[$style.panelBody, $style.tableWrap]">
-      <ApplicationsTable with-resume />
+      <ApplicationsTable :applications="filteredApplications" with-resume />
     </div>
   </section>
 
@@ -150,12 +159,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
-import type { JobInput } from "~/composables/tryangle/types";
+import type { ApplicationStatus, JobInput } from "~/composables/tryangle/types";
 
 const {
   state,
+  statuses,
   flowOptions,
   remoteOptions,
   adminMatchedJobs,
@@ -183,6 +193,7 @@ const initialJobForm = (): JobInput => ({
 });
 
 const jobForm = reactive<JobInput>(initialJobForm());
+const applicationStatusFilter = ref<ApplicationStatus | "">("");
 
 const closedApplications = computed(
   () =>
@@ -196,6 +207,12 @@ const rejectedApplications = computed(
       (application) => application.status === "見送り",
     ).length,
 );
+const filteredApplications = computed(() => {
+  if (!applicationStatusFilter.value) return state.value.applications;
+  return state.value.applications.filter(
+    (application) => application.status === applicationStatusFilter.value,
+  );
+});
 const adminMatchTarget = computed(() => {
   const preview = getFreelancer(state.value.previewFreelancerId);
   if (preview) return preview;
@@ -285,6 +302,25 @@ async function submitJob() {
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+.filterField {
+  display: grid;
+  gap: 4px;
+  min-width: 160px;
+  color: #263f63;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.filterControl {
+  width: 100%;
+  border: 1px solid #c6d5e8;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
 }
 
 .panelBody {

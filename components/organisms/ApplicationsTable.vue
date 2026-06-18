@@ -54,9 +54,11 @@
 <script setup lang="ts">
 import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import { computed } from "vue";
+import type { Application } from "~/composables/tryangle/types";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
+    applications?: Application[];
     withResume?: boolean;
   }>(),
   {
@@ -74,14 +76,16 @@ const {
   selectPreview,
 } = useTryangleRuntime();
 
+const applications = computed(() => props.applications || state.value.applications);
+
 const applicationGroups = computed(() =>
-  state.value.applications.reduce<
+  applications.value.reduce<
     Array<{
       freelancerId: string;
       name: string;
       role: string;
       availability: string;
-      applications: typeof state.value.applications;
+      applications: Application[];
     }>
   >((groups, application) => {
     const freelancer = getFreelancer(application.freelancerId);
