@@ -126,10 +126,18 @@
   <div :class="[$style.grid, $style.two, $style.stackMd]">
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">案件管理一覧</h2>
+        <div :class="$style.panelHeaderText">
+          <h2 :class="$style.panelTitle">マッチ案件一覧</h2>
+          <p v-if="adminMatchTarget" :class="$style.panelNote">
+            対象: {{ adminMatchTarget.name }} / {{ adminMatchSkillText }}
+          </p>
+        </div>
       </div>
       <div :class="[$style.panelBody, $style.tableWrap]">
-        <JobsAdminTable />
+        <JobsAdminTable
+          :jobs="adminMatchedJobsForTable"
+          :loading="adminMatchedJobsLoading"
+        />
       </div>
     </section>
     <section :class="$style.panel">
@@ -142,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import type { JobInput } from "~/composables/useTryangleFreelance";
 
@@ -150,9 +158,14 @@ const {
   state,
   flowOptions,
   remoteOptions,
+  adminMatchedJobs,
+  adminMatchedJobsLoading,
   createJob,
   markDirty,
   clearUnsavedChanges,
+  loadAdminMatchedJobs,
+  getFreelancer,
+  getJob,
 } = useTryangleFreelance();
 
 const initialJobForm = (): JobInput => ({
@@ -182,6 +195,29 @@ const rejectedApplications = computed(
     state.value.applications.filter(
       (application) => application.status === "見送り",
     ).length,
+);
+const adminMatchTarget = computed(() => {
+  const preview = getFreelancer(state.value.previewFreelancerId);
+  if (preview) return preview;
+
+  const selected = getFreelancer(state.value.selectedFreelancerId);
+  if (selected) return selected;
+
+  return state.value.freelancers[0];
+});
+const adminMatchSkillText = computed(
+  () => adminMatchTarget.value?.skills.join(" / ") || "スキル未登録",
+);
+const adminMatchedJobsForTable = computed(() =>
+  adminMatchedJobs.value.map((job) => getJob(job.id) || job),
+);
+
+watch(
+  () => adminMatchTarget.value?.id || "",
+  (freelancerId) => {
+    if (freelancerId) void loadAdminMatchedJobs(freelancerId);
+  },
+  { immediate: true },
 );
 
 async function submitJob() {
@@ -234,6 +270,20 @@ async function submitJob() {
   margin: 0;
   color: #10294f;
   font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.panelHeaderText {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.panelNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 

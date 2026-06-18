@@ -406,6 +406,9 @@ const scoutJobPicker = ref<ScoutJobPickerState>({
   selectedJobId: "",
   loading: false,
 });
+const adminMatchedJobs = ref<Job[]>([]);
+const adminMatchedJobsLoading = ref(false);
+const adminMatchedFreelancerId = ref("");
 const hasUnsavedChanges = ref(false);
 const toastMessage = ref("");
 const toastVisible = ref(false);
@@ -1757,6 +1760,33 @@ async function searchScoutableJobs() {
   }
 }
 
+async function loadAdminMatchedJobs(freelancerId = "") {
+  if (currentRole.value !== "sales") return;
+
+  const target = getFreelancer(freelancerId);
+  if (!target) {
+    adminMatchedFreelancerId.value = "";
+    adminMatchedJobs.value = [];
+    return;
+  }
+
+  adminMatchedFreelancerId.value = target.id;
+  adminMatchedJobsLoading.value = true;
+  try {
+    const jobs = await apiRequest<Job[]>(`/jobs/scoutable/${target.id}`);
+    adminMatchedJobs.value = jobs;
+  } catch (error) {
+    adminMatchedJobs.value = [];
+    showToast(
+      error instanceof Error
+        ? error.message
+        : "マッチ案件の取得に失敗しました。",
+    );
+  } finally {
+    adminMatchedJobsLoading.value = false;
+  }
+}
+
 function selectScoutJob(jobId: string) {
   scoutJobPicker.value.selectedJobId = jobId;
 }
@@ -2407,6 +2437,9 @@ export function useTryangleFreelance() {
     filters,
     scoutFilters,
     scoutJobPicker,
+    adminMatchedJobs,
+    adminMatchedJobsLoading,
+    adminMatchedFreelancerId,
     jobPagination,
     jobsLoading,
     hasUnsavedChanges,
@@ -2466,6 +2499,7 @@ export function useTryangleFreelance() {
     openScoutJobPicker,
     closeScoutJobPicker,
     searchScoutableJobs,
+    loadAdminMatchedJobs,
     selectScoutJob,
     sendSelectedScout,
     sendScout,

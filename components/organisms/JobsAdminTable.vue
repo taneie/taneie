@@ -11,32 +11,52 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="job in state.jobs" :key="job.id">
-        <td data-label="案件">{{ job.title }}<br />{{ job.client }}</td>
-        <td data-label="単価">{{ job.rateMin }}-{{ job.rateMax }}万円</td>
-        <td data-label="商流">
-          <TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge>
-        </td>
-        <td data-label="マージン">{{ job.marginRate ?? 12 }}%</td>
-        <td data-label="並び替え">
-          <BaseButton variant="secondary" @click="toggleJobSort(job.id)">{{
-            job.sortFlag ? "上位" : "通常"
-          }}</BaseButton>
-        </td>
-        <td data-label="公開">
-          <BaseButton variant="secondary" @click="toggleJobActive(job.id)">{{
-            job.active ? "公開" : "停止"
-          }}</BaseButton>
+      <tr v-if="loading">
+        <td :class="$style.stateCell" colspan="6">案件を取得しています。</td>
+      </tr>
+      <tr v-else-if="displayJobs.length === 0">
+        <td :class="$style.stateCell" colspan="6">
+          条件に合う案件はありません。
         </td>
       </tr>
+      <template v-else>
+        <tr v-for="job in displayJobs" :key="job.id">
+          <td data-label="案件">{{ job.title }}<br />{{ job.client }}</td>
+          <td data-label="単価">{{ job.rateMin }}-{{ job.rateMax }}万円</td>
+          <td data-label="商流">
+            <TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge>
+          </td>
+          <td data-label="マージン">{{ job.marginRate ?? 12 }}%</td>
+          <td data-label="並び替え">
+            <BaseButton variant="secondary" @click="toggleJobSort(job.id)">{{
+              job.sortFlag ? "上位" : "通常"
+            }}</BaseButton>
+          </td>
+          <td data-label="公開">
+            <BaseButton variant="secondary" @click="toggleJobActive(job.id)">{{
+              job.active ? "公開" : "停止"
+            }}</BaseButton>
+          </td>
+        </tr>
+      </template>
     </tbody>
   </table>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import type { Job } from "~/composables/useTryangleFreelance";
+
+const props = defineProps<{
+  jobs?: Job[];
+  loading?: boolean;
+}>();
+
 const { state, streamTone, toggleJobSort, toggleJobActive } =
   useTryangleFreelance();
+
+const displayJobs = computed(() => props.jobs ?? state.value.jobs);
 </script>
 
 <style module>
@@ -60,6 +80,11 @@ const { state, streamTone, toggleJobSort, toggleJobActive } =
   color: var(--muted);
   font-size: 12px;
   background: var(--primary-soft);
+}
+
+.stateCell {
+  color: var(--muted);
+  text-align: center;
 }
 
 @media (max-width: 620px) {

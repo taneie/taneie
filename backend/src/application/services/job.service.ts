@@ -155,7 +155,7 @@ export class JobService {
         messages: {
           none: {
             freelancerProfileId: profile.id,
-           messageType: "scout",
+            messageType: "scout",
           },
         },
       },
@@ -183,8 +183,14 @@ export class JobService {
       filters.push({ remoteType: profile.remoteType as never });
     }
 
-    const skillNames = profile.skills.map((item) => item.skill.name).filter(Boolean);
-    if (skillNames.length) {
+    const skillNames = profile.skills
+      .map((item) => item.skill.name)
+      .filter(Boolean);
+    if (!skillNames.length) {
+      filters.push({
+        id: { equals: "00000000-0000-0000-0000-000000000000" },
+      });
+    } else {
       filters.push({
         skills: {
           some: {
