@@ -194,7 +194,7 @@ const {
   }
 
   .brand {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
   }
 
   .nav {
@@ -204,22 +204,24 @@ const {
   }
 
   .accountBar {
-    margin-left: 0;
+    margin-left: auto;
+    justify-content: flex-end;
   }
 }
 
 @media (max-width: 980px) {
   .topbarInner {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
   }
 
   .brand {
-    width: 100%;
+    width: auto;
   }
 
   .accountBar {
     flex-wrap: wrap;
+    margin-left: auto;
   }
 }
 
@@ -229,7 +231,15 @@ const {
   }
 
   .topbarInner {
+    align-items: stretch;
+    flex-direction: column;
     padding: 11px 12px;
+  }
+
+  .accountBar {
+    justify-content: space-between;
+    width: 100%;
+    margin-left: 0;
   }
 
   .nav {
