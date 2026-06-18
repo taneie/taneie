@@ -366,9 +366,12 @@ async function loadWorkspace() {
     apiRequest<Message[]>("/messages"),
   ]);
 
-  if (state.value.auth.role === "freelancer") {
-    await fetchJobsPage({ reset: true });
-  } else {
+  state.value.applications = applications;
+  state.value.meetingRequests = meetings;
+  state.value.messages = messages;
+  knownMessageIds = new Set(messages.map((message) => message.id));
+
+  if (state.value.auth.role === "sales") {
     const jobs = await apiRequest<Job[]>("/jobs").catch(() => []);
     state.value.jobs = jobs;
     jobPagination.value = {
@@ -377,14 +380,6 @@ async function loadWorkspace() {
       offset: 0,
       hasMore: false,
     };
-  }
-
-  state.value.applications = applications;
-  state.value.meetingRequests = meetings;
-  state.value.messages = messages;
-  knownMessageIds = new Set(messages.map((message) => message.id));
-
-  if (state.value.auth.role === "sales") {
     const [freelancers, contactInquiries] = await Promise.all([
       apiRequest<Freelancer[]>("/freelancers"),
       apiRequest<ContactInquiry[]>("/contact-inquiries").catch(() => []),
@@ -409,6 +404,7 @@ async function loadWorkspace() {
     };
     state.value.freelancers = [profile];
     state.value.contactInquiries = contactInquiries;
+    await fetchJobsPage({ reset: true });
   }
 
   ensureChatSelection();

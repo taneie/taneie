@@ -17,12 +17,24 @@ export class JobService {
   constructor(private readonly db: PrismaClient) {}
 
   async list(context?: AuthContext, input: JobListInput = {}) {
+    let freelancerMatchProfile:
+      | { skills: Array<{ skill: { name: string } }> }
+      | undefined;
+
     if (context?.role === "freelancer") {
       await assertFreelancerCanViewJobs(this.db, context.userId);
+      freelancerMatchProfile =
+        await this.db.freelancerProfile.findUniqueOrThrow({
+          where: { userId: context.userId },
+          select: { skills: { include: { skill: true } } },
+        });
     }
 
-    const where = this.buildListWhere(context, input);
-    const orderBy = [{ isPinned: "desc" as const }, { createdAt: "desc" as const }];
+    const where = this.buildListWhere(context, input, freelancerMatchProfile);
+    const orderBy = [
+      { isPinned: "desc" as const },
+      { createdAt: "desc" as const },
+    ];
 
     if (input.limit === undefined && input.offset === undefined) {
       const jobs = await this.db.job.findMany({
@@ -203,11 +215,33 @@ export class JobService {
     return { AND: filters };
   }
 
-  private buildListWhere(context: AuthContext | undefined, input: JobListInput) {
+  private buildListWhere(
+    context: AuthContext | undefined,
+    input: JobListInput,
+    freelancerMatchProfile?: { skills: Array<{ skill: { name: string } }> },
+  ) {
     const filters: Prisma.JobWhereInput[] = [];
 
     if (context?.role !== "sales") {
       filters.push({ isActive: true });
+    }
+
+    if (context?.role === "freelancer") {
+      const skillNames =
+        freelancerMatchProfile?.skills
+          .map((item) => item.skill.name)
+          .filter(Boolean) || [];
+      filters.push(
+        skillNames.length
+          ? {
+              skills: {
+                some: {
+                  skill: { name: { in: skillNames } },
+                },
+              },
+            }
+          : { id: { equals: "00000000-0000-0000-0000-000000000000" } },
+      );
     }
 
     if (input.keyword) {
