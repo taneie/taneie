@@ -789,8 +789,15 @@ const activeChatMessages = computed(() => {
       }
       return !message.jobId;
     })
-    .sort((a, b) => a.at.localeCompare(b.at));
+    .sort((a, b) => b.at.localeCompare(a.at));
 });
+
+const currentUnreadChatCount = computed(
+  () =>
+    state.value.messages.filter(
+      (message) => isIncomingMessage(message) && !message.readAt,
+    ).length,
+);
 
 const activeMeetingRequests = computed(() => {
   const freelancerId = activeChatFreelancerId.value;
@@ -2057,6 +2064,7 @@ export function useTryangleFreelance() {
     canUseJobMeeting,
     activeMeetingApplication,
     activeMeetingJobId,
+    currentUnreadChatCount,
     chatFreelancers,
     activeChatMessages,
     activeMeetingRequests,

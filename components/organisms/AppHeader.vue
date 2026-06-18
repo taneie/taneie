@@ -18,6 +18,16 @@
         >
           <AppIcon :name="item.icon" />
           <span>{{ item.label }}</span>
+          <span
+            v-if="
+              item.view === 'meeting' &&
+              currentRole === 'freelancer' &&
+              currentUnreadChatCount
+            "
+            :class="$style.unreadBadge"
+          >
+            {{ currentUnreadChatCount }}
+          </span>
         </button>
       </nav>
 
@@ -41,8 +51,15 @@
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 
-const { state, availableNavItems, setView, logout, roleLabel } =
-  useTryangleFreelance();
+const {
+  state,
+  currentRole,
+  availableNavItems,
+  currentUnreadChatCount,
+  setView,
+  logout,
+  roleLabel,
+} = useTryangleFreelance();
 </script>
 
 <style module>
@@ -117,6 +134,20 @@ const { state, availableNavItems, setView, logout, roleLabel } =
   color: var(--primary);
   background: var(--primary-weak);
   font-weight: 700;
+}
+
+.unreadBadge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #d92d20;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .accountBar {

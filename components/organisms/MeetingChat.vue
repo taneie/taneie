@@ -2,7 +2,10 @@
   <div
     :class="[$style.grid, currentRole === 'sales' ? $style.three : $style.two]"
   >
-    <section v-if="currentRole === 'sales'" :class="$style.panel">
+    <section
+      v-if="currentRole === 'sales'"
+      :class="[$style.panel, $style.userPanel]"
+    >
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">チャット対象</h2>
         <TagBadge tone="blue">{{ chatFreelancers.length }}名</TagBadge>
@@ -46,7 +49,7 @@
       </div>
     </section>
 
-    <section :class="$style.panel">
+    <section :class="[$style.panel, $style.meetingPanel]">
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">面談候補</h2>
         <TagBadge :tone="meetingThreadMode === 'job' ? 'amber' : 'teal'">
@@ -150,7 +153,7 @@
       </div>
     </section>
 
-    <section :class="$style.panel">
+    <section :class="[$style.panel, $style.chatPanel]">
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">
           {{ meetingThreadMode === "job" ? "案件面談チャット" : "初回面談チャット" }}
@@ -177,15 +180,15 @@
               <span :class="$style.messageTime">{{
                 displayDateTime(message.at)
               }}</span>
-              <span
-                v-if="isOwnMessage(message) && message.readAt"
-                :class="$style.readStatus"
-                >既読</span
-              >
             </div>
             <div :class="$style.messageBubble">
               <div :class="$style.messageBody">{{ message.body }}</div>
             </div>
+            <span
+              v-if="isOwnMessage(message) && message.readAt"
+              :class="$style.readStatus"
+              >既読</span
+            >
           </div>
           <div v-if="!activeChatMessages.length" :class="$style.emptyState">
             {{ emptyChatText }}
@@ -725,6 +728,18 @@ textarea.control {
 }
 
 @media (max-width: 620px) {
+  .chatPanel {
+    order: -3;
+  }
+
+  .userPanel {
+    order: -2;
+  }
+
+  .meetingPanel {
+    order: -1;
+  }
+
   .panelBody,
   .panelHeader {
     padding: 12px;
