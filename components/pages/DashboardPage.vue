@@ -29,22 +29,19 @@
   </section>
 
   <div :class="[$style.grid, $style.two]">
-    <section :class="$style.panel">
-      <div :class="$style.panelHeader">
+    <details :class="$style.panel" open>
+      <summary :class="$style.panelHeader">
         <div :class="$style.panelHeaderText">
           <h2 :class="$style.panelTitle">優先案件</h2>
           <span :class="$style.panelNote">{{ filteredPriorityJobs.length }}件</span>
         </div>
         <div :class="$style.headerActions">
-          <BaseButton variant="ghost" @click="priorityCollapsed = !priorityCollapsed">
-            {{ priorityCollapsed ? "展開" : "折りたたみ" }}
-          </BaseButton>
-          <BaseButton variant="ghost" icon="search" @click="setView('jobs')"
+          <BaseButton variant="ghost" icon="search" @click.stop="setView('jobs')"
             >案件を見る</BaseButton
           >
         </div>
-      </div>
-      <div v-if="!priorityCollapsed" :class="[$style.panelBody, $style.cardList]">
+      </summary>
+      <div :class="[$style.panelBody, $style.cardList]">
         <input
           v-model="prioritySearch"
           :class="$style.control"
@@ -69,10 +66,10 @@
           aria-hidden="true"
         />
       </div>
-    </section>
+    </details>
 
-    <section :class="$style.panel">
-      <div :class="$style.panelHeader">
+    <details :class="$style.panel" open>
+      <summary :class="$style.panelHeader">
         <div :class="$style.panelHeaderText">
           <h2 :class="$style.panelTitle">提案前チェック</h2>
           <span :class="$style.panelNote">
@@ -80,18 +77,12 @@
           </span>
         </div>
         <div :class="$style.headerActions">
-          <BaseButton
-            variant="ghost"
-            @click="applicationsCollapsed = !applicationsCollapsed"
-          >
-            {{ applicationsCollapsed ? "展開" : "折りたたみ" }}
-          </BaseButton>
-          <BaseButton variant="ghost" icon="send" @click="aliveCheck"
+          <BaseButton variant="ghost" icon="send" @click.stop="aliveCheck"
             >稼働状況を確認</BaseButton
           >
         </div>
-      </div>
-      <div v-if="!applicationsCollapsed" :class="$style.panelBody">
+      </summary>
+      <div :class="$style.panelBody">
         <div :class="[$style.grid, $style.three]">
           <CoverageCard
             title="基本導線"
@@ -163,7 +154,7 @@
           />
         </div>
       </div>
-    </section>
+    </details>
   </div>
 </template>
 
@@ -185,8 +176,6 @@ const {
 
 const prioritySearch = ref("");
 const applicationSearch = ref("");
-const priorityCollapsed = ref(false);
-const applicationsCollapsed = ref(false);
 const priorityLimit = ref(5);
 const applicationLimit = ref(5);
 const prioritySentinel = ref<HTMLElement | null>(null);
@@ -323,6 +312,30 @@ onBeforeUnmount(() => {
   max-width: 100%;
 }
 
+.panel > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel > summary::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-right: 2px solid #46627f;
+  border-bottom: 2px solid #46627f;
+  transform: rotate(45deg);
+  transition: transform 0.16s ease;
+}
+
+.panel[open] > summary::after {
+  transform: rotate(225deg);
+}
+
 .panelHeader {
   display: flex;
   align-items: center;
@@ -358,6 +371,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-left: auto;
 }
 
 .panelBody {
