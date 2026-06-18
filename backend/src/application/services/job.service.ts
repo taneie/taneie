@@ -18,7 +18,11 @@ export class JobService {
 
   async list(context?: AuthContext, input: JobListInput = {}) {
     let freelancerMatchProfile:
-      | { skills: Array<{ skill: { name: string } }> }
+      | {
+          desiredRate: number | null;
+          remoteType: string | null;
+          skills: Array<{ skill: { name: string } }>;
+        }
       | undefined;
 
     if (context?.role === "freelancer") {
@@ -26,7 +30,11 @@ export class JobService {
       freelancerMatchProfile =
         await this.db.freelancerProfile.findUniqueOrThrow({
           where: { userId: context.userId },
-          select: { skills: { include: { skill: true } } },
+          select: {
+            desiredRate: true,
+            remoteType: true,
+            skills: { include: { skill: true } },
+          },
         });
     }
 
@@ -218,7 +226,11 @@ export class JobService {
   private buildListWhere(
     context: AuthContext | undefined,
     input: JobListInput,
-    freelancerMatchProfile?: { skills: Array<{ skill: { name: string } }> },
+    freelancerMatchProfile?: {
+      desiredRate: number | null;
+      remoteType: string | null;
+      skills: Array<{ skill: { name: string } }>;
+    },
   ) {
     const filters: Prisma.JobWhereInput[] = [];
 
@@ -242,6 +254,14 @@ export class JobService {
             }
           : { id: { equals: "00000000-0000-0000-0000-000000000000" } },
       );
+
+      if (freelancerMatchProfile?.desiredRate) {
+        filters.push({ rateMax: { gte: freelancerMatchProfile.desiredRate } });
+      }
+
+      if (freelancerMatchProfile?.remoteType) {
+        filters.push({ remoteType: freelancerMatchProfile.remoteType as never });
+      }
     }
 
     if (input.keyword) {
