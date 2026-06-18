@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import type { Freelancer } from "~/composables/tryangle/types";
 
 const props = defineProps<{
@@ -52,7 +52,7 @@ defineEmits<{
   preview: [freelancerId: string];
 }>();
 
-const { today } = useTryangleFreelance();
+const { today } = useTryangleRuntime();
 
 const daysOld = computed(() => {
   return Math.floor(

@@ -110,7 +110,7 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 
 const {
   filters,
@@ -129,7 +129,7 @@ const {
   canApplyMoreJobs,
   applyJob,
   setView,
-} = useTryangleFreelance();
+} = useTryangleRuntime();
 
 const loadMoreTrigger = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;

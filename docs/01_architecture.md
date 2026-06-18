@@ -42,7 +42,8 @@ TRYANGLE FREELANCE/
     pages/
     templates/
   composables/
-    useTryangleFreelance.ts
+    tryangle/
+      useTryangleRuntime.ts
   backend/
     src/
       application/
@@ -66,12 +67,12 @@ TRYANGLE FREELANCE/
 
 ### 4.1 エントリポイント
 
-| ファイル                              | 役割                                              |
-| ------------------------------------- | ------------------------------------------------- |
-| `app.vue`                             | Nuxtアプリのルート                                |
-| `pages/index.vue`                     | 単一ページアプリとして主要UIを表示                |
-| `components/templates/AppShell.vue`   | ログイン後のアプリケーションレイアウト            |
-| `composables/useTryangleFreelance.ts` | 画面状態、API通信、認証、画面遷移、業務操作を集約 |
+| ファイル                                      | 役割                                              |
+| --------------------------------------------- | ------------------------------------------------- |
+| `app.vue`                                     | Nuxtアプリのルート                                |
+| `pages/index.vue`                             | 単一ページアプリとして主要UIを表示                |
+| `components/templates/AppShell.vue`           | ログイン後のアプリケーションレイアウト            |
+| `composables/tryangle/useTryangleRuntime.ts`  | 画面状態、API通信、認証、画面遷移、業務操作を集約 |
 
 ### 4.2 コンポーネント分類
 

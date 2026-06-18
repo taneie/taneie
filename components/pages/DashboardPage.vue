@@ -149,7 +149,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 
 const {
   state,
@@ -161,7 +161,7 @@ const {
   estimateRate,
   getFreelancer,
   getJob,
-} = useTryangleFreelance();
+} = useTryangleRuntime();
 
 const prioritySearch = ref("");
 const applicationSearch = ref("");

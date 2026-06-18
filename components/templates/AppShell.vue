@@ -25,10 +25,10 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import { watch } from "vue";
 const { state, currentRole, ensureActiveView, setView } =
-  useTryangleFreelance();
+  useTryangleRuntime();
 
 watch(
   () => [state.value.auth?.role, state.value.activeView],

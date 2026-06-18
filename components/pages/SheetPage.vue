@@ -75,10 +75,10 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import { computed } from "vue";
 const { state, splitCsv, maskName, copyText, printSheet } =
-  useTryangleFreelance();
+  useTryangleRuntime();
 
 const profile = computed(() => state.value.profile);
 const publicId = computed(

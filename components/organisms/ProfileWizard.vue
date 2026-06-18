@@ -299,7 +299,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import type { ProfileTermsInput } from "~/composables/tryangle/types";
 
 const {
@@ -320,7 +320,7 @@ const {
   dbSkillOptions,
   frameworkSkillOptions,
   cloudSkillOptions,
-} = useTryangleFreelance();
+} = useTryangleRuntime();
 
 const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候補"];
 const profile = computed(() => state.value.profile);

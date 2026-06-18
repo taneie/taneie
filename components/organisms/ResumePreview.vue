@@ -24,9 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import { computed } from "vue";
-const { state, currentPreviewFreelancer } = useTryangleFreelance();
+const { state, currentPreviewFreelancer } = useTryangleRuntime();
 
 const freelancer = computed(() => {
   state.value.previewFreelancerId;

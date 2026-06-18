@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import type { Job } from "~/composables/tryangle/types";
 
 const props = defineProps<{
@@ -54,7 +54,7 @@ const props = defineProps<{
 }>();
 
 const { state, streamTone, toggleJobSort, toggleJobActive } =
-  useTryangleFreelance();
+  useTryangleRuntime();
 
 const displayJobs = computed(() => props.jobs ?? state.value.jobs);
 </script>

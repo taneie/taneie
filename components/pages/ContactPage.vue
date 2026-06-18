@@ -205,7 +205,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, useCssModule } from "vue";
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import type { ContactInquiryInput } from "~/composables/tryangle/types";
 
 const {
@@ -217,7 +217,7 @@ const {
   answerContactInquiry,
   markDirty,
   clearUnsavedChanges,
-} = useTryangleFreelance();
+} = useTryangleRuntime();
 const styles = useCssModule();
 
 const inquiryTypeOptions = [

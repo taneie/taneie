@@ -280,7 +280,7 @@
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import type { RegisterInput } from "~/composables/tryangle/types";
 
 const {
@@ -290,7 +290,7 @@ const {
   markDirty,
   confirmDiscardChanges,
   requestBrowserNotificationPermission,
-} = useTryangleFreelance();
+} = useTryangleRuntime();
 
 const heroImageSrc = "/images/lp-hero-engineer.png";
 const flowImageSrc = "/images/lp-flow-visual.png";

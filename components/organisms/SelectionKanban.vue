@@ -37,11 +37,11 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import { computed } from "vue";
 
 const { state, statuses, getFreelancer, getJob, changeApplicationStatus } =
-  useTryangleFreelance();
+  useTryangleRuntime();
 
 const applicationGroups = computed(() =>
   state.value.applications.reduce<

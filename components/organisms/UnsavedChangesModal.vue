@@ -35,9 +35,9 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 
-const { unsavedConfirmVisible, resolveUnsavedConfirm } = useTryangleFreelance();
+const { unsavedConfirmVisible, resolveUnsavedConfirm } = useTryangleRuntime();
 </script>
 
 <style module>

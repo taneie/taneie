@@ -151,7 +151,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, watch } from "vue";
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import type { JobInput } from "~/composables/tryangle/types";
 
 const {
@@ -166,7 +166,7 @@ const {
   loadAdminMatchedJobs,
   getFreelancer,
   getJob,
-} = useTryangleFreelance();
+} = useTryangleRuntime();
 
 const initialJobForm = (): JobInput => ({
   title: "",

@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 
 const {
   chatBannerVisible,
@@ -29,7 +29,7 @@ const {
   chatBannerBody,
   openChatBanner,
   dismissChatBanner,
-} = useTryangleFreelance();
+} = useTryangleRuntime();
 </script>
 
 <style module>

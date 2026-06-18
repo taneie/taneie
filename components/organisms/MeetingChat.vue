@@ -216,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
 import { computed, onMounted, ref, watch } from "vue";
 import type { Message } from "~/composables/tryangle/types";
 
@@ -244,7 +244,7 @@ const {
   markDirty,
   clearUnsavedChanges,
   getJob,
-} = useTryangleFreelance();
+} = useTryangleRuntime();
 
 const candidates = ref<string[]>([""]);
 const body = ref("");

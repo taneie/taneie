@@ -1992,7 +1992,7 @@ function saveAndNotify(message: string) {
   showToast(message);
 }
 
-export function useTryangleFreelance() {
+export function useTryangleRuntime() {
   return {
     state,
     filters,
