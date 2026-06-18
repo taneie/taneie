@@ -725,21 +725,21 @@ textarea.control {
   .two {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 620px) {
-  .chatPanel {
+  .userPanel {
     order: -3;
   }
 
-  .userPanel {
+  .chatPanel {
     order: -2;
   }
 
   .meetingPanel {
     order: -1;
   }
+}
 
+@media (max-width: 620px) {
   .panelBody,
   .panelHeader {
     padding: 12px;
