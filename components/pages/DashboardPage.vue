@@ -124,26 +124,15 @@
             type="search"
             placeholder="応募者、案件、ステータスで検索"
           />
-          <article
+          <DashboardApplicationCard
             v-for="application in visibleApplications"
             :key="application.id"
-            :class="$style.applicationCard"
-          >
-            <div>
-              <strong>{{ getFreelancer(application.freelancerId)?.name || "不明" }}</strong>
-              <p>
-                {{ getJob(application.jobId)?.title || "不明な案件" }} /
-                {{ application.status }} / {{ application.appliedAt }}
-              </p>
-            </div>
-            <BaseButton
-              variant="secondary"
-              icon="briefcase"
-              @click="setView('admin')"
-            >
-              管理で確認
-            </BaseButton>
-          </article>
+            :freelancer-name="getFreelancer(application.freelancerId)?.name || '不明'"
+            :job-title="getJob(application.jobId)?.title || '不明な案件'"
+            :status="application.status"
+            :applied-at="application.appliedAt"
+            @open-admin="setView('admin')"
+          />
           <div v-if="!visibleApplications.length" :class="$style.empty">
             条件に合う応募はありません。
           </div>
@@ -413,34 +402,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
 }
 
-.applicationCard {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 12px;
-  background: #fff;
-}
-
-.applicationCard > div {
-  min-width: 0;
-}
-
-.applicationCard strong,
-.applicationCard p {
-  overflow-wrap: anywhere;
-}
-
-.applicationCard p {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
 .empty {
   padding: 18px;
   border: 1px dashed #b7c9df;
@@ -500,14 +461,8 @@ onBeforeUnmount(() => {
   }
 
   .headerActions,
-  .headerActions button,
-  .applicationCard,
-  .applicationCard button {
+  .headerActions button {
     width: 100%;
-  }
-
-  .applicationCard {
-    display: grid;
   }
 }
 </style>
