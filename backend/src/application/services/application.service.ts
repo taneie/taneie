@@ -4,6 +4,7 @@ import {
   labelToApplicationStatus,
   type AuthContext,
 } from "../../domain/types.js";
+import { notifyUser } from "../../infrastructure/push.js";
 import { mapApplication } from "../mappers.js";
 import {
   applicationInclude,
@@ -95,6 +96,13 @@ export class ApplicationService {
       },
       include: applicationInclude,
     });
-    return mapApplication(application);
+    const mapped = mapApplication(application);
+    await notifyUser(this.db, application.freelancerProfile.userId, {
+      title: "TRYANGLE FREELANCE",
+      body: `${application.job.title}の選考ステータスが「${mapped.status}」になりました。`,
+      url: "/",
+      tag: `tryangle-application-${application.id}-${status}`,
+    });
+    return mapped;
   }
 }
