@@ -12,18 +12,18 @@ import {
 } from "./shared.js";
 
 const DEFAULT_JOB_LIMIT = 10;
+type FreelancerMatchProfile = {
+  desiredRate: number | null;
+  remoteType: string | null;
+  skills: Array<{ skill: { name: string } }>;
+};
+type ListedJob = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
 
 export class JobService {
   constructor(private readonly db: PrismaClient) {}
 
   async list(context?: AuthContext, input: JobListInput = {}) {
-    let freelancerMatchProfile:
-      | {
-          desiredRate: number | null;
-          remoteType: string | null;
-          skills: Array<{ skill: { name: string } }>;
-        }
-      | undefined;
+    let freelancerMatchProfile: FreelancerMatchProfile | undefined;
 
     if (context?.role === "freelancer") {
       await assertFreelancerCanViewJobs(this.db, context.userId);
@@ -43,6 +43,33 @@ export class JobService {
       { isPinned: "desc" as const },
       { createdAt: "desc" as const },
     ];
+
+    if (context?.role === "freelancer" && freelancerMatchProfile) {
+      const jobs = await this.db.job.findMany({
+        where,
+        include: jobInclude,
+        orderBy,
+      });
+      const matchedJobs = this.filterJobsByFreelancerSkills(
+        jobs,
+        freelancerMatchProfile,
+      );
+
+      if (input.limit === undefined && input.offset === undefined) {
+        return matchedJobs.map(mapJob);
+      }
+
+      const limit = input.limit ?? DEFAULT_JOB_LIMIT;
+      const offset = input.offset ?? 0;
+      const pagedJobs = matchedJobs.slice(offset, offset + limit);
+      return {
+        items: pagedJobs.map(mapJob),
+        total: matchedJobs.length,
+        limit,
+        offset,
+        hasMore: offset + pagedJobs.length < matchedJobs.length,
+      };
+    }
 
     if (input.limit === undefined && input.offset === undefined) {
       const jobs = await this.db.job.findMany({
@@ -226,11 +253,7 @@ export class JobService {
   private buildListWhere(
     context: AuthContext | undefined,
     input: JobListInput,
-    freelancerMatchProfile?: {
-      desiredRate: number | null;
-      remoteType: string | null;
-      skills: Array<{ skill: { name: string } }>;
-    },
+    freelancerMatchProfile?: FreelancerMatchProfile,
   ) {
     const filters: Prisma.JobWhereInput[] = [];
 
@@ -239,22 +262,6 @@ export class JobService {
     }
 
     if (context?.role === "freelancer") {
-      const skillNames =
-        freelancerMatchProfile?.skills
-          .map((item) => item.skill.name)
-          .filter(Boolean) || [];
-      filters.push(
-        skillNames.length
-          ? {
-              skills: {
-                some: {
-                  skill: { name: { in: skillNames } },
-                },
-              },
-            }
-          : { id: { equals: "00000000-0000-0000-0000-000000000000" } },
-      );
-
       if (freelancerMatchProfile?.desiredRate) {
         filters.push({ rateMax: { gte: freelancerMatchProfile.desiredRate } });
       }
@@ -307,5 +314,28 @@ export class JobService {
     }
 
     return filters.length ? { AND: filters } : {};
+  }
+
+  private filterJobsByFreelancerSkills(
+    jobs: ListedJob[],
+    profile: FreelancerMatchProfile,
+  ) {
+    const profileSkills = new Set(
+      profile.skills
+        .map((item) => this.normalizeSkillName(item.skill.name))
+        .filter(Boolean),
+    );
+
+    if (!profileSkills.size) return [];
+
+    return jobs.filter((job) =>
+      job.skills.some((item) =>
+        profileSkills.has(this.normalizeSkillName(item.skill.name)),
+      ),
+    );
+  }
+
+  private normalizeSkillName(value: string) {
+    return value.trim().replace(/\s+/g, "").toLowerCase();
   }
 }

@@ -1867,6 +1867,7 @@ async function saveProfileToApi(message: string) {
     syncProfileToFreelancer();
     clearUnsavedChanges();
     persist();
+    if (currentRole.value === "freelancer") await fetchJobsPage({ reset: true });
     if (message) showToast(message);
   } catch (error) {
     showToast(
