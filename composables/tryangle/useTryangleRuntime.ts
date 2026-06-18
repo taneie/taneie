@@ -1477,6 +1477,59 @@ async function changeApplicationStatus(applicationId: string, status: string) {
   }
 }
 
+async function sendApplicationFollowup(
+  applicationId: string,
+  introductionJobId: string,
+  body: string,
+) {
+  if (currentRole.value !== "sales") {
+    showToast("応募者への連絡は営業アカウントで利用できます。");
+    return false;
+  }
+
+  const application = state.value.applications.find(
+    (item) => item.id === applicationId,
+  );
+  if (!application) return false;
+
+  const trimmedBody = body.trim();
+  const sourceJob = getJob(application.jobId);
+  const introductionJob = introductionJobId ? getJob(introductionJobId) : undefined;
+  if (!trimmedBody && !introductionJob) {
+    showToast("紹介案件または連絡内容を入力してください。");
+    return false;
+  }
+
+  const messageBody = [
+    `${sourceJob?.title || "応募案件"}の選考ステータスは「${application.status}」です。`,
+    introductionJob
+      ? `別途ご紹介したい案件: ${introductionJob.title} / ${introductionJob.rateMin}〜${introductionJob.rateMax}万円 / ${introductionJob.remote}`
+      : "",
+    trimmedBody,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  try {
+    const message = await apiRequest<Message>("/messages", {
+      method: "POST",
+      body: JSON.stringify({
+        freelancerProfileId: application.freelancerId,
+        body: messageBody,
+        messageType: "chat",
+      }),
+    });
+    state.value.messages.push(message);
+    knownMessageIds.add(message.id);
+    persist();
+    showToast("応募者へチャット連絡を送信しました。");
+    return true;
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : "送信に失敗しました。");
+    return false;
+  }
+}
+
 async function addMeeting(candidateValue: string) {
   if (!candidateValue) {
     showToast("候補日時を入力してください。");
@@ -2079,6 +2132,7 @@ export function useTryangleRuntime() {
     toggleJobSort,
     toggleJobActive,
     changeApplicationStatus,
+    sendApplicationFollowup,
     addMeeting,
     updateMeetingStatus,
     updateInitialMeetingCompleted,
