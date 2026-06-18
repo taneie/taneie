@@ -54,22 +54,6 @@
         </TagBadge>
       </div>
       <div :class="$style.panelBody">
-        <div :class="$style.threadTabs">
-          <BaseButton
-            :variant="meetingThreadMode === 'initial' ? undefined : 'secondary'"
-            @click="setMeetingThreadMode('initial')"
-          >
-            初回面談
-          </BaseButton>
-          <BaseButton
-            :variant="meetingThreadMode === 'job' ? undefined : 'secondary'"
-            :disabled="!canUseJobMeeting"
-            @click="setMeetingThreadMode('job')"
-          >
-            案件面談
-          </BaseButton>
-        </div>
-
         <div
           v-if="meetingThreadMode === 'job'"
           :class="[$style.formGrid, $style.one, $style.stackSm]"
@@ -112,7 +96,11 @@
           </BaseButton>
         </div>
 
-        <form :class="$style.formGrid" @submit.prevent="submitMeeting">
+        <form
+          v-if="canShowMeetingForm"
+          :class="$style.formGrid"
+          @submit.prevent="submitMeeting"
+        >
           <div :class="$style.field">
             <span>候補日時</span>
             <div :class="$style.dateRows">
@@ -285,6 +273,9 @@ const emptyChatText = computed(() =>
     ? "この案件面談のメッセージはまだありません。"
     : "初回面談のメッセージはまだありません。",
 );
+const canShowMeetingForm = computed(
+  () => currentRole.value !== "sales" && meetingThreadMode.value === "job",
+);
 
 function isOwnMessage(message: Message) {
   if (currentRole.value === "sales") return message.channel === "sales";
@@ -354,17 +345,15 @@ watch(
     activeFreelancerApplications.value.length,
   ],
   () => {
-    if (!canUseJobMeeting.value && meetingThreadMode.value === "job") {
+    if (!canUseJobMeeting.value || !activeFreelancerApplications.value.length) {
       setMeetingThreadMode("initial");
       return;
     }
-    if (
-      meetingThreadMode.value === "job" &&
-      !activeMeetingApplicationId.value &&
-      activeFreelancerApplications.value[0]
-    ) {
+    if (!activeMeetingApplicationId.value && activeFreelancerApplications.value[0]) {
       selectMeetingApplication(activeFreelancerApplications.value[0].id);
+      return;
     }
+    setMeetingThreadMode("job");
   },
   { immediate: true },
 );
@@ -437,13 +426,6 @@ async function submitMessage() {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
-}
-
-.threadTabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
 }
 
 .notice {
@@ -754,10 +736,6 @@ textarea.control {
 
   .actions {
     display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .threadTabs {
     grid-template-columns: 1fr;
   }
 
