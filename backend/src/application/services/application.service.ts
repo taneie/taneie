@@ -97,12 +97,23 @@ export class ApplicationService {
       include: applicationInclude,
     });
     const mapped = mapApplication(application);
+    await this.notifyStatusChanged(application, mapped.status);
+    return mapped;
+  }
+
+  private async notifyStatusChanged(
+    application: {
+      id: string;
+      job: { title: string };
+      freelancerProfile: { userId: string | null };
+    },
+    statusLabel: string,
+  ) {
     await notifyUser(this.db, application.freelancerProfile.userId, {
       title: "TRYANGLE FREELANCE",
-      body: `${application.job.title}の選考ステータスが「${mapped.status}」になりました。`,
+      body: `${application.job.title}の選考ステータスが「${statusLabel}」になりました。`,
       url: "/",
-      tag: `tryangle-application-${application.id}-${status}`,
+      tag: `tryangle-application-${application.id}-${statusLabel}`,
     });
-    return mapped;
   }
 }

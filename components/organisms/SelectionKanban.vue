@@ -29,41 +29,12 @@
               {{ option }}
             </option>
           </select>
-          <div :class="$style.followForm">
-            <label :class="$style.field">
-              紹介したい案件
-              <select
-                :class="$style.control"
-                :value="followupForm(application.id).jobId"
-                @change="onFollowupJobChange(application.id, $event)"
-              >
-                <option value="">選択なし</option>
-                <option
-                  v-for="job in followupJobs(application.jobId)"
-                  :key="job.id"
-                  :value="job.id"
-                >
-                  {{ job.title }}
-                </option>
-              </select>
-            </label>
-            <label :class="$style.field">
-              連絡内容
-              <textarea
-                :class="[$style.control, $style.textarea]"
-                :value="followupForm(application.id).body"
-                placeholder="ステータス変更の補足、見送り理由、次に紹介したい案件の案内など"
-                @input="onFollowupBodyInput(application.id, $event)"
-              ></textarea>
-            </label>
-            <BaseButton
-              variant="secondary"
-              icon="send"
-              @click="sendFollowup(application.id)"
-            >
-              チャット送信
-            </BaseButton>
-          </div>
+          <ApplicationFollowupForm
+            :application-id="application.id"
+            :current-job-id="application.jobId"
+            :jobs="state.jobs"
+            @submit="sendFollowup"
+          />
         </div>
       </div>
     </details>
@@ -73,7 +44,7 @@
 
 <script setup lang="ts">
 import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
-import { computed, reactive } from "vue";
+import { computed } from "vue";
 import type { Application } from "~/composables/tryangle/types";
 
 const {
@@ -90,7 +61,6 @@ const props = defineProps<{
 }>();
 
 const applications = computed(() => props.applications || state.value.applications);
-const followups = reactive<Record<string, { jobId: string; body: string }>>({});
 
 const applicationGroups = computed(() =>
   applications.value.reduce<
@@ -122,27 +92,20 @@ function onStatusChange(applicationId: string, event: Event) {
   changeApplicationStatus(applicationId, (event.target as HTMLSelectElement).value);
 }
 
-function followupForm(applicationId: string) {
-  followups[applicationId] ||= { jobId: "", body: "" };
-  return followups[applicationId];
-}
-
-function followupJobs(currentJobId: string) {
-  return state.value.jobs.filter((job) => job.active && job.id !== currentJobId);
-}
-
-function onFollowupJobChange(applicationId: string, event: Event) {
-  followupForm(applicationId).jobId = (event.target as HTMLSelectElement).value;
-}
-
-function onFollowupBodyInput(applicationId: string, event: Event) {
-  followupForm(applicationId).body = (event.target as HTMLTextAreaElement).value;
-}
-
-async function sendFollowup(applicationId: string) {
-  const form = followupForm(applicationId);
-  if (await sendApplicationFollowup(applicationId, form.jobId, form.body)) {
-    followups[applicationId] = { jobId: "", body: "" };
+async function sendFollowup(payload: {
+  applicationId: string;
+  jobId: string;
+  body: string;
+  reset: () => void;
+}) {
+  if (
+    await sendApplicationFollowup(
+      payload.applicationId,
+      payload.jobId,
+      payload.body,
+    )
+  ) {
+    payload.reset();
   }
 }
 </script>
@@ -208,22 +171,6 @@ async function sendFollowup(applicationId: string) {
   line-height: 1.6;
 }
 
-.followForm {
-  display: grid;
-  gap: 10px;
-  margin-top: 12px;
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
-}
-
-.field {
-  display: grid;
-  gap: 6px;
-  color: #263f63;
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .control {
   width: 100%;
   border: 1px solid #c6d5e8;
@@ -232,11 +179,6 @@ async function sendFollowup(applicationId: string) {
   background: #fff;
   color: var(--ink);
   outline: none;
-}
-
-.textarea {
-  min-height: 82px;
-  resize: vertical;
 }
 
 .control:focus {
