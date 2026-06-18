@@ -66,10 +66,10 @@
           <section :class="$style.heroSection">
             <div :class="$style.heroContent">
               <p :class="$style.eyebrow">フリーランスエンジニア向け案件マッチング</p>
-              <h1>希望条件とスキルをもとに、営業担当が最適な案件提案まで伴走します。</h1>
-              <p :class="$style.heroLead">
+              <h1>マージン開示で高単価。</h1><h1>あなたのスキルに最適な条件を最速提案。</h1>
+              <!-- <p :class="$style.heroLead">
                 マージン開示で高単価。あなたのスキルに最適な条件を最速提案。
-              </p>
+              </p> -->
 
               <div :class="$style.heroActions">
                 <button type="button" :class="$style.primaryCta" @click="scrollToRegister">
@@ -110,29 +110,31 @@
           <section id="features" :class="$style.infoSection">
             <div :class="$style.sectionHead">
               <span>FEATURES</span>
-              <h2>最短1分で応募まで。TRYANGLEが案件探しを自動化。</h2>
+              <!-- 本番運用までに、h2の羅列を治す -->
+              <h2>最短1分で応募まで。</h2><h2>TRYANGLEが案件探しを自動化。</h2>
             </div>
 
+            <!-- p要素はPCだと表示するでOK -->
             <div :class="$style.featureGrid">
               <article>
                 <span :class="$style.featureIcon" aria-hidden="true">⌕</span>
                 <div :class="$style.featureBody">
-                  <strong>条件に合う案件を探しやすい</strong>
-                  <p>単価・スキルなどで素早く絞り込み</p>
+                  <strong>案件探しの時間を1/3に</strong>
+                  <!-- <p>単価・スキルなどで素早く絞り込み</p> -->
                 </div>
               </article>
               <article>
                 <span :class="$style.featureIcon" aria-hidden="true">↔</span>
                 <div :class="$style.featureBody">
-                  <strong>営業担当とのやり取りを集約</strong>
-                  <p>チャットと面談調整を1画面で管理</p>
+                  <strong>応募後の調整がスムーズに進む</strong>
+                  <!-- <p>チャットと面談調整を1画面で管理</p> -->
                 </div>
               </article>
               <article>
                 <span :class="$style.featureIcon" aria-hidden="true">✓</span>
                 <div :class="$style.featureBody">
-                  <strong>提案用プロフィールを整備</strong>
-                  <p>スキル・稼働条件を段階的に登録</p>
+                  <strong>提案準備が自動で整う</strong>
+                  <!-- <p>スキル・稼働条件を段階的に登録</p> -->
                 </div>
               </article>
             </div>
@@ -206,6 +208,7 @@
             <span>30秒で開始</span>
             <h2>無料会員登録</h2>
             <p>登録後、プロフィール入力画面へ進みます。</p>
+            <p>30秒で完了。登録後も費用は一切かかりません。</p>
           </div>
 
           <form
@@ -1166,6 +1169,7 @@ function scrollToRegister() {
 
   .heroContent h1 {
     line-height: 1.14;
+    font-size: 24px;
   }
 
   .heroLead {
@@ -1275,6 +1279,7 @@ function scrollToRegister() {
   .sectionHead h2 {
     margin-top: 7px;
     line-height: 1.3;
+    font-size: 20px;
   }
 
   .featureGrid,
