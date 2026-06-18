@@ -1,16 +1,24 @@
 <template>
-  <div :class="$style.kanban">
-    <div v-for="status in statuses" :key="status" :class="$style.lane">
-      <h3>{{ status }} {{ applicationsByStatus(status).length }}</h3>
+  <div :class="$style.groupList">
+    <details
+      v-for="group in applicationGroups"
+      :key="group.freelancerId"
+      :class="$style.group"
+      open
+    >
+      <summary :class="$style.groupSummary">
+        <span>
+          <strong>担当者: {{ group.name }}</strong>
+          <small>{{ group.role }}</small>
+        </span>
+        <TagBadge tone="blue">{{ group.applications.length }}件</TagBadge>
+      </summary>
       <div :class="$style.cardList">
         <div
-          v-for="application in applicationsByStatus(status)"
+          v-for="application in group.applications"
           :key="application.id"
           :class="$style.card"
         >
-          <strong>{{
-            getFreelancer(application.freelancerId)?.name || "不明"
-          }}</strong>
           <p>{{ getJob(application.jobId)?.title || "不明な案件" }}</p>
           <select
             :class="$style.control"
@@ -22,65 +30,95 @@
             </option>
           </select>
         </div>
-        <div
-          v-if="applicationsByStatus(status).length === 0"
-          :class="$style.empty"
-        >
-          該当なし
-        </div>
       </div>
-    </div>
+    </details>
+    <div v-if="!applicationGroups.length" :class="$style.empty">該当なし</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import type { ApplicationStatus } from "~/composables/useTryangleFreelance";
+import { computed } from "vue";
 
 const { state, statuses, getFreelancer, getJob, changeApplicationStatus } =
   useTryangleFreelance();
 
-function applicationsByStatus(status: ApplicationStatus) {
-  return state.value.applications.filter(
-    (application) => application.status === status,
-  );
-}
+const applicationGroups = computed(() =>
+  state.value.applications.reduce<
+    Array<{
+      freelancerId: string;
+      name: string;
+      role: string;
+      applications: typeof state.value.applications;
+    }>
+  >((groups, application) => {
+    const freelancer = getFreelancer(application.freelancerId);
+    const groupId = application.freelancerId || "unknown";
+    let group = groups.find((item) => item.freelancerId === groupId);
+    if (!group) {
+      group = {
+        freelancerId: groupId,
+        name: freelancer?.name || "不明",
+        role: freelancer?.role || "役割未設定",
+        applications: [],
+      };
+      groups.push(group);
+    }
+    group.applications.push(application);
+    return groups;
+  }, []),
+);
 
 function onStatusChange(applicationId: string, event: Event) {
-  changeApplicationStatus(
-    applicationId,
-    (event.target as HTMLSelectElement).value,
-  );
+  changeApplicationStatus(applicationId, (event.target as HTMLSelectElement).value);
 }
 </script>
 
 <style module>
-.kanban {
+.groupList {
   display: grid;
-  grid-template-columns: repeat(4, minmax(190px, 1fr));
   gap: 12px;
-  overflow-x: auto;
   max-width: 100%;
   min-width: 0;
 }
 
-.lane {
-  min-height: 260px;
+.group {
   background: var(--primary-soft);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 10px;
+  overflow: hidden;
 }
 
-.lane h3 {
-  margin: 0 0 10px;
-  color: #10294f;
-  font-size: 14px;
+.groupSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.groupSummary span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.groupSummary strong,
+.groupSummary small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.groupSummary small {
+  color: var(--muted);
 }
 
 .cardList {
   display: grid;
   gap: 10px;
+  padding: 10px;
+  padding-top: 0;
 }
 
 .card {
@@ -121,20 +159,9 @@ function onStatusChange(applicationId: string, event: Event) {
   text-align: center;
 }
 
-@media (max-width: 1180px) {
-  .kanban {
-    grid-template-columns: repeat(4, minmax(220px, 1fr));
-  }
-}
-
 @media (max-width: 620px) {
-  .kanban {
-    grid-template-columns: 1fr;
-    overflow: visible;
-  }
-
-  .lane {
-    min-height: 0;
+  .groupSummary {
+    align-items: stretch;
   }
 }
 </style>

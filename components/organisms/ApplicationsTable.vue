@@ -1,34 +1,33 @@
 <template>
-  <table :class="$style.table">
-    <thead>
-      <tr>
-        <th>応募日</th>
-        <th>案件</th>
-        <th>応募者</th>
-        <th>稼働</th>
-        <th>ステータス</th>
-        <th v-if="withResume">レジュメ</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="application in state.applications" :key="application.id">
-        <td data-label="応募日">{{ application.appliedAt }}</td>
-        <td data-label="案件">
-          {{ getJob(application.jobId)?.title || "" }}<br />
-          <TagBadge :tone="streamTone(getJob(application.jobId)?.stream || '')">
-            {{ getJob(application.jobId)?.stream || "" }}
-          </TagBadge>
-        </td>
-        <td data-label="応募者">
-          {{ getFreelancer(application.freelancerId)?.name || "" }}<br />
-          {{ getFreelancer(application.freelancerId)?.role || "" }}
-        </td>
-        <td data-label="稼働">
-          <StatusBadge
-            :value="getFreelancer(application.freelancerId)?.availability || ''"
-          />
-        </td>
-        <td data-label="ステータス">
+  <div :class="$style.groupList">
+    <details
+      v-for="group in applicationGroups"
+      :key="group.freelancerId"
+      :class="$style.group"
+      open
+    >
+      <summary :class="$style.groupSummary">
+        <span>
+          <strong>担当者: {{ group.name }}</strong>
+          <small>{{ group.role }} / {{ group.availability }}</small>
+        </span>
+        <TagBadge tone="blue">{{ group.applications.length }}件</TagBadge>
+      </summary>
+
+      <div :class="$style.itemList">
+        <article
+          v-for="application in group.applications"
+          :key="application.id"
+          :class="$style.item"
+        >
+          <div :class="$style.itemMain">
+            <strong>{{ getJob(application.jobId)?.title || "" }}</strong>
+            <span>{{ application.appliedAt }} / {{ application.status }}</span>
+            <TagBadge :tone="streamTone(getJob(application.jobId)?.stream || '')">
+              {{ getJob(application.jobId)?.stream || "" }}
+            </TagBadge>
+          </div>
+          <StatusBadge :value="group.availability" />
           <select
             :class="$style.control"
             :value="application.status"
@@ -38,22 +37,24 @@
               {{ status }}
             </option>
           </select>
-        </td>
-        <td v-if="withResume" data-label="レジュメ">
           <BaseButton
+            v-if="withResume"
             variant="secondary"
             icon="search"
             @click="selectPreview(application.freelancerId)"
-            >確認</BaseButton
+            >レジュメ</BaseButton
           >
-        </td>
-      </tr>
-    </tbody>
-  </table>
+        </article>
+      </div>
+    </details>
+    <div v-if="!applicationGroups.length" :class="$style.empty">該当なし</div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import { computed } from "vue";
+
 withDefaults(
   defineProps<{
     withResume?: boolean;
@@ -73,35 +74,109 @@ const {
   selectPreview,
 } = useTryangleFreelance();
 
+const applicationGroups = computed(() =>
+  state.value.applications.reduce<
+    Array<{
+      freelancerId: string;
+      name: string;
+      role: string;
+      availability: string;
+      applications: typeof state.value.applications;
+    }>
+  >((groups, application) => {
+    const freelancer = getFreelancer(application.freelancerId);
+    const groupId = application.freelancerId || "unknown";
+    let group = groups.find((item) => item.freelancerId === groupId);
+    if (!group) {
+      group = {
+        freelancerId: groupId,
+        name: freelancer?.name || "不明",
+        role: freelancer?.role || "役割未設定",
+        availability: freelancer?.availability || "",
+        applications: [],
+      };
+      groups.push(group);
+    }
+    group.applications.push(application);
+    return groups;
+  }, []),
+);
+
 function onStatusChange(applicationId: string, event: Event) {
-  changeApplicationStatus(
-    applicationId,
-    (event.target as HTMLSelectElement).value,
-  );
+  changeApplicationStatus(applicationId, (event.target as HTMLSelectElement).value);
 }
 </script>
 
 <style module>
-.table {
-  width: 100%;
-  min-width: 720px;
-  max-width: 100%;
-  border-collapse: collapse;
+.groupList {
+  display: grid;
+  gap: 12px;
 }
 
-.table th,
-.table td {
-  padding: 11px 9px;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-  vertical-align: top;
-  font-size: 13px;
+.group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
 }
 
-.table th {
+.groupSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  background: var(--primary-soft);
+  cursor: pointer;
+}
+
+.groupSummary span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.groupSummary strong,
+.groupSummary small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.groupSummary small {
+  color: var(--muted);
+}
+
+.itemList {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, auto) minmax(140px, 180px) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.itemMain {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.itemMain strong,
+.itemMain span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.itemMain span {
   color: var(--muted);
   font-size: 12px;
-  background: var(--primary-soft);
 }
 
 .control {
@@ -119,65 +194,22 @@ function onStatusChange(applicationId: string, event: Event) {
   box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
 }
 
-@media (max-width: 620px) {
-  .table,
-  .table thead,
-  .table tbody,
-  .table tr,
-  .table th,
-  .table td {
-    display: block;
+.empty {
+  padding: 24px;
+  color: var(--muted);
+  border: 1px dashed #b7c9df;
+  border-radius: 8px;
+  background: #fbfdff;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .item {
+    grid-template-columns: 1fr;
   }
 
-  .table {
-    min-width: 0;
-  }
-
-  .table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-  }
-
-  .table tr {
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #fff;
-    padding: 8px;
-    margin-bottom: 10px;
-  }
-
-  .table td {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 5px;
-    align-items: start;
-    min-width: 0;
-    border-bottom: 1px solid #edf2f7;
-    padding: 10px 4px;
-    overflow-wrap: anywhere;
-  }
-
-  .table td > * {
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  .table td:last-child {
-    border-bottom: 0;
-  }
-
-  .table td::before {
-    content: attr(data-label);
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 800;
-  }
-
-  .table td button,
-  .table td select {
+  .item button,
+  .item select {
     width: 100%;
   }
 }
