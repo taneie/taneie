@@ -49,8 +49,69 @@
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">面談候補</h2>
+        <TagBadge :tone="meetingThreadMode === 'job' ? 'amber' : 'teal'">
+          {{ meetingThreadMode === "job" ? "案件面談" : "初回面談" }}
+        </TagBadge>
       </div>
       <div :class="$style.panelBody">
+        <div :class="$style.threadTabs">
+          <BaseButton
+            :variant="meetingThreadMode === 'initial' ? undefined : 'secondary'"
+            @click="setMeetingThreadMode('initial')"
+          >
+            初回面談
+          </BaseButton>
+          <BaseButton
+            :variant="meetingThreadMode === 'job' ? undefined : 'secondary'"
+            :disabled="!canUseJobMeeting"
+            @click="setMeetingThreadMode('job')"
+          >
+            案件面談
+          </BaseButton>
+        </div>
+
+        <div
+          v-if="meetingThreadMode === 'job'"
+          :class="[$style.formGrid, $style.one, $style.stackSm]"
+        >
+          <label :class="$style.field">
+            案件
+            <select
+              :class="$style.control"
+              :value="activeMeetingApplicationId"
+              @change="onApplicationChange"
+            >
+              <option
+                v-for="application in activeFreelancerApplications"
+                :key="application.id"
+                :value="application.id"
+              >
+                {{ jobTitle(application.jobId) }} / {{ application.status }}
+              </option>
+            </select>
+          </label>
+          <div v-if="!activeFreelancerApplications.length" :class="$style.emptyState">
+            応募済み案件がないため、案件面談は作成できません。
+          </div>
+        </div>
+
+        <div v-if="!canUseJobMeeting" :class="$style.notice">
+          初回面談が完了すると、案件ごとの面談候補とチャットを利用できます。
+        </div>
+
+        <div
+          v-if="
+            currentRole === 'sales' &&
+            meetingThreadMode === 'initial' &&
+            !selectedFreelancer.initialMeetingCompleted
+          "
+          :class="$style.actions"
+        >
+          <BaseButton icon="calendar" @click="completeInitialMeeting">
+            初回面談を完了にする
+          </BaseButton>
+        </div>
+
         <form :class="$style.formGrid" @submit.prevent="submitMeeting">
           <div :class="$style.field">
             <span>候補日時</span>
@@ -108,7 +169,7 @@
             </div>
           </div>
           <div v-if="!activeMeetingRequests.length" :class="$style.emptyState">
-            この求職者の面談候補はまだありません。
+            {{ emptyMeetingText }}
           </div>
         </div>
       </div>
@@ -116,10 +177,15 @@
 
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">チャット</h2>
+        <h2 :class="$style.panelTitle">
+          {{ meetingThreadMode === "job" ? "案件面談チャット" : "初回面談チャット" }}
+        </h2>
         <TagBadge tone="teal">{{ selectedFreelancer.name }}</TagBadge>
       </div>
       <div :class="$style.panelBody">
+        <div v-if="meetingThreadMode === 'job'" :class="$style.notice">
+          {{ selectedJobTitle }}
+        </div>
         <div :class="[$style.messageList, $style.conversation]">
           <div
             v-for="message in activeChatMessages"
@@ -147,7 +213,7 @@
             </div>
           </div>
           <div v-if="!activeChatMessages.length" :class="$style.emptyState">
-            この相手とのメッセージはまだありません。
+            {{ emptyChatText }}
           </div>
         </div>
 
@@ -173,27 +239,52 @@
 
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import type { Message } from "~/composables/useTryangleFreelance";
 
 const {
   currentRole,
   selectedFreelancer,
   activeChatFreelancerId,
+  meetingThreadMode,
+  activeMeetingApplicationId,
+  activeFreelancerApplications,
+  canUseJobMeeting,
+  activeMeetingApplication,
+  activeMeetingJobId,
   chatFreelancers,
   activeChatMessages,
   activeMeetingRequests,
   selectChatFreelancer,
+  setMeetingThreadMode,
+  selectMeetingApplication,
   addMeeting,
   updateMeetingStatus,
+  updateInitialMeetingCompleted,
   sendMessage,
   markActiveChatAsRead,
   markDirty,
   clearUnsavedChanges,
+  getJob,
 } = useTryangleFreelance();
 
 const candidates = ref<string[]>([""]);
 const body = ref("");
+const selectedJobTitle = computed(() =>
+  meetingThreadMode.value === "job" && activeMeetingApplication.value
+    ? jobTitle(activeMeetingApplication.value.jobId)
+    : "",
+);
+const emptyMeetingText = computed(() =>
+  meetingThreadMode.value === "job"
+    ? "この案件の面談候補はまだありません。"
+    : "この求職者の初回面談候補はまだありません。",
+);
+const emptyChatText = computed(() =>
+  meetingThreadMode.value === "job"
+    ? "この案件面談のメッセージはまだありません。"
+    : "初回面談のメッセージはまだありません。",
+);
 
 function isOwnMessage(message: Message) {
   if (currentRole.value === "sales") return message.channel === "sales";
@@ -204,6 +295,19 @@ function displayDateTime(value = "") {
   if (!value) return "";
   const normalized = value.replace("T", " ");
   return normalized.slice(0, 16);
+}
+
+function jobTitle(jobId: string) {
+  return getJob(jobId)?.title || "案件未選択";
+}
+
+function onApplicationChange(event: Event) {
+  selectMeetingApplication((event.target as HTMLSelectElement).value);
+}
+
+function completeInitialMeeting() {
+  if (!activeChatFreelancerId.value) return;
+  void updateInitialMeetingCompleted(activeChatFreelancerId.value, true);
 }
 
 async function submitMeeting() {
@@ -232,10 +336,37 @@ onMounted(() => {
 });
 
 watch(
-  () => [activeChatFreelancerId.value, activeChatMessages.value.length],
+  () => [
+    activeChatFreelancerId.value,
+    activeChatMessages.value.length,
+    meetingThreadMode.value,
+    activeMeetingJobId.value,
+  ],
   () => {
     void markActiveChatAsRead();
   },
+);
+
+watch(
+  () => [
+    activeChatFreelancerId.value,
+    canUseJobMeeting.value,
+    activeFreelancerApplications.value.length,
+  ],
+  () => {
+    if (!canUseJobMeeting.value && meetingThreadMode.value === "job") {
+      setMeetingThreadMode("initial");
+      return;
+    }
+    if (
+      meetingThreadMode.value === "job" &&
+      !activeMeetingApplicationId.value &&
+      activeFreelancerApplications.value[0]
+    ) {
+      selectMeetingApplication(activeFreelancerApplications.value[0].id);
+    }
+  },
+  { immediate: true },
 );
 
 async function submitMessage() {
@@ -306,6 +437,23 @@ async function submitMessage() {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+}
+
+.threadTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.notice {
+  border: 1px solid #c6d5e8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #f8fbff;
+  color: #263f63;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .one {
@@ -606,6 +754,10 @@ textarea.control {
 
   .actions {
     display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .threadTabs {
     grid-template-columns: 1fr;
   }
 

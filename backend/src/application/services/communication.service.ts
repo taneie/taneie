@@ -45,6 +45,28 @@ export class CommunicationService {
         "freelancerProfileId is required",
         "FREELANCER_PROFILE_REQUIRED",
       );
+
+    if (input.applicationId) {
+      const application = await this.db.application.findUnique({
+        where: { id: input.applicationId },
+        include: { freelancerProfile: true },
+      });
+      if (!application || application.freelancerProfileId !== profileId) {
+        throw new AppError(
+          404,
+          "案件面談に紐づく応募が見つかりません。",
+          "APPLICATION_NOT_FOUND",
+        );
+      }
+      if (!application.freelancerProfile.initialMeetingCompleted) {
+        throw new AppError(
+          403,
+          "初回面談が完了していないため案件面談は登録できません。",
+          "INITIAL_MEETING_REQUIRED",
+        );
+      }
+    }
+
     return this.db.meetingRequest.create({
       data: {
         freelancerProfileId: profileId,
@@ -53,6 +75,7 @@ export class CommunicationService {
         status: "candidate",
         createdBy: context.userId,
       },
+      include: { application: { select: { jobId: true } } },
     });
   }
 
@@ -93,7 +116,9 @@ export class CommunicationService {
       messageType?: "chat" | "scout" | "alive_check" | "system";
     },
   ) {
-    if (input.messageType === "scout") {
+    const messageType = input.messageType || "chat";
+
+    if (messageType === "scout") {
       if (context.role !== "sales") {
         throw new AppError(403, "スカウトは営業アカウントで利用できます。", "FORBIDDEN");
       }
@@ -118,6 +143,33 @@ export class CommunicationService {
         : await this.db.freelancerProfile.findUniqueOrThrow({
             where: { userId: context.userId },
           });
+
+    if (input.jobId && messageType !== "scout") {
+      if (!profile.initialMeetingCompleted) {
+        throw new AppError(
+          403,
+          "初回面談が完了していないため案件面談チャットは利用できません。",
+          "INITIAL_MEETING_REQUIRED",
+        );
+      }
+
+      const application = await this.db.application.findUnique({
+        where: {
+          jobId_freelancerProfileId: {
+            jobId: input.jobId,
+            freelancerProfileId: profile.id,
+          },
+        },
+      });
+      if (!application) {
+        throw new AppError(
+          404,
+          "案件面談に紐づく応募が見つかりません。",
+          "APPLICATION_NOT_FOUND",
+        );
+      }
+    }
+
     const receiverUserId =
       context.role === "sales"
         ? profile.userId
@@ -134,7 +186,7 @@ export class CommunicationService {
         freelancerProfileId: profile.id,
         jobId: input.jobId,
         body: encryptText(input.body),
-        messageType: input.messageType || "chat",
+        messageType,
       },
       include: { sender: true, receiver: true },
     });

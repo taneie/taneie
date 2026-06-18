@@ -112,6 +112,8 @@ export interface Application {
   freelancerId: string;
   status: ApplicationStatus;
   appliedAt: string;
+  job?: Job;
+  freelancer?: Freelancer;
 }
 
 export interface Message {

@@ -41,9 +41,18 @@ export function registerMeetingRoutes(
     requireAuth,
     validateBody(createMeetingSchema),
     asyncHandler<AuthedRequest>(async (req, res) => {
-      res
-        .status(201)
-        .json(await communicationService.createMeeting(req.auth!, req.body));
+      const meeting = await communicationService.createMeeting(
+        req.auth!,
+        req.body,
+      );
+      res.status(201).json({
+        id: meeting.id,
+        freelancerProfileId: meeting.freelancerProfileId,
+        applicationId: meeting.applicationId,
+        jobId: meeting.application?.jobId,
+        candidateAt: meeting.candidateAt.toISOString(),
+        status: getKeyByValue(labelToMeetingStatus, meeting.status),
+      });
     }),
   );
 

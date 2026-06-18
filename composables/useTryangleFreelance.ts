@@ -136,6 +136,8 @@ const chatBannerVisible = ref(false);
 const chatBannerTitle = ref("");
 const chatBannerBody = ref("");
 const chatBannerFreelancerId = ref("");
+const meetingThreadMode = ref<"initial" | "job">("initial");
+const activeMeetingApplicationId = ref("");
 const initialized = ref(false);
 let accessToken = "";
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -710,6 +712,9 @@ const selectedFreelancer = computed<Freelancer>(() => {
       availability: profile.availability,
       lastUpdated: profile.lastUpdated,
       resumeName: profile.resumeName,
+      pledgedAt: profile.pledgedAt,
+      initialMeetingCompleted: profile.initialMeetingCompleted,
+      initialMeetingCompletedAt: profile.initialMeetingCompletedAt,
     };
   }
 
@@ -726,6 +731,31 @@ const activeChatFreelancerId = computed(() => {
     state.value.selectedFreelancerId || state.value.freelancers[0]?.id || ""
   );
 });
+
+const activeFreelancerApplications = computed(() =>
+  state.value.applications.filter(
+    (application) => application.freelancerId === activeChatFreelancerId.value,
+  ),
+);
+
+const canUseJobMeeting = computed(() =>
+  Boolean(selectedFreelancer.value?.initialMeetingCompleted),
+);
+
+const activeMeetingApplication = computed(() => {
+  if (!activeFreelancerApplications.value.length) return undefined;
+  return (
+    activeFreelancerApplications.value.find(
+      (application) => application.id === activeMeetingApplicationId.value,
+    ) || activeFreelancerApplications.value[0]
+  );
+});
+
+const activeMeetingJobId = computed(() =>
+  meetingThreadMode.value === "job"
+    ? activeMeetingApplication.value?.jobId || ""
+    : "",
+);
 
 const chatFreelancers = computed(() => {
   return state.value.freelancers.map((freelancer) => {
@@ -752,16 +782,26 @@ const activeChatMessages = computed(() => {
   if (!freelancerId) return [];
 
   return state.value.messages
-    .filter((message) => message.freelancerId === freelancerId)
+    .filter((message) => {
+      if (message.freelancerId !== freelancerId) return false;
+      if (meetingThreadMode.value === "job") {
+        return Boolean(activeMeetingJobId.value) && message.jobId === activeMeetingJobId.value;
+      }
+      return !message.jobId;
+    })
     .sort((a, b) => a.at.localeCompare(b.at));
 });
 
 const activeMeetingRequests = computed(() => {
   const freelancerId = activeChatFreelancerId.value;
   if (!freelancerId) return [];
-  return state.value.meetingRequests.filter(
-    (meeting) => meeting.freelancerId === freelancerId,
-  );
+  return state.value.meetingRequests.filter((meeting) => {
+    if (meeting.freelancerId !== freelancerId) return false;
+    if (meetingThreadMode.value === "job") {
+      return Boolean(activeMeetingJobId.value) && meeting.jobId === activeMeetingJobId.value;
+    }
+    return !meeting.applicationId;
+  });
 });
 
 function canAccess(view: ViewKey) {
@@ -852,9 +892,38 @@ function selectChatFreelancer(freelancerId: string) {
   if (!freelancer) return;
 
   state.value.selectedFreelancerId = freelancer.id;
+  activeMeetingApplicationId.value =
+    state.value.applications.find(
+      (application) => application.freelancerId === freelancer.id,
+    )?.id || "";
+  if (!freelancer.initialMeetingCompleted) meetingThreadMode.value = "initial";
   void setView("meeting");
   void markActiveChatAsRead();
   persist();
+}
+
+function setMeetingThreadMode(mode: "initial" | "job") {
+  if (mode === "job" && !canUseJobMeeting.value) {
+    meetingThreadMode.value = "initial";
+    showToast("案件面談は初回面談の完了後に利用できます。");
+    return;
+  }
+  meetingThreadMode.value = mode;
+  if (mode === "job" && !activeMeetingApplicationId.value) {
+    activeMeetingApplicationId.value =
+      activeFreelancerApplications.value[0]?.id || "";
+  }
+  void markActiveChatAsRead();
+}
+
+function selectMeetingApplication(applicationId: string) {
+  const exists = activeFreelancerApplications.value.some(
+    (application) => application.id === applicationId,
+  );
+  if (!exists) return;
+  activeMeetingApplicationId.value = applicationId;
+  meetingThreadMode.value = "job";
+  void markActiveChatAsRead();
 }
 
 async function login(email: string, password: string) {
@@ -1436,10 +1505,23 @@ async function addMeeting(candidateValue: string) {
     return;
   }
 
+  if (meetingThreadMode.value === "job") {
+    if (!canUseJobMeeting.value) {
+      showToast("案件面談は初回面談の完了後に利用できます。");
+      return;
+    }
+    if (!activeMeetingApplication.value) {
+      showToast("案件面談に紐づける応募案件を選択してください。");
+      return;
+    }
+  }
+
   try {
     const meeting = await apiRequest<{
       id: string;
       freelancerProfileId: string;
+      applicationId?: string;
+      jobId?: string;
       candidateAt: string;
       status: string;
     }>("/meeting-requests", {
@@ -1449,6 +1531,10 @@ async function addMeeting(candidateValue: string) {
           currentRole.value === "sales"
             ? activeChatFreelancerId.value
             : undefined,
+        applicationId:
+          meetingThreadMode.value === "job"
+            ? activeMeetingApplication.value?.id
+            : undefined,
         candidateAt: toApiDateTime(candidateValue),
       }),
     });
@@ -1456,6 +1542,8 @@ async function addMeeting(candidateValue: string) {
     state.value.meetingRequests.push({
       id: meeting.id,
       freelancerId: meeting.freelancerProfileId,
+      applicationId: meeting.applicationId,
+      jobId: meeting.jobId,
       candidate: candidateLabel,
       status: "候補",
     });
@@ -1494,6 +1582,51 @@ async function updateMeetingStatus(
   }
 }
 
+async function updateInitialMeetingCompleted(
+  freelancerId: string,
+  completed: boolean,
+) {
+  if (currentRole.value !== "sales") {
+    showToast("初回面談完了の更新は営業アカウントで利用できます。");
+    return;
+  }
+
+  try {
+    const freelancer = await apiRequest<Freelancer>(
+      `/freelancers/${freelancerId}/initial-meeting`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ completed }),
+      },
+    );
+    const index = state.value.freelancers.findIndex(
+      (item) => item.id === freelancer.id,
+    );
+    if (index >= 0) state.value.freelancers[index] = freelancer;
+    else state.value.freelancers.unshift(freelancer);
+
+    if (state.value.profile.id === freelancer.id) {
+      state.value.profile.initialMeetingCompleted =
+        Boolean(freelancer.initialMeetingCompleted);
+      state.value.profile.initialMeetingCompletedAt =
+        freelancer.initialMeetingCompletedAt || "";
+    }
+    if (!freelancer.initialMeetingCompleted) {
+      meetingThreadMode.value = "initial";
+    }
+    persist();
+    showToast(
+      freelancer.initialMeetingCompleted
+        ? "初回面談を完了にしました。"
+        : "初回面談の完了を解除しました。",
+    );
+  } catch (error) {
+    showToast(
+      error instanceof Error ? error.message : "初回面談の更新に失敗しました。",
+    );
+  }
+}
+
 async function sendMessage(body: string) {
   const trimmedBody = body.trim();
   if (!trimmedBody) {
@@ -1512,11 +1645,20 @@ async function sendMessage(body: string) {
     return false;
   }
 
+  if (meetingThreadMode.value === "job" && !activeMeetingJobId.value) {
+    showToast("案件面談に紐づける応募案件を選択してください。");
+    return false;
+  }
+
   try {
     const message = await apiRequest<Message>("/messages", {
       method: "POST",
       body: JSON.stringify({
         freelancerProfileId: isSales ? freelancerId : undefined,
+        jobId:
+          meetingThreadMode.value === "job"
+            ? activeMeetingJobId.value
+            : undefined,
         body: trimmedBody,
         messageType: "chat",
       }),
@@ -1707,6 +1849,9 @@ function syncProfileToFreelancer() {
     availability: profile.availability,
     lastUpdated: profile.lastUpdated || today(),
     resumeName: profile.resumeName,
+    pledgedAt: profile.pledgedAt,
+    initialMeetingCompleted: profile.initialMeetingCompleted,
+    initialMeetingCompletedAt: profile.initialMeetingCompletedAt,
   };
 
   const index = state.value.freelancers.findIndex(
@@ -1786,7 +1931,11 @@ function getFreelancer(id = "") {
 }
 
 function getJob(id = "") {
-  return state.value.jobs.find((job) => job.id === id);
+  return (
+    state.value.jobs.find((job) => job.id === id) ||
+    state.value.applications.find((application) => application.jobId === id)
+      ?.job
+  );
 }
 
 function meetingCandidatesForProfile(profileId: string) {
@@ -1881,6 +2030,8 @@ export function useTryangleFreelance() {
     chatBannerVisible,
     chatBannerTitle,
     chatBannerBody,
+    meetingThreadMode,
+    activeMeetingApplicationId,
     navItems,
     demoAccounts,
     statuses,
@@ -1902,6 +2053,10 @@ export function useTryangleFreelance() {
     selectedFreelancer,
     currentFreelancerId,
     activeChatFreelancerId,
+    activeFreelancerApplications,
+    canUseJobMeeting,
+    activeMeetingApplication,
+    activeMeetingJobId,
     chatFreelancers,
     activeChatMessages,
     activeMeetingRequests,
@@ -1912,6 +2067,8 @@ export function useTryangleFreelance() {
     setAuthMode,
     setView,
     selectChatFreelancer,
+    setMeetingThreadMode,
+    selectMeetingApplication,
     login,
     loginWithDemo,
     register,
@@ -1940,6 +2097,7 @@ export function useTryangleFreelance() {
     changeApplicationStatus,
     addMeeting,
     updateMeetingStatus,
+    updateInitialMeetingCompleted,
     sendMessage,
     submitContactInquiry,
     loadContactInquiries,
