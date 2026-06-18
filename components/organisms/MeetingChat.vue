@@ -85,6 +85,15 @@
         <div v-if="!canUseJobMeeting" :class="$style.notice">
           初回面談が完了すると、案件ごとの面談候補とチャットを利用できます。
         </div>
+        <div v-if="canCompleteInitialMeeting" :class="$style.statusPanel">
+          <div>
+            <strong>初回面談が完了したら、案件面談に進めます。</strong>
+            <p>日程の確定だけでは案件面談には切り替わりません。</p>
+          </div>
+          <BaseButton icon="calendar" @click="completeInitialMeeting">
+            初回面談を完了
+          </BaseButton>
+        </div>
 
         <form
           v-if="canShowMeetingForm"
@@ -269,6 +278,12 @@ const canShowMeetingForm = computed(
     (currentRole.value === "sales" && Boolean(rescheduleMeetingId.value)) ||
     (currentRole.value !== "sales" && meetingThreadMode.value === "job"),
 );
+const canCompleteInitialMeeting = computed(
+  () =>
+    currentRole.value === "sales" &&
+    meetingThreadMode.value === "initial" &&
+    !selectedFreelancer.value.initialMeetingCompleted,
+);
 const meetingFormLabel = computed(() =>
   currentRole.value === "sales" ? "リスケ候補日時" : "候補日時",
 );
@@ -303,14 +318,17 @@ async function confirmMeeting(meetingId: string) {
   const candidateText = meetingCandidateText(meetingId);
   if (!(await updateMeetingStatus(meetingId, "確定"))) return;
   await sendMessage(`${candidateText} の面談候補を確定しました。`);
-  if (
-    currentRole.value === "sales" &&
-    meetingThreadMode.value === "initial" &&
-    activeChatFreelancerId.value
-  ) {
-    await updateInitialMeetingCompleted(activeChatFreelancerId.value, true);
-  }
   if (rescheduleMeetingId.value === meetingId) rescheduleMeetingId.value = "";
+}
+
+async function completeInitialMeeting() {
+  if (!activeChatFreelancerId.value) return;
+  if (!(await updateInitialMeetingCompleted(activeChatFreelancerId.value, true))) {
+    return;
+  }
+  if (activeFreelancerApplications.value.length) {
+    setMeetingThreadMode("job");
+  }
 }
 
 async function startReschedule(meetingId: string) {
@@ -469,6 +487,26 @@ async function submitMessage() {
   color: #263f63;
   font-size: 13px;
   line-height: 1.6;
+}
+
+.statusPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  border: 1px solid #b9d7d1;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f4fbf8;
+  color: #173f3a;
+}
+
+.statusPanel p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .one {

@@ -756,7 +756,7 @@ const activeChatMessages = computed(() => {
     .filter((message) => {
       if (message.freelancerId !== freelancerId) return false;
       if (meetingThreadMode.value === "job") {
-        return Boolean(activeMeetingJobId.value) && message.jobId === activeMeetingJobId.value;
+        return Boolean(message.jobId);
       }
       return !message.jobId;
     })
@@ -1568,7 +1568,7 @@ async function updateInitialMeetingCompleted(
 ) {
   if (currentRole.value !== "sales") {
     showToast("初回面談完了の更新は営業アカウントで利用できます。");
-    return;
+    return false;
   }
 
   try {
@@ -1600,10 +1600,12 @@ async function updateInitialMeetingCompleted(
         ? "初回面談を完了にしました。"
         : "初回面談の完了を解除しました。",
     );
+    return true;
   } catch (error) {
     showToast(
       error instanceof Error ? error.message : "初回面談の更新に失敗しました。",
     );
+    return false;
   }
 }
 
