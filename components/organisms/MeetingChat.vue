@@ -218,7 +218,7 @@
 <script setup lang="ts">
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
 import { computed, onMounted, ref, watch } from "vue";
-import type { Message } from "~/composables/useTryangleFreelance";
+import type { Message } from "~/composables/tryangle/types";
 
 const {
   currentRole,

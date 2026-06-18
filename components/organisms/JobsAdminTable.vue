@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import type { Job } from "~/composables/useTryangleFreelance";
+import type { Job } from "~/composables/tryangle/types";
 
 const props = defineProps<{
   jobs?: Job[];

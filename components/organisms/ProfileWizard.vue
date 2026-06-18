@@ -300,7 +300,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import type { ProfileTermsInput } from "~/composables/useTryangleFreelance";
+import type { ProfileTermsInput } from "~/composables/tryangle/types";
 
 const {
   state,

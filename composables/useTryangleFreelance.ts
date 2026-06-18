@@ -57,35 +57,6 @@ import {
   today,
   toApiDateTime,
 } from "./tryangle/utils";
-export type {
-  Account,
-  AliveCheck,
-  ApiRequestOptions,
-  Application,
-  ApplicationStatus,
-  AuthMode,
-  AuthUser,
-  ContactInquiry,
-  ContactInquiryInput,
-  Freelancer,
-  IconName,
-  Job,
-  JobFilters,
-  JobInput,
-  JobListResponse,
-  JobPagination,
-  MeetingRequest,
-  Message,
-  NavItem,
-  Profile,
-  ProfileTermsInput,
-  RegisterInput,
-  Role,
-  ScoutFilters,
-  ScoutJobPickerState,
-  TryangleState,
-  ViewKey,
-} from "./tryangle/types";
 
 function getApiBase() {
   const runtimeConfig = useRuntimeConfig();

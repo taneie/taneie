@@ -113,7 +113,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import type { Job, Role } from "~/composables/useTryangleFreelance";
+import type { Job, Role } from "~/composables/tryangle/types";
 
 const props = withDefaults(
   defineProps<{

@@ -205,10 +205,8 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, useCssModule } from "vue";
-import {
-  useTryangleFreelance,
-  type ContactInquiryInput,
-} from "~/composables/useTryangleFreelance";
+import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
+import type { ContactInquiryInput } from "~/composables/tryangle/types";
 
 const {
   state,

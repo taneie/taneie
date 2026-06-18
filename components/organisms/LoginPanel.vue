@@ -281,7 +281,7 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
 import { useTryangleFreelance } from "~/composables/useTryangleFreelance";
-import type { RegisterInput } from "~/composables/useTryangleFreelance";
+import type { RegisterInput } from "~/composables/tryangle/types";
 
 const {
   login,
