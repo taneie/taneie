@@ -7,7 +7,7 @@ const args = process.argv.slice(2);
 
 if (args.length === 0) {
   console.error(
-    "Usage: node ./scripts/nuxt-short-tmp.mjs <nuxt-command> [...args]",
+    "Usage: node ./Frontend/scripts/nuxt-short-tmp.mjs <nuxt-command> [...args]",
   );
   process.exit(1);
 }

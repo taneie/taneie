@@ -332,7 +332,7 @@ http://127.0.0.1:5173/
 
 - Colimaが停止しているとPostgreSQLコンテナも使えないため、開発前に `colima status` を確認する。
 - `localhost` で疎通しない場合は `127.0.0.1` を使う。
-- このプロジェクトではNuxt/Viteのsocketエラー対策として `scripts/nuxt-short-tmp.mjs` を経由するため、直接 `npx nuxt dev` ではなく `npm run dev` を使う。
+- このプロジェクトではNuxt/Viteのsocketエラー対策として `Frontend/scripts/nuxt-short-tmp.mjs` を経由するため、直接 `npx nuxt dev` ではなく `npm run dev` を使う。
 - Colimaのディスク容量が不足した場合は、Colima VMのディスク設定を拡張する。
 
 ## 6. OS共通の起動順序
@@ -430,7 +430,7 @@ npm run db:generate
 | `npm run build`     | Nuxtアプリをビルド                                         |
 | `npm run preview`   | ビルド済みアプリをローカルプレビュー                       |
 | `npm run generate`  | 静的生成                                                   |
-| `npm run deploy`    | `generate` 後、`.output/public` を GitHub Pages にデプロイ |
+| `npm run deploy`    | `generate` 後、`Frontend/.output/public` を GitHub Pages にデプロイ |
 | `npm run api:build` | バックエンドTypeScriptをコンパイル                         |
 | `npm run api:start` | コンパイル済みAPIを起動                                    |
 
@@ -443,12 +443,12 @@ npm run db:generate
 
 ## 14. macOSでNuxt/Vite socketエラーが出る場合
 
-このプロジェクトでは `scripts/nuxt-short-tmp.mjs` を経由してNuxtを起動し、`TMPDIR=/tmp` を自動設定する。直接 `npx nuxt dev` は使わず `npm run dev` を使用する。
+このプロジェクトでは `Frontend/scripts/nuxt-short-tmp.mjs` を経由してNuxtを起動し、`TMPDIR=/tmp` を自動設定する。直接 `npx nuxt dev` は使わず `npm run dev` を使用する。
 
 キャッシュ削除:
 
 ```bash
-rm -rf .nuxt .output node_modules/.vite
+rm -rf Frontend/.nuxt Frontend/.output node_modules/.vite
 npm run dev
 ```
 

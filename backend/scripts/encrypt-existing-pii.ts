@@ -4,7 +4,7 @@ import {
   decryptText,
   encryptText,
   piiHash,
-} from "../backend/src/infrastructure/crypto.js";
+} from "../src/infrastructure/crypto.js";
 
 const databaseUrl =
   process.env.DATABASE_URL ||

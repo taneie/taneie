@@ -49,17 +49,17 @@ Atomic Design 構成
 主な配置は以下です。
 
 ```txt
-app.vue
-pages/
-components/
+Frontend/app.vue
+Frontend/pages/
+Frontend/components/
   atoms/
   molecules/
   organisms/
   pages/
   templates/
-composables/
-src/styles.css
-public/
+Frontend/composables/
+Frontend/src/styles.css
+Frontend/public/
 ```
 
 ### バックエンド
@@ -77,7 +77,7 @@ Zod
 主な配置は以下です。
 
 ```txt
-backend/src/
+Backend/src/
   application/
   domain/
   infrastructure/
@@ -96,7 +96,7 @@ Prisma Seed
 主な配置は以下です。
 
 ```txt
-prisma/
+Backend/prisma/
   schema.prisma
   seed.ts
   migrations/
@@ -480,34 +480,25 @@ npm run db:seed
 現在のスクリプト:
 
 ```txt
-scripts/create-sales-user.ts
+Backend/scripts/add-sales-user/create-sales-users-from-config.mjs
 ```
 
 実行例:
 
 ```bash
-SALES_USER_PASSWORD='change-me-password' \
-  npx tsx scripts/create-sales-user.ts \
-    --email sales2@tryangle.jp \
-    --name 'TRYANGLE 営業2'
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target local
 ```
 
 Windows PowerShellの場合:
 
 ```powershell
-$env:SALES_USER_PASSWORD="change-me-password"
-npx tsx scripts/create-sales-user.ts --email sales2@tryangle.jp --name "TRYANGLE 営業2"
-Remove-Item Env:SALES_USER_PASSWORD
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target local
 ```
 
-既存ユーザーを更新する場合は `--update-existing` を付けます。
+検証環境で事前確認する場合は `--dryRun` を付けます。
 
 ```bash
-SALES_USER_PASSWORD='change-me-password' \
-  npx tsx scripts/create-sales-user.ts \
-    --email sales2@tryangle.jp \
-    --name 'TRYANGLE 営業2' \
-    --update-existing
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging --dryRun
 ```
 
 ---
@@ -631,7 +622,7 @@ sales
 このプロジェクトでは、Nuxtの起動に以下のラッパースクリプトを使用しています。
 
 ```txt
-scripts/nuxt-short-tmp.mjs
+Frontend/scripts/nuxt-short-tmp.mjs
 ```
 
 `package.json` の `dev`, `build`, `preview`, `typecheck`, `postinstall` は、このスクリプト経由でNuxtを実行します。
@@ -647,14 +638,14 @@ npm run dev
 キャッシュ起因の問題が疑われる場合は、以下を削除してから再起動してください。
 
 ```bash
-rm -rf .nuxt .output node_modules/.vite
+rm -rf Frontend/.nuxt Frontend/.output node_modules/.vite
 npm run dev
 ```
 
 Windows PowerShellの場合:
 
 ```powershell
-Remove-Item -Recurse -Force .nuxt, .output, node_modules/.vite
+Remove-Item -Recurse -Force Frontend/.nuxt, Frontend/.output, node_modules/.vite
 npm run dev
 ```
 
@@ -764,40 +755,43 @@ CORS_ORIGIN="http://127.0.0.1:5173,http://localhost:5173"
 
 ```txt
 .
-├── app.vue
-├── pages/
-│   └── index.vue
-├── components/
-│   ├── atoms/
-│   ├── molecules/
-│   ├── organisms/
+├── Frontend/
+│   ├── app.vue
 │   ├── pages/
-│   └── templates/
-├── composables/
-│   └── tryangle/
-│       └── useTryangleRuntime.ts
-├── backend/
+│   └── index.vue
+│   ├── components/
+│   │   ├── atoms/
+│   │   ├── molecules/
+│   │   ├── organisms/
+│   │   ├── pages/
+│   │   └── templates/
+│   ├── composables/
+│   │   └── tryangle/
+│   │       └── useTryangleRuntime.ts
+│   ├── public/
+│   ├── scripts/
+│   │   └── nuxt-short-tmp.mjs
+│   ├── src/
+│   │   └── styles.css
+│   ├── nuxt.config.ts
+│   └── tsconfig.json
+├── Backend/
 │   ├── src/
 │   │   ├── application/
 │   │   ├── domain/
 │   │   ├── infrastructure/
 │   │   └── interfaces/http/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   ├── seed.ts
+│   │   └── migrations/
+│   ├── scripts/
+│   │   ├── add-sales-user/
+│   │   └── encrypt-existing-pii.ts
 │   └── tsconfig.json
-├── prisma/
-│   ├── schema.prisma
-│   ├── seed.ts
-│   └── migrations/
-├── public/
-├── scripts/
-│   ├── create-sales-user.ts
-│   ├── encrypt-existing-pii.ts
-│   └── nuxt-short-tmp.mjs
-├── src/
-│   └── styles.css
 ├── docker-compose.yml
-├── nuxt.config.ts
 ├── package.json
-└── tsconfig.json
+└── prisma.config.ts
 ```
 
 ---

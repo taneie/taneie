@@ -4,27 +4,27 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node ./scripts/nuxt-short-tmp.mjs dev --host 127.0.0.1 --port 5173",
-    "start": "node backend/dist/interfaces/http/server.js",
-    "build": "node ./scripts/nuxt-short-tmp.mjs build",
-    "preview": "node ./scripts/nuxt-short-tmp.mjs preview . --host 127.0.0.1 --port 5173",
-    "typecheck": "node ./scripts/nuxt-short-tmp.mjs typecheck",
-    "api:dev": "tsx backend/src/interfaces/http/server.ts",
-    "api:build": "tsc -p backend/tsconfig.json",
-    "api:start": "node backend/dist/interfaces/http/server.js",
+    "dev": "node ./Frontend/scripts/nuxt-short-tmp.mjs dev Frontend --host 127.0.0.1 --port 5173",
+    "start": "node Backend/dist/interfaces/http/server.js",
+    "build": "node ./Frontend/scripts/nuxt-short-tmp.mjs build Frontend",
+    "preview": "node ./Frontend/scripts/nuxt-short-tmp.mjs preview Frontend --host 127.0.0.1 --port 5173",
+    "typecheck": "node ./Frontend/scripts/nuxt-short-tmp.mjs typecheck Frontend",
+    "api:dev": "tsx Backend/src/interfaces/http/server.ts",
+    "api:build": "tsc -p Backend/tsconfig.json",
+    "api:start": "node Backend/dist/interfaces/http/server.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:encrypt-pii": "tsx scripts/encrypt-existing-pii.ts",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:encrypt-pii": "tsx Backend/scripts/encrypt-existing-pii.ts",
+    "db:seed": "tsx Backend/prisma/seed.ts",
     "deploy:build": "npm run db:generate && npm run generate && npm run api:build",
     "deploy:start": "npm run db:deploy && npm run db:seed && npm run api:start",
-    "postinstall": "node ./scripts/nuxt-short-tmp.mjs prepare",
-    "generate": "nuxt generate",
-    "deploy": "npm run generate && gh-pages -d .output/public"
+    "postinstall": "node ./Frontend/scripts/nuxt-short-tmp.mjs prepare Frontend",
+    "generate": "node ./Frontend/scripts/nuxt-short-tmp.mjs generate Frontend",
+    "deploy": "npm run generate && gh-pages -d Frontend/.output/public"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx Backend/prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

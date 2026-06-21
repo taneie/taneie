@@ -6,10 +6,10 @@ const databaseUrl =
   "postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public";
 
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: "Backend/prisma/schema.prisma",
   migrations: {
-    path: "prisma/migrations",
-    seed: "tsx prisma/seed.ts",
+    path: "Backend/prisma/migrations",
+    seed: "tsx Backend/prisma/seed.ts",
   },
   datasource: {
     url: databaseUrl,

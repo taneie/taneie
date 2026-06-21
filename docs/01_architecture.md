@@ -32,34 +32,35 @@ flowchart LR
 
 ```text
 TRYANGLE FREELANCE/
-  app.vue
-  pages/
-    index.vue
-  components/
-    atoms/
-    molecules/
-    organisms/
+  Frontend/
+    app.vue
     pages/
-    templates/
-  composables/
-    tryangle/
-      useTryangleRuntime.ts
-  backend/
+    index.vue
+    components/
+      atoms/
+      molecules/
+      organisms/
+      pages/
+      templates/
+    composables/
+      tryangle/
+        useTryangleRuntime.ts
+    public/
+      push-sw.js
+    src/
+      styles.css
+    nuxt.config.ts
+  Backend/
     src/
       application/
       domain/
       infrastructure/
       interfaces/http/
-  prisma/
-    schema.prisma
-    migrations/
-    seed.ts
-  public/
-    push-sw.js
-  src/
-    styles.css
+    prisma/
+      schema.prisma
+      migrations/
+      seed.ts
   docker-compose.yml
-  nuxt.config.ts
   package.json
 ```
 
@@ -69,10 +70,10 @@ TRYANGLE FREELANCE/
 
 | ファイル                                      | 役割                                              |
 | --------------------------------------------- | ------------------------------------------------- |
-| `app.vue`                                     | Nuxtアプリのルート                                |
-| `pages/index.vue`                             | 単一ページアプリとして主要UIを表示                |
-| `components/templates/AppShell.vue`           | ログイン後のアプリケーションレイアウト            |
-| `composables/tryangle/useTryangleRuntime.ts`  | 画面状態、API通信、認証、画面遷移、業務操作を集約 |
+| `Frontend/app.vue`                            | Nuxtアプリのルート                                |
+| `Frontend/pages/index.vue`                    | 単一ページアプリとして主要UIを表示                |
+| `Frontend/components/templates/AppShell.vue`  | ログイン後のアプリケーションレイアウト            |
+| `Frontend/composables/tryangle/useTryangleRuntime.ts` | 画面状態、API通信、認証、画面遷移、業務操作を集約 |
 
 ### 4.2 コンポーネント分類
 

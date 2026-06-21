@@ -7,8 +7,8 @@
 ## 追加ファイル
 
 ```txt
-scripts/create-sales-users-from-config.mjs
-config/sales-users.config.json
+Backend/scripts/add-sales-user/create-sales-users-from-config.mjs
+Backend/scripts/add-sales-user/config/sales-users.config.json
 ```
 
 ## 使い方
@@ -16,7 +16,7 @@ config/sales-users.config.json
 プロジェクトルートに上記2ファイルを配置してから実行します。
 
 ```bash
-node scripts/add-sales-user/create-sales-users-from-config.mjs
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs
 ```
 
 対象環境は設定ファイルの `target` で選びます。
@@ -30,8 +30,8 @@ node scripts/add-sales-user/create-sales-users-from-config.mjs
 CLIで一時的に対象環境を上書きすることもできます。
 
 ```bash
-node scripts/create-sales-users-from-config.mjs --target staging --dryRun
-node scripts/create-sales-users-from-config.mjs --target staging --yes
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging --dryRun
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging --yes
 ```
 
 ## 設定ファイル
@@ -95,8 +95,8 @@ node scripts/create-sales-users-from-config.mjs --target staging --yes
 検証環境への実投入は誤操作防止のため `--yes` が必要です。
 
 ```bash
-node scripts/create-sales-users-from-config.mjs --target staging --dryRun
-node scripts/create-sales-users-from-config.mjs --target staging --yes
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging --dryRun
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging --yes
 ```
 
 ### production
@@ -115,8 +115,8 @@ node scripts/create-sales-users-from-config.mjs --target staging --yes
 本番も `--yes` が必要です。
 
 ```bash
-node scripts/create-sales-users-from-config.mjs --target production --dryRun
-node scripts/create-sales-users-from-config.mjs --target production --yes
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target production --dryRun
+node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target production --yes
 ```
 
 ## users の項目
@@ -135,7 +135,7 @@ node scripts/create-sales-users-from-config.mjs --target production --yes
 
 ## 挿入内容
 
-既存の `prisma/seed.ts` と同じ方針で保存します。
+既存の `Backend/prisma/seed.ts` と同じ方針で保存します。
 
 ```txt
 users.role = sales

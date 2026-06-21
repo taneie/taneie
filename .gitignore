@@ -4,7 +4,11 @@
 .nitro
 .cache
 dist
-backend/dist
+Frontend/.output
+Frontend/.nuxt
+Frontend/.nitro
+Frontend/.cache
+Backend/dist
 
 # Dependencies
 node_modules

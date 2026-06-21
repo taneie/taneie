@@ -73,7 +73,8 @@ export function createApp() {
   registerAliveCheckRoutes(app, communicationService);
 
   const staticDir =
-    process.env.STATIC_DIR || path.resolve(process.cwd(), ".output/public");
+    process.env.STATIC_DIR ||
+    path.resolve(process.cwd(), "Frontend/.output/public");
   if (existsSync(staticDir)) {
     app.use(express.static(staticDir));
     app.get(/^(?!\/api).*/, (_req, res) => {
