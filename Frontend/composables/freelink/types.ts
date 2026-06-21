@@ -159,7 +159,7 @@ export interface AliveCheck {
   at: string;
 }
 
-export interface TryangleState {
+export interface FreelinkState {
   auth: AuthUser | null;
   authMode: AuthMode;
   accounts: Account[];

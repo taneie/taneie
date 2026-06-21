@@ -110,10 +110,10 @@ export class ApplicationService {
     statusLabel: string,
   ) {
     await notifyUser(this.db, application.freelancerProfile.userId, {
-      title: "TRYANGLE FREELANCE",
+      title: "Freelink",
       body: `${application.job.title}の選考ステータスが「${statusLabel}」になりました。`,
       url: "/",
-      tag: `tryangle-application-${application.id}-${statusLabel}`,
+      tag: `freelink-application-${application.id}-${statusLabel}`,
     });
   }
 }

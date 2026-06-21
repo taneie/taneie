@@ -1,7 +1,7 @@
 <template>
   <img
-    src="/brand/tryangle-logo.svg"
-    alt="TRYANGLE FREELANCE"
+    src="/brand/freelink-logo.svg"
+    alt="Freelink"
     :class="$style.brandLogo"
     width="240"
     height="60"

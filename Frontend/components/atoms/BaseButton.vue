@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { computed, useCssModule } from "vue";
-import type { IconName } from "~/composables/tryangle/types";
+import type { IconName } from "~/composables/freelink/types";
 
 const props = withDefaults(
   defineProps<{

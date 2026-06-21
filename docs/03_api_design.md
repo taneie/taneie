@@ -80,7 +80,7 @@
 
 ```json
 {
-  "email": "sales@tryangle.jp",
+  "email": "sales@freelink.jp",
   "password": "sales123"
 }
 ```

@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuthMode } from "~/composables/tryangle/types";
+import type { AuthMode } from "~/composables/freelink/types";
 
 defineProps<{
   mode: AuthMode;

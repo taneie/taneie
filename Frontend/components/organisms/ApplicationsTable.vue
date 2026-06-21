@@ -52,9 +52,9 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 import { computed } from "vue";
-import type { Application } from "~/composables/tryangle/types";
+import type { Application } from "~/composables/freelink/types";
 
 const props = withDefaults(
   defineProps<{
@@ -74,7 +74,7 @@ const {
   streamTone,
   changeApplicationStatus,
   selectPreview,
-} = useTryangleRuntime();
+} = useFreelinkRuntime();
 
 const applications = computed(() => props.applications || state.value.applications);
 

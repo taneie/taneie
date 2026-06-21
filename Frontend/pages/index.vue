@@ -21,9 +21,9 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 import { onMounted } from "vue";
-const { state, isLoading, init } = useTryangleRuntime();
+const { state, isLoading, init } = useFreelinkRuntime();
 
 onMounted(() => {
   init();

@@ -112,8 +112,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
-import type { Job, Role } from "~/composables/tryangle/types";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import type { Job, Role } from "~/composables/freelink/types";
 
 const props = withDefaults(
   defineProps<{
@@ -132,7 +132,7 @@ defineEmits<{
   openAdmin: [];
 }>();
 
-const { streamTone } = useTryangleRuntime();
+const { streamTone } = useFreelinkRuntime();
 
 const applyButtonLabel = computed(() => {
   if (props.applied) return "応募済み";

@@ -1,9 +1,9 @@
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
-  const title = data.title || "TRYANGLE FREELANCE";
+  const title = data.title || "Freelink";
   const options = {
     body: data.body || "新着通知があります。",
-    tag: data.tag || "tryangle-freelance",
+    tag: data.tag || "freelink",
     data: {
       url: data.url || "/",
     },

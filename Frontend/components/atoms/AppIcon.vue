@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import type { IconName } from "~/composables/tryangle/types";
+import type { IconName } from "~/composables/freelink/types";
 
 withDefaults(
   defineProps<{

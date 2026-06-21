@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tryangle-freelance
+    name: freelink
     runtime: node
     plan: free
     buildCommand: npm ci --include=dev && npm run deploy:build

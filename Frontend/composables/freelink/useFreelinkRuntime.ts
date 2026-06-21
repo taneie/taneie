@@ -40,7 +40,7 @@ import type {
   Role,
   ScoutFilters,
   ScoutJobPickerState,
-  TryangleState,
+  FreelinkState,
   ViewKey,
 } from "./types";
 import {
@@ -64,7 +64,7 @@ function getApiBase() {
   return String(runtimeConfig.public.apiBase || API_BASE_FALLBACK).replace(/\/$/, "");
 }
 
-const state = ref<TryangleState>(createSeedState());
+const state = ref<FreelinkState>(createSeedState());
 
 const filters = ref<JobFilters>({
   keyword: "",
@@ -169,7 +169,7 @@ function init() {
   try {
     const saved = JSON.parse(
       localStorage.getItem(STORAGE_KEY) || "null",
-    ) as Partial<TryangleState> | null;
+    ) as Partial<FreelinkState> | null;
     state.value = saved
       ? normalizeLoadedState(mergeState(createSeedState(), saved))
       : createSeedState();
@@ -185,9 +185,9 @@ function init() {
 }
 
 function mergeState(
-  base: TryangleState,
-  saved: Partial<TryangleState>,
-): TryangleState {
+  base: FreelinkState,
+  saved: Partial<FreelinkState>,
+): FreelinkState {
   return {
     ...clone(base),
     ...saved,
@@ -206,7 +206,7 @@ function mergeState(
   };
 }
 
-function normalizeLoadedState(loadedState: TryangleState): TryangleState {
+function normalizeLoadedState(loadedState: FreelinkState): FreelinkState {
   if (isLegacySampleProfile(loadedState.profile)) {
     loadedState.profile = blankProfile("fr-current");
     loadedState.selectedFreelancerId = "fr-current";
@@ -226,7 +226,7 @@ function isLegacySampleProfile(profile: Profile) {
 
 function normalizeMessages(
   messages: Message[],
-  base: TryangleState,
+  base: FreelinkState,
 ): Message[] {
   return messages.map((message) => ({
     ...message,
@@ -235,7 +235,7 @@ function normalizeMessages(
   }));
 }
 
-function inferMessageFreelancerId(message: Message, base: TryangleState) {
+function inferMessageFreelancerId(message: Message, base: FreelinkState) {
   const names = [message.from, message.to];
   const matchedFreelancer = base.freelancers.find((freelancer) =>
     names.includes(freelancer.name),
@@ -472,9 +472,9 @@ function showBrowserChatNotification(message: Message) {
     Notification.permission !== "granted"
   )
     return;
-  const notification = new Notification("TRYANGLE FREELANCE", {
+  const notification = new Notification("Freelink", {
     body: `${message.from || "相手"}: ${message.body}`,
-    tag: `tryangle-chat-${message.id}`,
+    tag: `freelink-chat-${message.id}`,
   });
   notification.onclick = () => {
     window.focus();
@@ -1852,21 +1852,297 @@ async function aliveCheck() {
   }
 }
 
-function copyText(text: string) {
-  navigator.clipboard?.writeText(text || location.href);
-  showToast("共有用URLをコピーしました。");
+function downloadSheetPdf(publicId: string, mainSkills: string) {
+  if (!import.meta.client) return;
+  const canvas = renderAnonymousSheetCanvas(
+    state.value.profile,
+    publicId,
+    mainSkills,
+  );
+  const jpeg = canvas.toDataURL("image/jpeg", 0.92);
+  const imageBytes = base64ToBytes(jpeg.split(",")[1] || "");
+  const pdf = createPdfFromJpeg(imageBytes, canvas.width, canvas.height);
+  const url = URL.createObjectURL(pdf);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `anonymous-skill-sheet-${publicId}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("匿名スキルシートPDFを出力しました。");
 }
 
-function printSheet() {
-  if (!import.meta.client) return;
-  const previousTitle = document.title;
-  document.title = "TRYANGLE FREELANCE 匿名スキルシート";
-  document.body.classList.add("printing-anonymous-sheet");
-  window.print();
-  setTimeout(() => {
-    document.title = previousTitle;
-    document.body.classList.remove("printing-anonymous-sheet");
-  }, 300);
+function renderAnonymousSheetCanvas(
+  profile: Profile,
+  publicId: string,
+  mainSkills: string,
+) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1240;
+  canvas.height = 1754;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("PDF出力の準備に失敗しました。");
+
+  const page = { width: canvas.width, height: canvas.height };
+  const margin = 86;
+  const labelWidth = 230;
+  const bodyWidth = page.width - margin * 2;
+  const valueWidth = bodyWidth - labelWidth;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, page.width, page.height);
+  ctx.fillStyle = "#f1f6fd";
+  ctx.fillRect(0, 0, page.width, 250);
+
+  ctx.fillStyle = "#1d5fd3";
+  ctx.font = '700 30px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText("Freelink", margin, 92);
+  ctx.fillStyle = "#10294f";
+  ctx.font = '700 54px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText("匿名スキルシート", margin, 164);
+  ctx.fillStyle = "#49617d";
+  ctx.font = '400 25px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText(`Public ID: ${publicId}`, margin, 214);
+
+  let y = 322;
+  ctx.fillStyle = "#10294f";
+  ctx.font = '700 32px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText("候補者サマリー", margin, y);
+  y += 36;
+  ctx.strokeStyle = "#d6e2f0";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(margin, y);
+  ctx.lineTo(page.width - margin, y);
+  ctx.stroke();
+  y += 28;
+
+  const rows: Array<{ label: string; value: string }> = [
+    { label: "職種", value: profile.role || "未登録" },
+    { label: "経験年数", value: `${profile.years || "未登録"}年` },
+    { label: "主要スキル", value: mainSkills || "未登録" },
+    {
+      label: "希望単価",
+      value: profile.desiredRate ? `${profile.desiredRate}万円` : "未登録",
+    },
+    {
+      label: "稼働条件",
+      value: `${profile.startDate || "未登録"}開始 / ${profile.workRate || "未登録"} / ${profile.remote || "未登録"}`,
+    },
+    { label: "ステータス", value: profile.availability || "未登録" },
+    { label: "人物確認", value: "Freelink営業による初回面談調整中" },
+    {
+      label: "匿名化",
+      value: "氏名・メール・電話・固有社名は非表示。提案先へ共有しやすい内容に整形しています。",
+    },
+    {
+      label: "レジュメ",
+      value: profile.resumeName
+        ? `${profile.resumeName} は営業管理画面で確認できます。`
+        : "未登録",
+    },
+  ];
+
+  rows.forEach((row, index) => {
+    y = drawPdfRow(ctx, {
+      x: margin,
+      y,
+      width: bodyWidth,
+      labelWidth,
+      valueWidth,
+      label: row.label,
+      value: row.value,
+      alternate: index % 2 === 1,
+    });
+  });
+
+  y += 54;
+  ctx.fillStyle = "#10294f";
+  ctx.font = '700 30px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText("補足", margin, y);
+  y += 42;
+  ctx.fillStyle = "#49617d";
+  ctx.font = '400 24px "Hiragino Sans", "Yu Gothic", sans-serif';
+  drawWrappedText(
+    ctx,
+    "本資料はクライアント提案用の匿名プロフィールです。詳細な職務経歴書、連絡先、本人確認情報はFreelink営業管理画面で確認してください。",
+    margin,
+    y,
+    bodyWidth,
+    38,
+  );
+
+  ctx.fillStyle = "#7a8ca3";
+  ctx.font = '400 20px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText(`Generated: ${today()}`, margin, page.height - 72);
+  ctx.fillText(
+    "Freelink Confidential",
+    page.width - 420,
+    page.height - 72,
+  );
+
+  return canvas;
+}
+
+function drawPdfRow(
+  ctx: CanvasRenderingContext2D,
+  input: {
+    x: number;
+    y: number;
+    width: number;
+    labelWidth: number;
+    valueWidth: number;
+    label: string;
+    value: string;
+    alternate: boolean;
+  },
+) {
+  ctx.font = '400 25px "Hiragino Sans", "Yu Gothic", sans-serif';
+  const lines = wrapCanvasText(ctx, input.value, input.valueWidth - 48);
+  const rowHeight = Math.max(82, lines.length * 34 + 40);
+
+  ctx.fillStyle = input.alternate ? "#fbfdff" : "#ffffff";
+  ctx.fillRect(input.x, input.y, input.width, rowHeight);
+  ctx.fillStyle = "#eaf2fb";
+  ctx.fillRect(input.x, input.y, input.labelWidth, rowHeight);
+
+  ctx.strokeStyle = "#d6e2f0";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(input.x, input.y, input.width, rowHeight);
+  ctx.beginPath();
+  ctx.moveTo(input.x + input.labelWidth, input.y);
+  ctx.lineTo(input.x + input.labelWidth, input.y + rowHeight);
+  ctx.stroke();
+
+  ctx.fillStyle = "#18365f";
+  ctx.font = '700 24px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText(input.label, input.x + 28, input.y + 50);
+
+  ctx.fillStyle = "#10294f";
+  ctx.font = '400 25px "Hiragino Sans", "Yu Gothic", sans-serif';
+  lines.forEach((line, index) => {
+    ctx.fillText(
+      line,
+      input.x + input.labelWidth + 24,
+      input.y + 50 + index * 34,
+    );
+  });
+
+  return input.y + rowHeight;
+}
+
+function drawWrappedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+) {
+  wrapCanvasText(ctx, text, maxWidth).forEach((line, index) => {
+    ctx.fillText(line, x, y + index * lineHeight);
+  });
+}
+
+function wrapCanvasText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+) {
+  const lines: string[] = [];
+  text.split("\n").forEach((segment) => {
+    let line = "";
+    Array.from(segment).forEach((char) => {
+      const candidate = line + char;
+      if (line && ctx.measureText(candidate).width > maxWidth) {
+        lines.push(line);
+        line = char;
+        return;
+      }
+      line = candidate;
+    });
+    if (line) lines.push(line);
+  });
+  return lines;
+}
+
+function base64ToBytes(base64: string) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function createPdfFromJpeg(
+  jpegBytes: Uint8Array,
+  imageWidth: number,
+  imageHeight: number,
+) {
+  const encoder = new TextEncoder();
+  const chunks: BlobPart[] = [];
+  const offsets: number[] = [];
+  let length = 0;
+
+  function appendText(text: string) {
+    const bytes = encoder.encode(text);
+    chunks.push(toArrayBuffer(bytes));
+    length += bytes.length;
+  }
+
+  function appendBytes(bytes: Uint8Array) {
+    chunks.push(toArrayBuffer(bytes));
+    length += bytes.length;
+  }
+
+  function startObject(id: number) {
+    offsets[id] = length;
+    appendText(`${id} 0 obj\n`);
+  }
+
+  const pageWidth = 595.28;
+  const pageHeight = 841.89;
+  const content = `q\n${pageWidth} 0 0 ${pageHeight} 0 0 cm\n/Im0 Do\nQ\n`;
+
+  appendText("%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n");
+  startObject(1);
+  appendText("<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+  startObject(2);
+  appendText("<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+  startObject(3);
+  appendText(
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n`,
+  );
+  startObject(4);
+  appendText(`<< /Length ${encoder.encode(content).length} >>\nstream\n`);
+  appendText(content);
+  appendText("endstream\nendobj\n");
+  startObject(5);
+  appendText(
+    `<< /Type /XObject /Subtype /Image /Width ${imageWidth} /Height ${imageHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`,
+  );
+  appendBytes(jpegBytes);
+  appendText("\nendstream\nendobj\n");
+
+  const xrefOffset = length;
+  appendText("xref\n0 6\n0000000000 65535 f \n");
+  for (let id = 1; id <= 5; id += 1) {
+    appendText(`${String(offsets[id]).padStart(10, "0")} 00000 n \n`);
+  }
+  appendText(
+    `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`,
+  );
+
+  return new Blob(chunks, { type: "application/pdf" });
+}
+
+function toArrayBuffer(bytes: Uint8Array) {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
 }
 
 function syncProfileToFreelancer() {
@@ -2047,7 +2323,7 @@ function saveAndNotify(message: string) {
   showToast(message);
 }
 
-export function useTryangleRuntime() {
+export function useFreelinkRuntime() {
   return {
     state,
     filters,
@@ -2142,8 +2418,7 @@ export function useTryangleRuntime() {
     answerContactInquiry,
     markActiveChatAsRead,
     aliveCheck,
-    copyText,
-    printSheet,
+    downloadSheetPdf,
     syncProfileToFreelancer,
     hasApplied,
     getFreelancer,

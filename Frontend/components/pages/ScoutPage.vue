@@ -159,7 +159,7 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 const {
   scoutFilters,
   scoutJobPicker,
@@ -174,7 +174,7 @@ const {
   sendSelectedScout,
   selectPreview,
   streamTone,
-} = useTryangleRuntime();
+} = useFreelinkRuntime();
 </script>
 
 <style module>

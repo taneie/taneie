@@ -1,7 +1,7 @@
 import type { Account, ApplicationStatus, NavItem, Role, ViewKey } from "./types";
 
-export const STORAGE_KEY = "tryangle-freelance-state-v1";
-export const TOKEN_KEY = "tryangle-freelance-token";
+export const STORAGE_KEY = "freelink-state-v1";
+export const TOKEN_KEY = "freelink-token";
 export const API_BASE_FALLBACK = "http://127.0.0.1:8787/api";
 export const JOB_PAGE_SIZE = 10;
 export const JOB_APPLICATION_LIMIT = 5;
@@ -57,10 +57,10 @@ export const demoAccounts: Account[] = [
     freelancerId: "fr-current",
   },
   {
-    email: "sales@tryangle.jp",
+    email: "sales@freelink.jp",
     password: "sales123",
     role: "sales",
-    name: "TRYANGLE 営業",
+    name: "Freelink 営業",
     startView: "dashboard",
   },
 ];

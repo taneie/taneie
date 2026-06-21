@@ -5,10 +5,10 @@
   >
     <template #actions>
       <div :class="$style.actions">
-        <BaseButton icon="send" @click="copyText(shareUrl)"
-          >URLコピー</BaseButton
-        >
-        <BaseButton variant="secondary" icon="print" @click="printSheet"
+        <BaseButton
+          variant="secondary"
+          icon="print"
+          @click="downloadSheetPdf(publicId, mainSkills)"
           >PDF出力</BaseButton
         >
       </div>
@@ -16,7 +16,7 @@
   </PageHead>
 
   <div :class="[$style.grid, $style.two]">
-    <section :class="[$style.panel, $style.printable]">
+    <section :class="$style.panel">
       <div :class="$style.panelBody">
         <article id="anonymous-sheet" :class="$style.sheet">
           <h2>匿名スキルシート / {{ publicId }}</h2>
@@ -40,7 +40,7 @@
             <div>ステータス</div>
             <div>{{ profile.availability }}</div>
             <div>人物確認</div>
-            <div>TRYANGLE営業による初回面談調整中</div>
+            <div>Freelink営業による初回面談調整中</div>
           </div>
         </article>
       </div>
@@ -48,16 +48,9 @@
 
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">出力情報</h2>
+        <h2 :class="$style.panelTitle">PDF出力情報</h2>
       </div>
-      <!-- 本番運用時にリンクを環境のものに差し替えるよう修正（どこにファイル実体を置くか） -->
       <div :class="$style.panelBody">
-        <FormInput
-          label="共有用URL"
-          name="sheetUrl"
-          :model-value="shareUrl"
-          readonly
-        />
         <div :class="[$style.card, $style.stackSm]">
           <strong>匿名化対象</strong>
           <p>
@@ -75,20 +68,15 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 import { computed } from "vue";
-const { state, splitCsv, maskName, copyText, printSheet } =
-  useTryangleRuntime();
+const { state, splitCsv, maskName, downloadSheetPdf } =
+  useFreelinkRuntime();
 
 const profile = computed(() => state.value.profile);
 const publicId = computed(
   () =>
     `tf-${profile.value.id.slice(-3)}-${splitCsv(profile.value.languages)[0]?.toLowerCase() || "engineer"}`,
-);
-const shareUrl = computed(() =>
-  import.meta.client
-    ? `${location.origin}${location.pathname}#sheet/${publicId.value}`
-    : "",
 );
 const mainSkills = computed(() =>
   [
@@ -247,21 +235,6 @@ const mainSkills = computed(() =>
 
   .sheetGrid {
     grid-template-columns: 1fr;
-  }
-}
-
-@media print {
-  .actions,
-  .panel:not(.printable) {
-    display: none !important;
-  }
-
-  .panelBody {
-    padding: 0;
-  }
-
-  .sheet {
-    border: 0;
   }
 }
 </style>

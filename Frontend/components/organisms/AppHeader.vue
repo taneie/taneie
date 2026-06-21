@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 
 const {
   state,
@@ -59,7 +59,7 @@ const {
   setView,
   logout,
   roleLabel,
-} = useTryangleRuntime();
+} = useFreelinkRuntime();
 </script>
 
 <style module>

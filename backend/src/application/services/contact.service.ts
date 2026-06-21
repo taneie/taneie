@@ -70,10 +70,10 @@ export class ContactService {
 
     if (inquiry.userId) {
       await notifyUser(this.db, inquiry.userId, {
-        title: "TRYANGLE FREELANCE",
+        title: "Freelink",
         body: `問い合わせに回答が届きました: ${decryptText(inquiry.subject)}`,
         url: "/",
-        tag: `tryangle-contact-answer-${inquiry.id}`,
+        tag: `freelink-contact-answer-${inquiry.id}`,
       });
     }
 
@@ -95,10 +95,10 @@ export class ContactService {
     await Promise.all(
       salesUsers.map((user) =>
         notifyUser(this.db, user.id, {
-          title: "TRYANGLE FREELANCE",
+          title: "Freelink",
           body: `新しい問い合わせ: ${subject}`,
           url: "/",
-          tag: `tryangle-contact-${inquiryId}`,
+          tag: `freelink-contact-${inquiryId}`,
         }),
       ),
     );

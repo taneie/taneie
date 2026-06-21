@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { Job } from "~/composables/tryangle/types";
+import type { Job } from "~/composables/freelink/types";
 
 const props = defineProps<{
   applicationId: string;

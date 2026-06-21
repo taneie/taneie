@@ -9,8 +9,8 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
-const { toastMessage, toastVisible } = useTryangleRuntime();
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+const { toastMessage, toastVisible } = useFreelinkRuntime();
 </script>
 
 <style module>

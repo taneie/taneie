@@ -4,12 +4,12 @@
 
 <script setup lang="ts">
 import { computed, useCssModule } from "vue";
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 const props = defineProps<{
   value: string;
 }>();
 
-const { availabilityClass } = useTryangleRuntime();
+const { availabilityClass } = useFreelinkRuntime();
 const css = useCssModule();
 const toneClass = computed(
   () => css[availabilityClass(props.value)] || css.pause,

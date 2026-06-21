@@ -16,7 +16,7 @@ function key() {
     return createHash("sha256").update(config.dataEncryptionKey).digest();
   }
   return createHash("sha256")
-    .update("tryangle-local-development-encryption-key")
+    .update("freelink-local-development-encryption-key")
     .digest();
 }
 

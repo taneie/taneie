@@ -45,8 +45,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
-import type { Job } from "~/composables/tryangle/types";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import type { Job } from "~/composables/freelink/types";
 
 const props = defineProps<{
   jobs?: Job[];
@@ -54,7 +54,7 @@ const props = defineProps<{
 }>();
 
 const { state, streamTone, toggleJobSort, toggleJobActive } =
-  useTryangleRuntime();
+  useFreelinkRuntime();
 
 const displayJobs = computed(() => props.jobs ?? state.value.jobs);
 </script>

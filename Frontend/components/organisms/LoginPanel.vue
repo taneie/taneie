@@ -53,7 +53,7 @@
             </button>
             <button type="button" @click="startDemoLogin('sales')">
               <strong>営業デモ</strong>
-              <span>sales@tryangle.jp</span>
+              <span>sales@freelink.jp</span>
             </button>
           </div>
         </div>
@@ -111,7 +111,7 @@
             <div :class="$style.sectionHead">
               <span>FEATURES</span>
               <!-- 本番運用までに、h2の羅列を治す -->
-              <h2>最短1分で応募まで。</h2><h2>TRYANGLEが案件探しを自動化。</h2>
+              <h2>最短1分で応募まで。</h2><h2>Freelinkが案件探しを自動化。</h2>
             </div>
 
             <!-- p要素はPCだと表示するでOK -->
@@ -269,7 +269,7 @@
     </main>
 
     <footer :class="$style.landingFooter">
-      <span>© 2026 TRYANGLE FREELANCE. All rights reserved.</span>
+      <span>© 2026 Freelink. All rights reserved.</span>
       <button type="button" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
     </footer>
 
@@ -280,8 +280,8 @@
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
-import type { RegisterInput } from "~/composables/tryangle/types";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import type { RegisterInput } from "~/composables/freelink/types";
 
 const {
   login,
@@ -290,7 +290,7 @@ const {
   markDirty,
   confirmDiscardChanges,
   requestBrowserNotificationPermission,
-} = useTryangleRuntime();
+} = useFreelinkRuntime();
 
 const heroImageSrc = "/images/lp-hero-engineer.png";
 const flowImageSrc = "/images/lp-flow-visual.png";

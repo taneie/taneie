@@ -1,6 +1,6 @@
-# TRYANGLE FREELANCE
+# Freelink
 
-TRYANGLE FREELANCE は、フリーランス人材・案件・応募・スカウト・面談・チャットを管理するためのWebアプリケーションです。
+Freelink は、フリーランス人材・案件・応募・スカウト・面談・チャットを管理するためのWebアプリケーションです。
 
 フロントエンドは Nuxt 3 / Vue 3、バックエンドは Express、DBは PostgreSQL + Prisma で構成されています。
 
@@ -364,7 +364,7 @@ http://127.0.0.1:5173/
   freelance123
 
 営業:
-  sales@tryangle.jp
+  sales@freelink.jp
   sales123
 ```
 
@@ -670,7 +670,7 @@ docker compose up -d postgres
 `.env` の `DATABASE_URL` がDocker Composeの設定と一致しているか確認してください。
 
 ```env
-DATABASE_URL="postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public"
+DATABASE_URL="postgresql://freelink:freelink@localhost:5432/freelink?schema=public"
 ```
 
 ### `5432` ポートが使われている
@@ -687,7 +687,7 @@ ports:
 `.env` も合わせて変更します。
 
 ```env
-DATABASE_URL="postgresql://tryangle:tryangle@localhost:5433/tryangle_freelance?schema=public"
+DATABASE_URL="postgresql://freelink:freelink@localhost:5433/freelink?schema=public"
 ```
 
 ### Prisma Client関連のエラーが出る
@@ -766,8 +766,8 @@ CORS_ORIGIN="http://127.0.0.1:5173,http://localhost:5173"
 │   │   ├── pages/
 │   │   └── templates/
 │   ├── composables/
-│   │   └── tryangle/
-│   │       └── useTryangleRuntime.ts
+│   │   └── freelink/
+│   │       └── useFreelinkRuntime.ts
 │   ├── public/
 │   ├── scripts/
 │   │   └── nuxt-short-tmp.mjs

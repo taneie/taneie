@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">Freelink logo</title>
+  <desc id="desc">Freelink wordmark with a connected triangular network mark.</desc>
+  <defs>
+    <linearGradient id="freelinkLineA" x1="120" y1="244" x2="220" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b49d8"/>
+      <stop offset="1" stop-color="#0878ff"/>
+    </linearGradient>
+    <linearGradient id="freelinkLineB" x1="220" y1="64" x2="326" y2="242" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0878ff"/>
+      <stop offset="1" stop-color="#10c8df"/>
+    </linearGradient>
+    <linearGradient id="freelinkLineC" x1="106" y1="244" x2="326" y2="244" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b38c8"/>
+      <stop offset="0.55" stop-color="#0a66ff"/>
+      <stop offset="1" stop-color="#13c7df"/>
+    </linearGradient>
+    <linearGradient id="freelinkNodeA" x1="164" y1="54" x2="254" y2="136" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#087bff"/>
+      <stop offset="1" stop-color="#075be8"/>
+    </linearGradient>
+    <linearGradient id="freelinkNodeB" x1="74" y1="216" x2="154" y2="292" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0855e9"/>
+      <stop offset="1" stop-color="#0730b7"/>
+    </linearGradient>
+    <linearGradient id="freelinkNodeC" x1="286" y1="210" x2="374" y2="292" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0bd4e4"/>
+      <stop offset="1" stop-color="#04a7ed"/>
+    </linearGradient>
+    <linearGradient id="freelinkText" x1="430" y1="168" x2="1020" y2="168" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#061b5c"/>
+      <stop offset="0.48" stop-color="#071f68"/>
+      <stop offset="1" stop-color="#0b72ff"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M120 225 L205 80" stroke="url(#freelinkLineA)" stroke-width="28"/>
+    <path d="M225 81 L315 225" stroke="url(#freelinkLineB)" stroke-width="28"/>
+    <path d="M111 244 H270 L310 179 H384" stroke="url(#freelinkLineC)" stroke-width="30"/>
+  </g>
+  <circle cx="216" cy="66" r="47" fill="url(#freelinkNodeA)"/>
+  <circle cx="96" cy="254" r="47" fill="url(#freelinkNodeB)"/>
+  <circle cx="358" cy="254" r="47" fill="url(#freelinkNodeC)"/>
+  <text x="474" y="226" fill="url(#freelinkText)" font-family="Inter, Arial, sans-serif" font-size="140" font-weight="800" letter-spacing="-3">Freelink</text>
+</svg>

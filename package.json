@@ -1,5 +1,5 @@
 {
-  "name": "tryangle-freelance",
+  "name": "freelink",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,6 +9,7 @@
     "build": "node ./Frontend/scripts/nuxt-short-tmp.mjs build Frontend",
     "preview": "node ./Frontend/scripts/nuxt-short-tmp.mjs preview Frontend --host 127.0.0.1 --port 5173",
     "typecheck": "node ./Frontend/scripts/nuxt-short-tmp.mjs typecheck Frontend",
+    "dev:api": "npm run api:dev",
     "api:dev": "tsx Backend/src/interfaces/http/server.ts",
     "api:build": "tsc -p Backend/tsconfig.json",
     "api:start": "node Backend/dist/interfaces/http/server.js",

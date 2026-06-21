@@ -96,7 +96,7 @@
           />
           <CoverageCard
             title="提案資料"
-            body="チャット履歴、匿名スキルシート、共有用URLを確認"
+            body="チャット履歴、匿名スキルシートを確認"
             tone="amber"
           />
         </div>
@@ -149,7 +149,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 
 const {
   state,
@@ -161,7 +161,7 @@ const {
   estimateRate,
   getFreelancer,
   getJob,
-} = useTryangleRuntime();
+} = useFreelinkRuntime();
 
 const prioritySearch = ref("");
 const applicationSearch = ref("");

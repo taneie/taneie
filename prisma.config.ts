@@ -3,7 +3,7 @@ import { defineConfig } from "prisma/config";
 
 const databaseUrl =
   process.env.DATABASE_URL ||
-  "postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public";
+  "postgresql://freelink:freelink@localhost:5432/freelink?schema=public";
 
 export default defineConfig({
   schema: "Backend/prisma/schema.prisma",

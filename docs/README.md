@@ -1,6 +1,6 @@
-# TRYANGLE FREELANCE ドキュメント
+# Freelink ドキュメント
 
-このドキュメントは、アップロードされた `TRYANGLE FREELANCE` のソースコードを静的に確認して生成した設計ドキュメントです。
+このドキュメントは、アップロードされた `Freelink` のソースコードを静的に確認して生成した設計ドキュメントです。
 
 ## ドキュメント構成
 
@@ -17,7 +17,7 @@
 
 ## 前提
 
-- 対象システム名: TRYANGLE FREELANCE
+- 対象システム名: Freelink
 - フロントエンド: Nuxt 3 / Vue 3
 - バックエンド: Express / TypeScript
 - DB: PostgreSQL / Prisma

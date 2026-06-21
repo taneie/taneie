@@ -160,8 +160,8 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
-import type { ApplicationStatus, JobInput } from "~/composables/tryangle/types";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import type { ApplicationStatus, JobInput } from "~/composables/freelink/types";
 
 const {
   state,
@@ -176,7 +176,7 @@ const {
   loadAdminMatchedJobs,
   getFreelancer,
   getJob,
-} = useTryangleRuntime();
+} = useFreelinkRuntime();
 
 const initialJobForm = (): JobInput => ({
   title: "",

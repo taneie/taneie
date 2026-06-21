@@ -226,9 +226,9 @@
 </template>
 
 <script setup lang="ts">
-import { useTryangleRuntime } from "~/composables/tryangle/useTryangleRuntime";
+import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 import { computed, onMounted, ref, watch } from "vue";
-import type { Message } from "~/composables/tryangle/types";
+import type { Message } from "~/composables/freelink/types";
 
 const {
   currentRole,
@@ -254,7 +254,7 @@ const {
   markDirty,
   clearUnsavedChanges,
   getJob,
-} = useTryangleRuntime();
+} = useFreelinkRuntime();
 
 const candidates = ref<string[]>([""]);
 const body = ref("");

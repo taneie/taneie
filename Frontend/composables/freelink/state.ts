@@ -1,6 +1,6 @@
-import type { Profile, TryangleState } from "./types";
+import type { Profile, FreelinkState } from "./types";
 
-export function createSeedState(): TryangleState {
+export function createSeedState(): FreelinkState {
   return {
     auth: null,
     authMode: "login",

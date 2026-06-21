@@ -47,7 +47,7 @@ node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target 
   "environments": {
     "local": {
       "enabled": true,
-      "databaseUrl": "postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public",
+      "databaseUrl": "postgresql://freelink:freelink@localhost:5432/freelink?schema=public",
       "dataEncryptionKey": "",
       "privacyPolicyVersion": "2026-06-10"
     },
@@ -67,8 +67,8 @@ node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target 
   },
   "users": [
     {
-      "email": "sales2@tryangle.jp",
-      "name": "TRYANGLE 営業2",
+      "email": "sales2@freelink.jp",
+      "name": "Freelink 営業2",
       "nameKana": "トライアングル エイギョウニ",
       "phone": "03-0000-0000",
       "password": "change-me-12chars-or-more",

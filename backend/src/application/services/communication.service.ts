@@ -192,10 +192,10 @@ export class CommunicationService {
     });
     const mapped = mapMessage(message);
     await notifyUser(this.db, receiverUserId, {
-      title: "TRYANGLE FREELANCE",
+      title: "Freelink",
       body: `${decryptText(message.sender.name)}: ${input.body}`,
       url: "/",
-      tag: `tryangle-chat-${message.id}`,
+      tag: `freelink-chat-${message.id}`,
     });
     return mapped;
   }

@@ -9,7 +9,7 @@ import {
 
 const databaseUrl =
   process.env.DATABASE_URL ||
-  "postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public";
+  "postgresql://freelink:freelink@localhost:5432/freelink?schema=public";
 const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
 
 async function upsertSkill(
@@ -70,10 +70,10 @@ async function main() {
   ]);
 
   const sales = await upsertSeedUser({
-    email: "sales@tryangle.jp",
+    email: "sales@freelink.jp",
     passwordHash: salesPassword,
     role: "sales",
-    name: "TRYANGLE 営業",
+    name: "Freelink 営業",
   });
 
   const freelancer = await upsertSeedUser({

@@ -4,7 +4,7 @@ import "./config.js";
 
 const databaseUrl =
   process.env.DATABASE_URL ||
-  "postgresql://tryangle:tryangle@localhost:5432/tryangle_freelance?schema=public";
+  "postgresql://freelink:freelink@localhost:5432/freelink?schema=public";
 
 export const prisma = new PrismaClient({
   adapter: new PrismaPg(databaseUrl),

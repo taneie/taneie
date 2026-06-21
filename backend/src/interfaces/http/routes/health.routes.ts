@@ -2,6 +2,6 @@ import type { Express } from "express";
 
 export function registerHealthRoutes(app: Express) {
   app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", service: "TRYANGLE FREELANCE API" });
+    res.json({ status: "ok", service: "Freelink API" });
   });
 }
