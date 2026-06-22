@@ -4,6 +4,27 @@
     kicker="案件・人材・応募・面談を一画面で把握します。"
   />
 
+  <section :class="$style.overviewBand">
+    <div :class="$style.overviewCopy">
+      <span :class="$style.eyebrow">営業サマリー</span>
+      <h2>{{ dashboardHeadline }}</h2>
+      <p>対応優先度の高い連絡、面談、応募を上から確認できます。</p>
+    </div>
+    <div :class="$style.focusGrid">
+      <button
+        v-for="item in dashboardFocusItems"
+        :key="item.id"
+        type="button"
+        :class="[$style.focusCard, $style[`focus${item.tone}`]]"
+        @click="item.onClick"
+      >
+        <span>{{ item.label }}</span>
+        <strong>{{ item.value }}</strong>
+        <small>{{ item.caption }}</small>
+      </button>
+    </div>
+  </section>
+
   <section :class="$style.metricRow">
     <MetricCard
       label="登録ユーザー"
@@ -240,6 +261,15 @@ interface SalesNextAction {
   onClick: () => void;
 }
 
+interface DashboardFocusItem {
+  id: string;
+  label: string;
+  value: string;
+  caption: string;
+  tone: "Blue" | "Teal" | "Amber" | "Rose";
+  onClick: () => void;
+}
+
 const registeredUsers = computed(
   () => state.value.freelancers.length
 );
@@ -272,6 +302,58 @@ const firstUnreadFreelancerId = computed(
     )?.freelancerId || "",
 );
 const latestAliveCheckAt = computed(() => state.value.aliveChecks.at(-1)?.at || "");
+const dashboardHeadline = computed(() => {
+  if (currentUnreadChatCount.value > 0) {
+    return `未読チャット ${currentUnreadChatCount.value}件を確認してください`;
+  }
+  if (pendingMeetings.value > 0) {
+    return `未確定の面談候補が ${pendingMeetings.value}件あります`;
+  }
+  if (activeApplications.value > 0) {
+    return `選考中応募 ${activeApplications.value}件を更新できます`;
+  }
+  return "営業状況は落ち着いています";
+});
+const dashboardFocusItems = computed<DashboardFocusItem[]>(() => [
+  {
+    id: "unread",
+    label: "未読チャット",
+    value: `${currentUnreadChatCount.value}件`,
+    caption: "求職者返信",
+    tone: "Blue",
+    onClick: () => {
+      if (firstUnreadFreelancerId.value) {
+        selectChatFreelancer(firstUnreadFreelancerId.value);
+        return;
+      }
+      void setView("meeting");
+    },
+  },
+  {
+    id: "meeting",
+    label: "面談候補",
+    value: `${pendingMeetings.value}件`,
+    caption: "未確定",
+    tone: "Amber",
+    onClick: () => void setView("meeting"),
+  },
+  {
+    id: "applications",
+    label: "選考中応募",
+    value: `${activeApplications.value}件`,
+    caption: "要ステータス管理",
+    tone: "Rose",
+    onClick: () => void setView("admin"),
+  },
+  {
+    id: "ready",
+    label: "即稼働人材",
+    value: `${readyFreelancers.value}名`,
+    caption: "スカウト候補",
+    tone: "Teal",
+    onClick: () => void setView("scout"),
+  },
+]);
 const salesNextActions = computed<SalesNextAction[]>(() => {
   const actions: SalesNextAction[] = [];
 
@@ -423,6 +505,105 @@ onBeforeUnmount(() => {
 .metricRow > *,
 .cardList > * {
   min-width: 0;
+}
+
+.overviewBand {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
+  padding: 18px;
+  border: 1px solid #cfe0f4;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f7fbff 0%, #eef6ff 100%);
+  box-shadow: var(--shadow);
+}
+
+.overviewCopy {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.overviewCopy h2 {
+  margin: 0;
+  color: #10294f;
+  font-size: 22px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.overviewCopy p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.focusGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.focusCard {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(29, 78, 137, 0.06);
+}
+
+.focusCard span,
+.focusCard small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.focusCard strong {
+  color: #10294f;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.focusCard:hover,
+.focusCard:focus-visible {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(29, 78, 137, 0.14),
+    0 10px 22px rgba(29, 78, 137, 0.12);
+}
+
+.focusBlue {
+  border-top: 4px solid #1d5fd3;
+}
+
+.focusTeal {
+  border-top: 4px solid #0f8f7e;
+}
+
+.focusAmber {
+  border-top: 4px solid #c87900;
+}
+
+.focusRose {
+  border-top: 4px solid #c2415b;
 }
 
 .two {
@@ -630,24 +811,34 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1180px) {
+  .overviewBand {
+    grid-template-columns: 1fr;
+  }
+
   .two {
     grid-template-columns: 1fr;
   }
 
   .three,
-  .metricRow {
+  .metricRow,
+  .focusGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 980px) {
   .three,
-  .metricRow {
+  .metricRow,
+  .focusGrid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 620px) {
+  .overviewBand {
+    padding: 12px;
+  }
+
   .panelBody,
   .panelHeader {
     padding: 12px;
