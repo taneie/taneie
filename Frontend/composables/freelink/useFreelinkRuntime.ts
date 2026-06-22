@@ -617,7 +617,15 @@ const profileRequirementItems = computed(() => {
     {
       label: "スキル詳細",
       step: 2,
-      done: Boolean(p.languages && p.db && p.frameworks && p.years),
+      done: Boolean(
+        [
+          p.languages,
+          p.db,
+          p.frameworks,
+          p.cloud,
+          p.otherSkills,
+        ].some((value) => splitCsv(value).length) && p.years,
+      ),
     },
     {
       label: "稼働条件",
@@ -1088,6 +1096,23 @@ async function saveProfileSkills(
     "languages" | "db" | "frameworks" | "cloud" | "otherSkills" | "years"
   >,
 ) {
+  const hasSkill = [
+    values.languages,
+    values.db,
+    values.frameworks,
+    values.cloud,
+    values.otherSkills,
+  ].some((value) => splitCsv(value).length);
+
+  if (!hasSkill) {
+    showToast("スキルはチェックまたはその他を1つ以上入力してください。");
+    return;
+  }
+  if (!String(values.years || "").trim()) {
+    showToast("経験年数を入力してください。");
+    return;
+  }
+
   Object.assign(state.value.profile, values, { lastUpdated: today() });
   state.value.wizardStep = 3;
   await saveProfileToApi("スキル情報を保存しました。");
