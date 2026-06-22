@@ -80,10 +80,12 @@
             name="phone"
             @update:model-value="markDirty"
           />
-          <FormInput
+          <FormSelect
             v-model="basic.role"
             label="職種"
             name="role"
+            :options="roleTitleOptions"
+            placeholder="職種を選択してください"
             @update:model-value="markDirty"
           />
           <div :class="$style.actions">
@@ -320,6 +322,7 @@ const {
   dbSkillOptions,
   frameworkSkillOptions,
   cloudSkillOptions,
+  roleTitleOptions,
 } = useFreelinkRuntime();
 
 const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候補"];

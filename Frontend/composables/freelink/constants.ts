@@ -83,6 +83,22 @@ export const availabilityOptions = [
   "2026年7月から空き予定",
   "現在は案件停止中",
 ];
+export const roleTitleOptions = [
+  "フロントエンドエンジニア",
+  "バックエンドエンジニア",
+  "フルスタックエンジニア",
+  "モバイルエンジニア",
+  "インフラ・SRE",
+  "クラウドエンジニア",
+  "DevOpsエンジニア",
+  "データエンジニア",
+  "機械学習エンジニア",
+  "QAエンジニア",
+  "セキュリティエンジニア",
+  "組み込みエンジニア",
+  "テックリード",
+  "PM/PL",
+];
 export const languageSkillOptions = [
   "Java",
   "TypeScript",

@@ -5,6 +5,9 @@
     :value="modelValue"
     @change="onChange"
   >
+    <option v-if="placeholder" value="" disabled>
+      {{ placeholder }}
+    </option>
     <option v-for="option in options" :key="option" :value="option">
       {{ option }}
     </option>
@@ -16,6 +19,7 @@ defineProps<{
   name: string;
   options: string[];
   modelValue: string;
+  placeholder?: string;
 }>();
 
 const emit = defineEmits<{

@@ -4,6 +4,7 @@
       :name="name"
       :options="options"
       :model-value="modelValue"
+      :placeholder="placeholder"
       @update:model-value="emit('update:modelValue', $event)"
     />
   </FieldLabel>
@@ -15,6 +16,7 @@ defineProps<{
   name: string;
   options: string[];
   modelValue: string;
+  placeholder?: string;
 }>();
 
 const emit = defineEmits<{

@@ -15,6 +15,7 @@ import {
   languageSkillOptions,
   navItems,
   remoteOptions,
+  roleTitleOptions,
   statuses,
 } from "./constants";
 import { blankProfile, createSeedState } from "./state";
@@ -2380,6 +2381,7 @@ export function useFreelinkRuntime() {
     flowOptions,
     remoteOptions,
     availabilityOptions,
+    roleTitleOptions,
     languageSkillOptions,
     dbSkillOptions,
     frameworkSkillOptions,

@@ -7,6 +7,25 @@ import {
   labelToStreamType,
 } from "../../domain/types.js";
 
+const roleTitleOptions = [
+  "フロントエンドエンジニア",
+  "バックエンドエンジニア",
+  "フルスタックエンジニア",
+  "モバイルエンジニア",
+  "インフラ・SRE",
+  "クラウドエンジニア",
+  "DevOpsエンジニア",
+  "データエンジニア",
+  "機械学習エンジニア",
+  "QAエンジニア",
+  "セキュリティエンジニア",
+  "組み込みエンジニア",
+  "テックリード",
+  "PM/PL",
+] as const;
+
+const roleTitle = z.union([z.enum(roleTitleOptions), z.literal("")]);
+
 const remoteType = z
   .union([
     z.enum(["full_remote", "hybrid", "onsite"]),
@@ -143,7 +162,7 @@ export const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(255).optional(),
   nameKana: z.string().trim().max(255).optional(),
   phone: z.string().trim().max(50).optional(),
-  roleTitle: z.string().trim().max(255).optional(),
+  roleTitle: roleTitle.optional(),
   yearsExperience: z.coerce.number().min(0).max(99).optional(),
   desiredRate: z.coerce.number().int().min(0).optional(),
   startDate: z.string().trim().optional(),

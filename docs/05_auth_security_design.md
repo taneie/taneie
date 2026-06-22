@@ -78,7 +78,7 @@ Zod schemaによりAPIごとに入力を検証する。
 | ----------------- | -------------------------------------------------------------- |
 | register          | メール形式、パスワード8〜128文字、プライバシーポリシー同意必須 |
 | create job        | 案件名必須、単価0以上、最大単価 >= 最小単価、マージン率0〜100  |
-| update profile    | 経験年数0〜99、各文字列長、enum値                              |
+| update profile    | 職種enum、経験年数0〜99、各文字列長、enum値                    |
 | meeting           | `candidateAt` はoffset付きdatetime                             |
 | message           | 本文必須                                                       |
 | push subscription | endpointはURL形式                                              |
