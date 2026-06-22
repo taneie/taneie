@@ -829,8 +829,8 @@ textarea.control {
 
 .own .messageBubble {
   position: relative;
-  background: var(--primary-weak);
-  border-color: #b8d0f3;
+  background: #e8f7ee;
+  border-color: #b9e4c8;
   border-top-right-radius: 6px;
 }
 
@@ -841,9 +841,9 @@ textarea.control {
   top: 12px;
   width: 12px;
   height: 12px;
-  background: var(--primary-weak);
-  border-right: 1px solid #b8d0f3;
-  border-bottom: 1px solid #b8d0f3;
+  background: #e8f7ee;
+  border-right: 1px solid #b9e4c8;
+  border-bottom: 1px solid #b9e4c8;
   transform: rotate(-45deg);
 }
 
