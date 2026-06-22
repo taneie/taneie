@@ -89,7 +89,19 @@
           @open-admin="setView('admin')"
         />
         <div v-if="!visiblePriorityJobs.length" :class="$style.empty">
-          条件に合う優先案件はありません。
+          <p>条件に合う優先案件はありません。</p>
+          <div :class="$style.emptyActions">
+            <BaseButton
+              v-if="prioritySearch"
+              variant="secondary"
+              @click="clearPrioritySearch"
+            >
+              条件をクリア
+            </BaseButton>
+            <BaseButton v-else variant="secondary" @click="setView('admin')">
+              案件管理へ
+            </BaseButton>
+          </div>
         </div>
         <div
           ref="prioritySentinel"
@@ -165,7 +177,19 @@
             @open-admin="setView('admin')"
           />
           <div v-if="!visibleApplications.length" :class="$style.empty">
-            条件に合う応募はありません。
+            <p>条件に合う応募はありません。</p>
+            <div :class="$style.emptyActions">
+              <BaseButton
+                v-if="applicationSearch"
+                variant="secondary"
+                @click="clearApplicationSearch"
+              >
+                条件をクリア
+              </BaseButton>
+              <BaseButton v-else variant="secondary" @click="setView('admin')">
+                応募管理へ
+              </BaseButton>
+            </div>
           </div>
           <div
             ref="applicationSentinel"
@@ -340,6 +364,14 @@ const filteredApplications = computed(() => {
 const visibleApplications = computed(() =>
   filteredApplications.value.slice(0, applicationLimit.value),
 );
+
+function clearPrioritySearch() {
+  prioritySearch.value = "";
+}
+
+function clearApplicationSearch() {
+  applicationSearch.value = "";
+}
 
 watch(prioritySearch, () => {
   priorityLimit.value = 5;
@@ -572,6 +604,18 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
+.empty p {
+  margin: 0;
+}
+
+.emptyActions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .sentinel {
   width: 100%;
   height: 1px;
@@ -637,6 +681,11 @@ onBeforeUnmount(() => {
   }
 
   .actionCount {
+    width: 100%;
+  }
+
+  .emptyActions,
+  .emptyActions button {
     width: 100%;
   }
 }

@@ -49,7 +49,12 @@
           @preview="selectPreview"
         />
         <div v-if="filteredFreelancers.length === 0" :class="$style.empty">
-          該当する候補者がいません。
+          <p>該当する候補者がいません。</p>
+          <div :class="$style.emptyActions">
+            <BaseButton variant="secondary" @click="clearScoutFilter">
+              条件をクリア
+            </BaseButton>
+          </div>
         </div>
       </div>
     </section>
@@ -137,7 +142,12 @@
           v-if="!scoutJobPicker.loading && scoutJobPicker.jobs.length === 0"
           :class="$style.empty"
         >
-          この候補者にスカウト可能な案件がありません。
+          <p>この候補者にスカウト可能な案件がありません。</p>
+          <div :class="$style.emptyActions">
+            <BaseButton variant="secondary" @click="clearScoutJobKeyword">
+              条件をクリア
+            </BaseButton>
+          </div>
         </div>
         <div v-if="scoutJobPicker.loading" :class="$style.empty">
           案件を検索しています。
@@ -186,6 +196,11 @@ const scoutModalRef = useModalA11y(
   computed(() => scoutJobPicker.value.open),
   closeScoutJobPicker,
 );
+
+function clearScoutJobKeyword() {
+  scoutJobPicker.value.keyword = "";
+  void searchScoutableJobs();
+}
 </script>
 
 <style module>
@@ -263,6 +278,18 @@ const scoutModalRef = useModalA11y(
   border-radius: 8px;
   background: #fbfdff;
   text-align: center;
+}
+
+.empty p {
+  margin: 0;
+}
+
+.emptyActions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .modalBackdrop {
@@ -429,6 +456,11 @@ const scoutModalRef = useModalA11y(
   .actions button,
   .modalActions button,
   .jobSearch button {
+    width: 100%;
+  }
+
+  .emptyActions,
+  .emptyActions button {
     width: 100%;
   }
 

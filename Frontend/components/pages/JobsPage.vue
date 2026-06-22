@@ -97,7 +97,12 @@
           @open-admin="setView('admin')"
         />
         <div v-if="filteredJobs.length === 0 && !jobsLoading" :class="$style.empty">
-          条件に合う案件がありません。
+          <p>条件に合う案件がありません。</p>
+          <div :class="$style.emptyActions">
+            <BaseButton variant="secondary" @click="clearJobFilter">
+              条件をクリア
+            </BaseButton>
+          </div>
         </div>
         <div ref="loadMoreTrigger" :class="$style.loadMoreSentinel" aria-hidden="true" />
         <div v-if="jobsLoading" :class="$style.loadingMore">
@@ -257,6 +262,18 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
+.empty p {
+  margin: 0;
+}
+
+.emptyActions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .loadMoreSentinel {
   width: 100%;
   height: 1px;
@@ -376,6 +393,11 @@ onBeforeUnmount(() => {
 
   .actions button,
   .loadMoreButton {
+    width: 100%;
+  }
+
+  .emptyActions,
+  .emptyActions button {
     width: 100%;
   }
 }
