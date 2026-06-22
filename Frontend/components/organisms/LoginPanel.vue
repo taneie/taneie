@@ -1236,25 +1236,21 @@ onBeforeUnmount(() => {
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
+  gap: 12px;
+  align-items: center;
   overflow: hidden;
-  padding: 18px;
-  border-color: rgba(185, 207, 235, 0.95);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98)),
-    #fff;
+  padding: 16px 16px 16px 18px;
+  border-color: var(--line);
+  background: #fff;
 }
 
-.featureGrid article::after {
+.featureGrid article::before {
   content: "";
   position: absolute;
-  right: -34px;
-  top: -38px;
-  width: 110px;
-  height: 110px;
-  border-radius: 999px;
-  background: rgba(29, 95, 211, 0.07);
+  inset: 14px auto 14px 0;
+  width: 4px;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(180deg, var(--primary), var(--cyan));
   pointer-events: none;
 }
 
@@ -1265,14 +1261,13 @@ onBeforeUnmount(() => {
   height: 42px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(169, 197, 237, 0.95);
-  border-radius: 12px;
-  background: linear-gradient(180deg, var(--primary), var(--primary-strong));
-  color: #fff;
-  font-size: 20px;
+  border: 1px solid #b8cff0;
+  border-radius: 8px;
+  background: #f4f8fe;
+  color: var(--primary-strong);
+  font-size: 18px;
   font-weight: 900;
   line-height: 1;
-  box-shadow: 0 10px 22px rgba(29, 95, 211, 0.18);
 }
 
 .featureBody {
@@ -1284,8 +1279,8 @@ onBeforeUnmount(() => {
 .featureBody strong {
   display: block;
   color: #0d2749;
-  font-size: 16px;
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .featureBody p {
@@ -1714,16 +1709,16 @@ onBeforeUnmount(() => {
 
   .featureGrid article {
     grid-template-columns: 42px minmax(0, 1fr);
-    gap: 14px;
-    padding: 14px;
-    border-radius: 12px;
+    gap: 12px;
+    padding: 14px 14px 14px 18px;
+    border-radius: 8px;
   }
 
   .featureIcon {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
-    font-size: 20px;
+    border-radius: 8px;
+    font-size: 18px;
     margin: auto 0;
   }
 
