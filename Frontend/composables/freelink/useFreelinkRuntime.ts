@@ -775,7 +775,7 @@ const activeChatMessages = computed(() => {
 
   return state.value.messages
     .filter((message) => message.freelancerId === freelancerId)
-    .sort((a, b) => b.at.localeCompare(a.at));
+    .sort((a, b) => a.at.localeCompare(b.at));
 });
 
 const currentUnreadChatCount = computed(

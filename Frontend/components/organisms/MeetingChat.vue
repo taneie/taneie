@@ -171,7 +171,10 @@
         <TagBadge tone="teal">{{ selectedFreelancer.name }}</TagBadge>
       </div>
       <div :class="$style.panelBody">
-        <div :class="[$style.messageList, $style.conversation]">
+        <div
+          ref="messageListRef"
+          :class="[$style.messageList, $style.conversation]"
+        >
           <div
             v-for="message in activeChatMessages"
             :key="message.id"
@@ -234,7 +237,7 @@
 
 <script setup lang="ts">
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import type { Message } from "~/composables/freelink/types";
 
 const {
@@ -267,6 +270,7 @@ const {
 const candidates = ref<string[]>([""]);
 const body = ref("");
 const rescheduleMeetingId = ref("");
+const messageListRef = ref<HTMLElement | null>(null);
 const emptyMeetingText = computed(() =>
   meetingThreadMode.value === "job"
     ? "この案件の面談候補はまだありません。"
@@ -398,8 +402,19 @@ function removeCandidate(index: number) {
   if (!candidates.value.length) candidates.value.push("");
 }
 
+async function scrollChatToBottom() {
+  await nextTick();
+  const target = messageListRef.value;
+  if (!target) return;
+  target.scrollTop = target.scrollHeight;
+  requestAnimationFrame(() => {
+    target.scrollTop = target.scrollHeight;
+  });
+}
+
 onMounted(() => {
   void markActiveChatAsRead();
+  void scrollChatToBottom();
 });
 
 watch(
@@ -411,6 +426,7 @@ watch(
   ],
   () => {
     void markActiveChatAsRead();
+    void scrollChatToBottom();
   },
 );
 
