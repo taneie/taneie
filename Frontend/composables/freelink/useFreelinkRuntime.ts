@@ -774,13 +774,7 @@ const activeChatMessages = computed(() => {
   if (!freelancerId) return [];
 
   return state.value.messages
-    .filter((message) => {
-      if (message.freelancerId !== freelancerId) return false;
-      if (meetingThreadMode.value === "job") {
-        return Boolean(message.jobId);
-      }
-      return !message.jobId || message.messageType === "scout";
-    })
+    .filter((message) => message.freelancerId === freelancerId)
     .sort((a, b) => b.at.localeCompare(a.at));
 });
 
@@ -1780,20 +1774,11 @@ async function sendMessage(body: string) {
     return false;
   }
 
-  if (meetingThreadMode.value === "job" && !activeMeetingJobId.value) {
-    showToast("案件面談に紐づける応募案件を選択してください。");
-    return false;
-  }
-
   try {
     const message = await apiRequest<Message>("/messages", {
       method: "POST",
       body: JSON.stringify({
         freelancerProfileId: isSales ? freelancerId : undefined,
-        jobId:
-          meetingThreadMode.value === "job"
-            ? activeMeetingJobId.value
-            : undefined,
         body: trimmedBody,
         messageType: "chat",
       }),

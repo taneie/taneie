@@ -281,14 +281,13 @@ salesは `freelancerProfileId` クエリで対象者を指定できる。
 {
   "freelancerProfileId": "uuid",
   "receiverUserId": "uuid",
-  "jobId": "uuid",
   "body": "面談候補を確認しました。",
   "messageType": "chat"
 }
 ```
 
 `messageType` は `chat`, `scout`, `alive_check`, `system` のいずれか。
-`jobId` を指定した `chat` は応募済み案件に紐づく案件チャットとして扱う。案件チャットの送信は初回面談完了を必須にしない。
+`chat` は案件ごとに分けず、求職者単位の共通スレッドとして扱う。`jobId` はスカウトなど、メッセージから案件情報へ遷移する用途で利用する。
 
 ## 10. Web Push API
 

@@ -167,15 +167,10 @@
 
     <section :class="[$style.panel, $style.chatPanel]">
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">
-          {{ meetingThreadMode === "job" ? "案件面談チャット" : "初回面談チャット" }}
-        </h2>
+        <h2 :class="$style.panelTitle">チャット</h2>
         <TagBadge tone="teal">{{ selectedFreelancer.name }}</TagBadge>
       </div>
       <div :class="$style.panelBody">
-        <div v-if="meetingThreadMode === 'job'" :class="$style.notice">
-          {{ selectedJobTitle }}
-        </div>
         <div :class="[$style.messageList, $style.conversation]">
           <div
             v-for="message in activeChatMessages"
@@ -272,20 +267,13 @@ const {
 const candidates = ref<string[]>([""]);
 const body = ref("");
 const rescheduleMeetingId = ref("");
-const selectedJobTitle = computed(() =>
-  meetingThreadMode.value === "job" && activeMeetingApplication.value
-    ? jobTitle(activeMeetingApplication.value.jobId)
-    : "",
-);
 const emptyMeetingText = computed(() =>
   meetingThreadMode.value === "job"
     ? "この案件の面談候補はまだありません。"
     : "この求職者の初回面談候補はまだありません。",
 );
-const emptyChatText = computed(() =>
-  meetingThreadMode.value === "job"
-    ? "この案件面談のメッセージはまだありません。"
-    : "初回面談のメッセージはまだありません。",
+const emptyChatText = computed(
+  () => "この求職者とのメッセージはまだありません。",
 );
 const canShowMeetingForm = computed(
   () =>
