@@ -73,7 +73,7 @@ async function main() {
     email: "sales@freelink.jp",
     passwordHash: salesPassword,
     role: "sales",
-    name: "Freelink 営業",
+    name: "営業",
   });
 
   const freelancer = await upsertSeedUser({

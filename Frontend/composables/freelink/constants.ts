@@ -60,7 +60,7 @@ export const demoAccounts: Account[] = [
     email: "sales@freelink.jp",
     password: "sales123",
     role: "sales",
-    name: "Freelink 営業",
+    name: "営業",
     startView: "dashboard",
   },
 ];
