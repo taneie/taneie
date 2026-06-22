@@ -1,5 +1,5 @@
 <template>
-  <header :class="$style.topbar" data-print-hidden="true">
+  <header ref="topbarRef" :class="$style.topbar" data-print-hidden="true">
     <div :class="$style.topbarInner">
       <div :class="$style.brand">
         <BrandMark />
@@ -49,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 
 const {
@@ -60,19 +61,50 @@ const {
   logout,
   roleLabel,
 } = useFreelinkRuntime();
+
+const topbarRef = ref<HTMLElement | null>(null);
+let headerObserver: ResizeObserver | undefined;
+
+function syncHeaderHeight() {
+  if (!import.meta.client || !topbarRef.value) return;
+  document.documentElement.style.setProperty(
+    "--app-header-height",
+    `${Math.ceil(topbarRef.value.getBoundingClientRect().height)}px`,
+  );
+}
+
+onMounted(async () => {
+  await nextTick();
+  syncHeaderHeight();
+  headerObserver = new ResizeObserver(syncHeaderHeight);
+  if (topbarRef.value) headerObserver.observe(topbarRef.value);
+  window.addEventListener("resize", syncHeaderHeight);
+});
+
+onBeforeUnmount(() => {
+  headerObserver?.disconnect();
+  if (import.meta.client) {
+    window.removeEventListener("resize", syncHeaderHeight);
+    document.documentElement.style.removeProperty("--app-header-height");
+  }
+});
 </script>
 
 <style module>
 .topbar {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 10;
+  left: 0;
+  right: 0;
+  z-index: 60;
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
   background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(14px);
+  max-height: min(46dvh, 260px);
+  overflow-y: auto;
 }
 
 .topbarInner {
@@ -227,12 +259,12 @@ const {
 
 @media (max-width: 620px) {
   .topbar {
-    position: static;
+    position: fixed;
   }
 
   .topbarInner {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: center;
+    flex-flow: row wrap;
     padding: 11px 12px;
   }
 
@@ -243,6 +275,7 @@ const {
   }
 
   .nav {
+    order: 3;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: max-content;
@@ -264,6 +297,7 @@ const {
   }
 
   .accountBar {
+    order: 2;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;

@@ -41,11 +41,12 @@ watch(
 .appShell {
   min-height: 100vh;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: 1fr;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   overflow-x: hidden;
+  padding-top: calc(var(--app-header-height, 72px) + var(--app-header-gap, 14px));
 }
 
 .workspace {
@@ -69,6 +70,11 @@ watch(
 }
 
 @media (max-width: 620px) {
+  .appShell {
+    padding-top: calc(var(--app-header-height, 132px) + var(--app-header-gap, 12px));
+    margin-bottom: 40px;
+  }
+
   .workspace {
     padding: 14px 10px 28px;
   }
@@ -77,8 +83,5 @@ watch(
     padding: 12px;
   }
 
-  .appShell {
-    margin-bottom: 40px;
-  }
 }
 </style>

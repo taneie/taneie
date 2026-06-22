@@ -237,17 +237,32 @@ const applyButtonLabel = computed(() => {
 
 @media (max-width: 620px) {
   .card {
-    padding: 0;
-    overflow: hidden;
-    border-radius: 10px;
+    padding: 14px;
   }
 
   .desktopCard {
-    display: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .mobileCard {
-    display: block;
+    display: none;
+  }
+
+  .cardAside {
+    min-width: 0;
+    justify-items: start;
+    gap: 10px;
+  }
+
+  .desktopActions {
+    justify-content: stretch;
+  }
+
+  .applyButton {
+    width: 100%;
+    max-width: none;
   }
 
   .mobileSummary {

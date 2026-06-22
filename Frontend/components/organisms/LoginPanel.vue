@@ -400,17 +400,20 @@ function scrollToRegister() {
 <style module>
 .landingShell {
   min-height: 100vh;
+  padding-top: 72px;
   background:
     radial-gradient(circle at top left, rgba(29, 95, 211, 0.14), transparent 34%),
     linear-gradient(180deg, #eef6ff 0%, #f7faff 42%, #f4f7fb 100%);
 }
 
 .landingHeader {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 30;
+  left: 0;
+  right: 0;
+  z-index: 60;
   border-bottom: 1px solid rgba(215, 224, 236, 0.78);
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(16px);
 }
 
@@ -439,10 +442,21 @@ function scrollToRegister() {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
   margin-left: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.headerNav::-webkit-scrollbar {
+  display: none;
 }
 
 .headerNav a {
+  flex: 0 0 auto;
   padding: 9px 12px;
   border-radius: 6px;
   color: var(--muted);
@@ -459,6 +473,7 @@ function scrollToRegister() {
 .headerActions {
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 8px;
 }
 
@@ -556,7 +571,7 @@ function scrollToRegister() {
 
 .landingLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(390px, 460px);
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
@@ -1102,24 +1117,7 @@ function scrollToRegister() {
   text-underline-offset: 3px;
 }
 
-@media (min-width: 981px) {
-  .registerPanel {
-    position: fixed;
-    z-index: 20;
-    top: 96px;
-    right: max(20px, calc((100vw - 1280px) / 2 + 20px));
-    width: min(460px, calc(100vw - 40px));
-    max-height: calc(100dvh - 116px);
-    overflow: auto;
-    backdrop-filter: blur(10px);
-  }
-}
-
 @media (max-width: 980px) {
-  .headerNav {
-    display: none;
-  }
-
   .landingLayout,
   .featureGrid,
   .projectGrid,
@@ -1140,19 +1138,61 @@ function scrollToRegister() {
 }
 
 @media (max-width: 620px) {
+  .landingShell {
+    padding-top: 132px;
+  }
+
   .headerInner {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 10px;
     padding: 12px;
   }
 
   .brand {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
     justify-content: flex-start;
   }
 
+  .headerNav {
+    order: 2;
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 2px;
+  }
+
+  .headerActions {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 620px) and (min-width: 421px) {
+  .headerInner {
+    flex-wrap: wrap;
+  }
+
+  .headerActions {
+    width: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .landingShell {
+    padding-top: 176px;
+  }
+
+  .headerInner {
+    flex-wrap: wrap;
+  }
+
+  .brand,
+  .headerNav,
   .headerActions {
     width: 100%;
+  }
+
+  .headerActions {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
@@ -1469,6 +1509,47 @@ function scrollToRegister() {
   .registerGrid > :nth-last-child(2),
   .registerGrid > :last-child {
     grid-column: auto;
+  }
+
+  .landingFooter {
+    padding: 18px 12px 28px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 620px) {
+  .landingMain {
+    padding: 22px 12px 40px;
+  }
+
+  .heroContent h1 {
+    line-height: 1.14;
+    font-size: 24px;
+  }
+
+  .heroActions {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-top: 22px;
+  }
+
+  .stats,
+  .registerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroVisual img,
+  .visualSection img {
+    aspect-ratio: 4 / 3;
+  }
+
+  .heroVisual::after {
+    display: none;
+  }
+
+  .registerPanel {
+    padding: 16px 16px 24px 16px;
   }
 
   .landingFooter {
