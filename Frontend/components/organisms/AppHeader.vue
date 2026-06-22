@@ -1,9 +1,14 @@
 <template>
   <header ref="topbarRef" :class="$style.topbar" data-print-hidden="true">
     <div :class="$style.topbarInner">
-      <div :class="$style.brand">
+      <button
+        type="button"
+        :class="$style.brand"
+        aria-label="トップページへ移動"
+        @click="goRoleHome"
+      >
         <BrandMark />
-      </div>
+      </button>
 
       <nav :class="$style.nav" aria-label="メイン">
         <button
@@ -63,6 +68,10 @@ const {
 
 const topbarRef = ref<HTMLElement | null>(null);
 let headerObserver: ResizeObserver | undefined;
+
+function goRoleHome() {
+  void setView(currentRole.value === "sales" ? "dashboard" : "jobs");
+}
 
 function syncHeaderHeight() {
   if (!import.meta.client || !topbarRef.value) return;
@@ -124,6 +133,17 @@ onBeforeUnmount(() => {
   min-width: 0;
   max-width: 100%;
   line-height: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  appearance: none;
+}
+
+.brand:focus-visible {
+  outline: 3px solid rgba(29, 78, 137, 0.24);
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .nav {
