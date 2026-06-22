@@ -62,10 +62,12 @@
     @click.self="closeScoutJobPicker"
   >
     <section
+      ref="scoutModalRef"
       :class="$style.modalPanel"
       role="dialog"
       aria-modal="true"
       aria-labelledby="scout-job-picker-title"
+      tabindex="-1"
     >
       <div :class="$style.modalHeader">
         <div>
@@ -161,6 +163,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
+import { useModalA11y } from "~/composables/freelink/useModalA11y";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 const {
   scoutFilters,
@@ -179,6 +182,10 @@ const {
 } = useFreelinkRuntime();
 
 useBodyScrollLock(computed(() => scoutJobPicker.value.open));
+const scoutModalRef = useModalA11y(
+  computed(() => scoutJobPicker.value.open),
+  closeScoutJobPicker,
+);
 </script>
 
 <style module>

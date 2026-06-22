@@ -7,10 +7,12 @@
       @click.self="$emit('close')"
     >
       <section
+        ref="modalRef"
         :class="$style.modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="privacy-policy-title"
+        tabindex="-1"
       >
         <header :class="$style.header">
           <div>
@@ -87,16 +89,19 @@
 <script setup lang="ts">
 import { toRef } from "vue";
 import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
+import { useModalA11y } from "~/composables/freelink/useModalA11y";
 
 const props = defineProps<{
   open: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   close: [];
 }>();
 
 useBodyScrollLock(toRef(props, "open"));
+
+const modalRef = useModalA11y(toRef(props, "open"), () => emit("close"));
 </script>
 
 <style module>

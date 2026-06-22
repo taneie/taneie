@@ -6,11 +6,13 @@
       role="presentation"
     >
       <section
+        ref="modalRef"
         :class="$style.dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="unsaved-title"
         aria-describedby="unsaved-description"
+        tabindex="-1"
       >
         <div :class="$style.iconWrap" aria-hidden="true">
           <AppIcon name="shield" />
@@ -36,11 +38,16 @@
 
 <script setup lang="ts">
 import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
+import { useModalA11y } from "~/composables/freelink/useModalA11y";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 
 const { unsavedConfirmVisible, resolveUnsavedConfirm } = useFreelinkRuntime();
 
 useBodyScrollLock(unsavedConfirmVisible);
+
+const modalRef = useModalA11y(unsavedConfirmVisible, () =>
+  resolveUnsavedConfirm(false),
+);
 </script>
 
 <style module>
