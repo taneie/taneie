@@ -28,6 +28,37 @@
     <MetricCard label="面談候補" :value="pendingMeetings" caption="未確定" />
   </section>
 
+  <details :class="$style.panel" open>
+    <summary :class="$style.panelHeader">
+      <div :class="$style.panelHeaderText">
+        <h2 :class="$style.panelTitle">次のアクション</h2>
+        <span :class="$style.panelNote">{{ salesNextActions.length }}件</span>
+      </div>
+    </summary>
+    <div :class="[$style.panelBody, $style.actionList]">
+      <div
+        v-for="action in salesNextActions"
+        :key="action.id"
+        :class="$style.actionItem"
+      >
+        <div :class="$style.actionText">
+          <span :class="$style.actionCount">{{ action.count }}</span>
+          <div>
+            <h3>{{ action.title }}</h3>
+            <p>{{ action.body }}</p>
+          </div>
+        </div>
+        <BaseButton
+          variant="secondary"
+          :icon="action.icon"
+          @click="action.onClick"
+        >
+          {{ action.label }}
+        </BaseButton>
+      </div>
+    </div>
+  </details>
+
   <div :class="[$style.grid, $style.two]">
     <details :class="$style.panel" open>
       <summary :class="$style.panelHeader">
@@ -150,17 +181,20 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import type { IconName } from "~/composables/freelink/types";
 
 const {
   state,
   currentRole,
   setView,
+  selectChatFreelancer,
   hasApplied,
   applyJob,
   aliveCheck,
   estimateRate,
   getFreelancer,
   getJob,
+  currentUnreadChatCount,
 } = useFreelinkRuntime();
 
 const prioritySearch = ref("");
@@ -171,6 +205,16 @@ const prioritySentinel = ref<HTMLElement | null>(null);
 const applicationSentinel = ref<HTMLElement | null>(null);
 let priorityObserver: IntersectionObserver | null = null;
 let applicationObserver: IntersectionObserver | null = null;
+
+interface SalesNextAction {
+  id: string;
+  title: string;
+  body: string;
+  count: string;
+  label: string;
+  icon: IconName;
+  onClick: () => void;
+}
 
 const registeredUsers = computed(
   () => state.value.freelancers.length
@@ -196,6 +240,71 @@ const pendingMeetings = computed(
     state.value.meetingRequests.filter((meeting) => meeting.status !== "確定")
       .length,
 );
+const firstUnreadFreelancerId = computed(
+  () =>
+    state.value.messages.find(
+      (message) =>
+        message.channel === "freelancer" && !message.readAt && message.freelancerId,
+    )?.freelancerId || "",
+);
+const latestAliveCheckAt = computed(() => state.value.aliveChecks.at(-1)?.at || "");
+const salesNextActions = computed<SalesNextAction[]>(() => {
+  const actions: SalesNextAction[] = [];
+
+  if (currentUnreadChatCount.value > 0) {
+    actions.push({
+      id: "unread-chat",
+      title: "未読チャットの確認",
+      body: "求職者からの返信を確認して、次の連絡を進めます。",
+      count: `${currentUnreadChatCount.value}件`,
+      label: "チャットへ",
+      icon: "send",
+      onClick: () => {
+        if (firstUnreadFreelancerId.value) {
+          selectChatFreelancer(firstUnreadFreelancerId.value);
+          return;
+        }
+        void setView("meeting");
+      },
+    });
+  }
+
+  if (pendingMeetings.value > 0) {
+    actions.push({
+      id: "pending-meetings",
+      title: "面談候補日の調整",
+      body: "候補または再調整の面談を確認して、確定まで進めます。",
+      count: `${pendingMeetings.value}件`,
+      label: "面談へ",
+      icon: "calendar",
+      onClick: () => void setView("meeting"),
+    });
+  }
+
+  if (activeApplications.value > 0) {
+    actions.push({
+      id: "active-applications",
+      title: "選考中応募の更新",
+      body: "応募状況を更新し、必要なフォロー連絡を行います。",
+      count: `${activeApplications.value}件`,
+      label: "応募管理へ",
+      icon: "briefcase",
+      onClick: () => void setView("admin"),
+    });
+  }
+
+  actions.push({
+    id: "alive-check",
+    title: "稼働状況の確認",
+    body: `即稼働人材へ確認を送信します。最新 ${latestAliveCheckAt.value || "未実施"}`,
+    count: `${readyFreelancers.value}名`,
+    label: "確認を送る",
+    icon: "send",
+    onClick: () => void aliveCheck(),
+  });
+
+  return actions;
+});
 const priorityJobs = computed(() => state.value.jobs.filter((job) => job.sortFlag));
 const filteredPriorityJobs = computed(() => {
   const keyword = prioritySearch.value.trim().toLowerCase();
@@ -380,6 +489,58 @@ onBeforeUnmount(() => {
   margin-bottom: 16px;
 }
 
+.actionList {
+  display: grid;
+  gap: 10px;
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.actionText {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.actionText h3 {
+  margin: 0;
+  color: #10294f;
+  font-size: 15px;
+}
+
+.actionText p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.actionCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  min-height: 40px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  background: #e9f1fc;
+  color: var(--primary-strong);
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .tableWrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -462,6 +623,20 @@ onBeforeUnmount(() => {
 
   .headerActions,
   .headerActions button {
+    width: 100%;
+  }
+
+  .actionItem,
+  .actionText {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .actionItem button {
+    width: 100%;
+  }
+
+  .actionCount {
     width: 100%;
   }
 }
