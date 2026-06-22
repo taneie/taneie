@@ -955,6 +955,49 @@ async function login(email: string, password: string) {
   }
 }
 
+async function requestPasswordReset(email: string) {
+  try {
+    const result = await apiRequest<{
+      message: string;
+      resetToken?: string;
+      expiresAt?: string;
+    }>("/auth/password-reset/request", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    showToast(result.message);
+    return result;
+  } catch (error) {
+    showToast(
+      error instanceof Error
+        ? error.message
+        : "パスワード再設定の申請に失敗しました。",
+    );
+    return null;
+  }
+}
+
+async function confirmPasswordReset(token: string, password: string) {
+  try {
+    const result = await apiRequest<{ message: string }>(
+      "/auth/password-reset/confirm",
+      {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
+      },
+    );
+    showToast(result.message);
+    return true;
+  } catch (error) {
+    showToast(
+      error instanceof Error
+        ? error.message
+        : "パスワードの再設定に失敗しました。",
+    );
+    return false;
+  }
+}
+
 async function loginWithDemo(role: Role) {
   if (!(await confirmDiscardChanges())) return;
   const account = demoAccounts.find((item) => item.role === role);
@@ -2416,6 +2459,8 @@ export function useFreelinkRuntime() {
     setMeetingThreadMode,
     selectMeetingApplication,
     login,
+    requestPasswordReset,
+    confirmPasswordReset,
     loginWithDemo,
     register,
     logout,

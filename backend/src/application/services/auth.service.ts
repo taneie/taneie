@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import {
   hashPassword,
   signToken,
@@ -80,6 +80,67 @@ export class AuthService {
     return { token, user: toAuthUser(user) };
   }
 
+  async requestPasswordReset(email: string) {
+    const user = await findUserByEmailForAuth(this.db, email);
+    if (!user || !user.isActive) {
+      return { issued: false };
+    }
+
+    const token = randomBytes(32)
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+    const tokenHash = hashResetToken(token);
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 30);
+
+    await this.db.passwordResetToken.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+    await this.db.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    return { issued: true, token, expiresAt };
+  }
+
+  async resetPassword(token: string, password: string) {
+    const tokenHash = hashResetToken(token);
+    const resetToken = await this.db.passwordResetToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+    if (
+      !resetToken ||
+      resetToken.usedAt ||
+      resetToken.expiresAt.getTime() < Date.now() ||
+      !resetToken.user.isActive
+    ) {
+      throw new AppError(
+        400,
+        "リセットリンクが無効または期限切れです。",
+        "INVALID_PASSWORD_RESET_TOKEN",
+      );
+    }
+
+    const passwordHash = await hashPassword(password);
+    await this.db.$transaction([
+      this.db.user.update({
+        where: { id: resetToken.userId },
+        data: { passwordHash },
+      }),
+      this.db.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+  }
+
   async getCurrentUser(userId: string) {
     const user = await this.db.user.findUniqueOrThrow({
       where: { id: userId },
@@ -93,4 +154,8 @@ export class AuthService {
       freelancerId: user.freelancerProfile?.id,
     };
   }
+}
+
+function hashResetToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
 }

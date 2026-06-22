@@ -23,11 +23,15 @@
 
         <div v-if="showLogin" :class="$style.loginPopover">
           <div :class="$style.popoverHead">
-            <strong>ログイン</strong>
-            <button type="button" aria-label="ログインを閉じる" @click="showLogin = false">×</button>
+            <strong>{{ authPopoverTitle }}</strong>
+            <button type="button" aria-label="ログインを閉じる" @click="closeLoginPopover">×</button>
           </div>
 
-          <form :class="[$style.formGrid, $style.one]" @submit.prevent="submitLogin">
+          <form
+            v-if="passwordResetMode === 'login'"
+            :class="[$style.formGrid, $style.one]"
+            @submit.prevent="submitLogin"
+          >
             <FormInput
               v-model="loginForm.email"
               label="メールアドレス"
@@ -43,9 +47,72 @@
               autocomplete="current-password"
             />
             <BaseButton type="submit" icon="user">ログイン</BaseButton>
+            <button
+              type="button"
+              :class="$style.textButton"
+              @click="openPasswordResetRequest"
+            >
+              パスワードを忘れた方
+            </button>
           </form>
 
-          <div v-if="showDemoLogin" :class="$style.demoList">
+          <form
+            v-else-if="passwordResetMode === 'request'"
+            :class="[$style.formGrid, $style.one]"
+            @submit.prevent="submitPasswordResetRequest"
+          >
+            <FormInput
+              v-model="passwordResetRequestForm.email"
+              label="メールアドレス"
+              name="resetEmail"
+              type="email"
+              autocomplete="email"
+              :error="passwordResetErrors.email"
+            />
+            <BaseButton type="submit" icon="send">再設定メールを送る</BaseButton>
+            <button type="button" :class="$style.textButton" @click="passwordResetMode = 'login'">
+              ログインに戻る
+            </button>
+          </form>
+
+          <form
+            v-else
+            :class="[$style.formGrid, $style.one]"
+            @submit.prevent="submitPasswordResetConfirm"
+          >
+            <p v-if="devPasswordResetToken" :class="$style.resetHint">
+              開発環境用のリセットコードを自動入力しました。
+            </p>
+            <FormInput
+              v-model="passwordResetConfirmForm.token"
+              label="リセットコード"
+              name="resetToken"
+              autocomplete="one-time-code"
+              :error="passwordResetErrors.token"
+            />
+            <FormInput
+              v-model="passwordResetConfirmForm.password"
+              label="新しいパスワード"
+              name="resetPassword"
+              type="password"
+              autocomplete="new-password"
+              :error="passwordResetErrors.password"
+            />
+            <FormInput
+              v-model="passwordResetConfirmForm.passwordConfirm"
+              label="新しいパスワード確認"
+              name="resetPasswordConfirm"
+              type="password"
+              autocomplete="new-password"
+              :error="passwordResetErrors.passwordConfirm"
+            />
+            <BaseButton type="submit" icon="user">パスワードを再設定</BaseButton>
+            <button type="button" :class="$style.textButton" @click="passwordResetMode = 'request'">
+              メールアドレス入力に戻る
+            </button>
+          </form>
+
+          <div v-if="showDemoLogin && passwordResetMode === 'login'" :class="$style.demoList">
             <button type="button" @click="startDemoLogin('freelancer')">
               <strong>求職者デモ</strong>
               <span>freelancer@example.com</span>
@@ -280,13 +347,15 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 import type { RegisterInput } from "~/composables/freelink/types";
 
 const {
   login,
   loginWithDemo,
+  requestPasswordReset,
+  confirmPasswordReset,
   register,
   markDirty,
   confirmDiscardChanges,
@@ -299,9 +368,12 @@ const flowImageSrc = "/images/lp-flow-visual.png";
 const showLogin = ref(false);
 const showPrivacyPolicy = ref(false);
 const privacyAccepted = ref(false);
+const passwordResetMode = ref<"login" | "request" | "confirm">("login");
+const devPasswordResetToken = ref("");
 const landingHeaderRef = ref<HTMLElement | null>(null);
 const showDemoLogin = import.meta.dev;
 const registerErrors = reactive<Record<string, string>>({});
+const passwordResetErrors = reactive<Record<string, string>>({});
 let landingHeaderObserver: ResizeObserver | undefined;
 
 const loginForm = reactive({
@@ -315,6 +387,22 @@ const registerForm = reactive({
   password: "",
   passwordConfirm: ""
 })
+
+const passwordResetRequestForm = reactive({
+  email: ""
+});
+
+const passwordResetConfirmForm = reactive({
+  token: "",
+  password: "",
+  passwordConfirm: ""
+});
+
+const authPopoverTitle = computed(() => {
+  if (passwordResetMode.value === "request") return "パスワード再設定";
+  if (passwordResetMode.value === "confirm") return "新しいパスワード";
+  return "ログイン";
+});
 
 const projects = [
   {
@@ -347,6 +435,77 @@ async function submitLogin() {
   if (!(await confirmDiscardChanges())) return;
   void requestBrowserNotificationPermission();
   login(loginForm.email, loginForm.password);
+}
+
+function closeLoginPopover() {
+  showLogin.value = false;
+  passwordResetMode.value = "login";
+  clearPasswordResetErrors();
+}
+
+function openPasswordResetRequest() {
+  passwordResetRequestForm.email = loginForm.email;
+  passwordResetMode.value = "request";
+  clearPasswordResetErrors();
+}
+
+async function submitPasswordResetRequest() {
+  clearPasswordResetErrors();
+  if (!passwordResetRequestForm.email.trim()) {
+    passwordResetErrors.email = "メールアドレスを入力してください。";
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(passwordResetRequestForm.email.trim())) {
+    passwordResetErrors.email = "メールアドレスの形式で入力してください。";
+    return;
+  }
+
+  const result = await requestPasswordReset(passwordResetRequestForm.email);
+  if (!result) return;
+
+  devPasswordResetToken.value = result.resetToken || "";
+  passwordResetConfirmForm.token = result.resetToken || "";
+  passwordResetMode.value = "confirm";
+}
+
+async function submitPasswordResetConfirm() {
+  clearPasswordResetErrors();
+  if (!passwordResetConfirmForm.token.trim()) {
+    passwordResetErrors.token = "リセットコードを入力してください。";
+  }
+  if (!passwordResetConfirmForm.password) {
+    passwordResetErrors.password = "新しいパスワードを入力してください。";
+  } else if (passwordResetConfirmForm.password.length < 8) {
+    passwordResetErrors.password = "パスワードは8文字以上で入力してください。";
+  }
+  if (!passwordResetConfirmForm.passwordConfirm) {
+    passwordResetErrors.passwordConfirm = "確認用パスワードを入力してください。";
+  } else if (
+    passwordResetConfirmForm.password !== passwordResetConfirmForm.passwordConfirm
+  ) {
+    passwordResetErrors.passwordConfirm = "確認用パスワードが一致しません。";
+  }
+  if (Object.keys(passwordResetErrors).length) return;
+
+  const succeeded = await confirmPasswordReset(
+    passwordResetConfirmForm.token,
+    passwordResetConfirmForm.password,
+  );
+  if (!succeeded) return;
+
+  loginForm.email = passwordResetRequestForm.email;
+  loginForm.password = "";
+  passwordResetConfirmForm.token = "";
+  passwordResetConfirmForm.password = "";
+  passwordResetConfirmForm.passwordConfirm = "";
+  devPasswordResetToken.value = "";
+  passwordResetMode.value = "login";
+}
+
+function clearPasswordResetErrors() {
+  Object.keys(passwordResetErrors).forEach((key) => {
+    delete passwordResetErrors[key];
+  });
 }
 
 function startDemoLogin(role: "freelancer" | "sales") {
@@ -656,6 +815,30 @@ onBeforeUnmount(() => {
   color: var(--muted);
   font-size: 12px;
   overflow-wrap: anywhere;
+}
+
+.textButton {
+  justify-self: center;
+  width: fit-content;
+  padding: 0;
+  background: transparent;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.resetHint {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #b8cff0;
+  border-radius: 6px;
+  background: #f4f8fe;
+  color: #173a66;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.6;
 }
 
 .landingMain {

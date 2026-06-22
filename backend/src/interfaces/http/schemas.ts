@@ -119,6 +119,14 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const passwordResetRequestSchema = z.object({
+  email: z.string().trim().email().max(255),
+});
+
+export const passwordResetConfirmSchema = z.object({
+  token: z.string().trim().min(32).max(255),
+  password: z.string().min(8).max(128),
+});
 
 export const listJobsQuerySchema = z.object({
   keyword: z.string().trim().optional(),

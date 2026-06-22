@@ -8,7 +8,12 @@ import {
   validateBody,
   type AuthedRequest,
 } from "../middleware.js";
-import { loginSchema, registerSchema } from "../schemas.js";
+import {
+  loginSchema,
+  passwordResetConfirmSchema,
+  passwordResetRequestSchema,
+  registerSchema,
+} from "../schemas.js";
 
 export function registerAuthRoutes(app: Express, authService: AuthService) {
   app.post(
@@ -37,6 +42,35 @@ export function registerAuthRoutes(app: Express, authService: AuthService) {
           "INVALID_CREDENTIALS",
         );
       res.json(result);
+    }),
+  );
+
+  app.post(
+    "/api/auth/password-reset/request",
+    validateBody(passwordResetRequestSchema),
+    asyncHandler(async (req, res) => {
+      const result = await authService.requestPasswordReset(req.body.email);
+      res.json({
+        message:
+          "登録済みのメールアドレスの場合、パスワード再設定の案内を送信しました。",
+        resetToken:
+          process.env.NODE_ENV === "production" || !result.issued
+            ? undefined
+            : result.token,
+        expiresAt:
+          process.env.NODE_ENV === "production" || !result.issued
+            ? undefined
+            : result.expiresAt,
+      });
+    }),
+  );
+
+  app.post(
+    "/api/auth/password-reset/confirm",
+    validateBody(passwordResetConfirmSchema),
+    asyncHandler(async (req, res) => {
+      await authService.resetPassword(req.body.token, req.body.password);
+      res.json({ message: "パスワードを再設定しました。" });
     }),
   );
 

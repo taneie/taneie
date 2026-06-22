@@ -41,6 +41,7 @@ erDiagram
 | Prisma Model               | 物理テーブル                   | 概要                                       |
 | -------------------------- | ------------------------------ | ------------------------------------------ |
 | `User`                     | `users`                        | 認証ユーザー。求職者・営業の共通アカウント |
+| `PasswordResetToken`       | `password_reset_tokens`        | パスワード再設定用の期限付きトークン       |
 | `FreelancerProfile`        | `freelancer_profiles`          | 求職者プロフィール                         |
 | `Skill`                    | `skills`                       | スキルマスタ                               |
 | `FreelancerSkill`          | `freelancer_skills`            | 求職者とスキルの関連                       |

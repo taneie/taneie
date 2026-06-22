@@ -19,6 +19,8 @@
 | GET      | `/push/public-key`             | 不要 | -                  | Web Push公開鍵取得           |
 | POST     | `/auth/register`               | 不要 | -                  | 求職者登録                   |
 | POST     | `/auth/login`                  | 不要 | -                  | ログイン                     |
+| POST     | `/auth/password-reset/request` | 不要 | -                  | パスワード再設定申請         |
+| POST     | `/auth/password-reset/confirm` | 不要 | -                  | パスワード再設定             |
 | GET      | `/auth/me`                     | 必要 | freelancer / sales | ログインユーザー情報取得     |
 | GET      | `/bootstrap`                   | 必要 | freelancer / sales | 初期表示データ取得           |
 | GET      | `/jobs`                        | 必要 | freelancer / sales | 案件一覧取得                 |
@@ -77,6 +79,29 @@
 ### 3.2 ログイン
 
 `POST /api/auth/login`
+
+### 3.3 パスワード再設定申請
+
+`POST /api/auth/password-reset/request`
+
+登録済みメールアドレスの有無を外部に出さないため、常に同じ成功メッセージを返す。開発環境ではメール送信の代替として `resetToken` を返す。
+
+```json
+{
+  "email": "freelancer@example.com"
+}
+```
+
+### 3.4 パスワード再設定
+
+`POST /api/auth/password-reset/confirm`
+
+```json
+{
+  "token": "<reset-token>",
+  "password": "newPassword123"
+}
+```
 
 ```json
 {
