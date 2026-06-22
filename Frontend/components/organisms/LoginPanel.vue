@@ -45,8 +45,7 @@
             <BaseButton type="submit" icon="user">ログイン</BaseButton>
           </form>
 
-          <!-- 本番運用時に削除する -->
-          <div :class="$style.demoList">
+          <div v-if="showDemoLogin" :class="$style.demoList">
             <button type="button" @click="startDemoLogin('freelancer')">
               <strong>求職者デモ</strong>
               <span>freelancer@example.com</span>
@@ -66,10 +65,10 @@
           <section :class="$style.heroSection">
             <div :class="$style.heroContent">
               <p :class="$style.eyebrow">フリーランスエンジニア向け案件マッチング</p>
-              <h1>マージン開示で高単価。</h1><h1>あなたのスキルに最適な条件を最速提案。</h1>
-              <!-- <p :class="$style.heroLead">
-                マージン開示で高単価。あなたのスキルに最適な条件を最速提案。
-              </p> -->
+              <h1>
+                <span>マージン開示で高単価。</span>
+                <span>あなたのスキルに最適な条件を最速提案。</span>
+              </h1>
 
               <div :class="$style.heroActions">
                 <button type="button" :class="$style.primaryCta" @click="scrollToRegister">
@@ -110,8 +109,10 @@
           <section id="features" :class="$style.infoSection">
             <div :class="$style.sectionHead">
               <span>FEATURES</span>
-              <!-- 本番運用までに、h2の羅列を治す -->
-              <h2>最短1分で応募まで。</h2><h2>Freelinkが案件探しを自動化。</h2>
+              <h2>
+                <span>最短1分で応募まで。</span>
+                <span>Freelinkが案件探しを自動化。</span>
+              </h2>
             </div>
 
             <!-- p要素はPCだと表示するでOK -->
@@ -299,6 +300,7 @@ const showLogin = ref(false);
 const showPrivacyPolicy = ref(false);
 const privacyAccepted = ref(false);
 const landingHeaderRef = ref<HTMLElement | null>(null);
+const showDemoLogin = import.meta.dev;
 const registerErrors = reactive<Record<string, string>>({});
 let landingHeaderObserver: ResizeObserver | undefined;
 
@@ -644,6 +646,11 @@ onBeforeUnmount(() => {
   font-size: clamp(32px, 4.2vw, 56px);
   line-height: 1.08;
   letter-spacing: 0;
+}
+
+.heroContent h1 span,
+.sectionHead h2 span {
+  display: block;
 }
 
 .heroLead {
