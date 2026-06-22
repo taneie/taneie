@@ -25,9 +25,8 @@
               currentUnreadChatCount
             "
             :class="$style.unreadBadge"
-          >
-            {{ currentUnreadChatCount }}
-          </span>
+            aria-label="未読あり"
+          />
         </button>
       </nav>
 
@@ -93,13 +92,13 @@ onBeforeUnmount(() => {
 <style module>
 .topbar {
   position: fixed;
-  top: 0;
+  top: var(--safe-top);
   left: 0;
   right: 0;
   z-index: 60;
   width: 100%;
   max-width: 100%;
-  overflow-x: clip;
+  overflow-x: hidden;
   background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(14px);
@@ -115,7 +114,7 @@ onBeforeUnmount(() => {
   max-width: 100%;
   min-width: 0;
   margin: 0;
-  padding: 13px clamp(14px, 1.4vw, 24px);
+  padding: 13px max(var(--page-inline), var(--safe-right)) 13px max(var(--page-inline), var(--safe-left));
 }
 
 .brand {
@@ -148,11 +147,13 @@ onBeforeUnmount(() => {
   align-items: center;
   flex: 0 0 auto;
   gap: 7px;
-  height: 38px;
+  min-height: 38px;
   padding: 0 12px;
   background: transparent;
   color: var(--muted);
   border-radius: 6px;
+  font-size: 14px;
+  line-height: 1;
   white-space: nowrap;
 }
 
@@ -169,17 +170,13 @@ onBeforeUnmount(() => {
 }
 
 .unreadBadge {
-  display: inline-grid;
-  place-items: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  display: inline-block;
+  width: 9px;
+  min-width: 9px;
+  height: 9px;
+  padding: 0;
   border-radius: 999px;
   background: #d92d20;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 1;
 }
 
 .accountBar {
@@ -265,7 +262,7 @@ onBeforeUnmount(() => {
   .topbarInner {
     align-items: center;
     flex-flow: row wrap;
-    padding: 11px 12px;
+    padding: 11px max(12px, var(--safe-right)) 11px max(12px, var(--safe-left));
   }
 
   .accountBar {
@@ -288,7 +285,7 @@ onBeforeUnmount(() => {
   }
 
   .navButton {
-    height: 42px;
+    min-height: 42px;
     padding: 0 10px;
   }
 

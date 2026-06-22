@@ -32,10 +32,10 @@ onMounted(() => {
 
 <style module>
 .loginShell {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: max(24px, var(--safe-top)) max(24px, var(--safe-right)) max(24px, var(--safe-bottom)) max(24px, var(--safe-left));
   background:
     linear-gradient(135deg, rgba(29, 95, 211, 0.16), rgba(15, 140, 168, 0.09)),
     #edf5ff;

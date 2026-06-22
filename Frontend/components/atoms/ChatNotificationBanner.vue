@@ -35,13 +35,13 @@ const {
 <style module>
 .banner {
   position: fixed;
-  top: 72px;
-  right: clamp(12px, 1.4vw, 24px);
+  top: calc(var(--safe-top) + var(--app-header-height, 72px) + 10px);
+  right: max(var(--page-inline), var(--safe-right));
   z-index: 40;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
-  width: min(440px, calc(100vw - 24px));
+  width: min(440px, calc(100vw - (var(--page-inline) * 2)));
   border: 1px solid #b8d0f3;
   border-radius: 8px;
   background: #f8fbff;
@@ -100,9 +100,9 @@ const {
 
 @media (max-width: 620px) {
   .banner {
-    top: 12px;
-    left: 12px;
-    right: 12px;
+    top: calc(var(--safe-top) + var(--app-header-height, 132px) + 8px);
+    left: max(12px, var(--safe-left));
+    right: max(12px, var(--safe-right));
     width: auto;
   }
 }

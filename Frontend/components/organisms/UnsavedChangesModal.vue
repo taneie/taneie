@@ -35,9 +35,12 @@
 </template>
 
 <script setup lang="ts">
+import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 
 const { unsavedConfirmVisible, resolveUnsavedConfirm } = useFreelinkRuntime();
+
+useBodyScrollLock(unsavedConfirmVisible);
 </script>
 
 <style module>

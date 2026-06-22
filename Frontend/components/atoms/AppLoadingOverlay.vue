@@ -22,7 +22,7 @@ withDefaults(
 <style module>
 .overlay {
   position: fixed;
-  inset: 0;
+  inset: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   z-index: 1000;
   display: grid;
   place-items: center;

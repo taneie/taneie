@@ -159,6 +159,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 const {
   scoutFilters,
@@ -175,6 +177,8 @@ const {
   selectPreview,
   streamTone,
 } = useFreelinkRuntime();
+
+useBodyScrollLock(computed(() => scoutJobPicker.value.open));
 </script>
 
 <style module>

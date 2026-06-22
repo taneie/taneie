@@ -1,6 +1,6 @@
 <template>
   <div :class="$style.landingShell">
-    <header :class="$style.landingHeader">
+    <header ref="landingHeaderRef" :class="$style.landingHeader">
       <div :class="$style.headerInner">
         <div :class="$style.brand">
           <BrandMark />
@@ -279,7 +279,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 import type { RegisterInput } from "~/composables/freelink/types";
 
@@ -298,7 +298,9 @@ const flowImageSrc = "/images/lp-flow-visual.png";
 const showLogin = ref(false);
 const showPrivacyPolicy = ref(false);
 const privacyAccepted = ref(false);
+const landingHeaderRef = ref<HTMLElement | null>(null);
 const registerErrors = reactive<Record<string, string>>({});
+let landingHeaderObserver: ResizeObserver | undefined;
 
 const loginForm = reactive({
   email: "",
@@ -395,20 +397,55 @@ function validateRegisterForm() {
 function scrollToRegister() {
   document.getElementById("register-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+function syncLandingHeaderHeight() {
+  if (!import.meta.client || !landingHeaderRef.value) return;
+  document.documentElement.style.setProperty(
+    "--landing-header-height",
+    `${Math.ceil(landingHeaderRef.value.getBoundingClientRect().height)}px`,
+  );
+}
+
+onMounted(async () => {
+  await nextTick();
+  syncLandingHeaderHeight();
+  landingHeaderObserver = new ResizeObserver(syncLandingHeaderHeight);
+  if (landingHeaderRef.value) {
+    landingHeaderObserver.observe(landingHeaderRef.value);
+  }
+  window.addEventListener("resize", syncLandingHeaderHeight);
+});
+
+onBeforeUnmount(() => {
+  landingHeaderObserver?.disconnect();
+  if (import.meta.client) {
+    window.removeEventListener("resize", syncLandingHeaderHeight);
+    document.documentElement.style.removeProperty("--landing-header-height");
+  }
+});
 </script>
 
 <style module>
 .landingShell {
-  min-height: 100vh;
-  padding-top: 72px;
+  min-height: 100dvh;
+  --landing-scroll-offset: calc(var(--safe-top) + var(--landing-header-height, 72px) + 16px);
+  padding-top: calc(var(--safe-top) + var(--landing-header-height, 72px));
+  padding-inline: var(--safe-left) var(--safe-right);
   background:
     radial-gradient(circle at top left, rgba(29, 95, 211, 0.14), transparent 34%),
     linear-gradient(180deg, #eef6ff 0%, #f7faff 42%, #f4f7fb 100%);
 }
 
+:global(#features),
+:global(#projects),
+:global(#flow),
+:global(#register-panel) {
+  scroll-margin-top: var(--landing-scroll-offset);
+}
+
 .landingHeader {
   position: fixed;
-  top: 0;
+  top: var(--safe-top);
   left: 0;
   right: 0;
   z-index: 60;
@@ -423,7 +460,7 @@ function scrollToRegister() {
   width: 100%;
   margin: 0 auto;
   min-width: 0;
-  padding: 14px 20px;
+  padding: 14px max(20px, var(--safe-right)) 14px max(20px, var(--safe-left));
   display: flex;
   align-items: center;
   gap: 18px;
@@ -644,24 +681,47 @@ function scrollToRegister() {
 }
 
 .stats div {
-  padding: 14px;
+  position: relative;
+  display: grid;
+  gap: 6px;
+  overflow: hidden;
+  padding: 15px 15px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.78);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 255, 0.96)),
+    #fff;
   box-shadow: 0 8px 22px rgba(29, 78, 137, 0.06);
 }
 
+.stats div::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--primary), var(--cyan));
+}
+
 .stats dt {
+  position: relative;
+  z-index: 1;
   color: var(--primary-strong);
-  font-size: 24px;
-  font-weight: 900;
+  font-size: clamp(21px, 2.2vw, 24px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  line-height: 1.08;
+  letter-spacing: 0;
 }
 
 .stats dd {
-  margin: 4px 0 0;
+  position: relative;
+  z-index: 1;
+  margin: 0;
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+  line-height: 1.45;
 }
 
 .heroVisual {
@@ -1006,6 +1066,8 @@ function scrollToRegister() {
   color: var(--soft);
   font-size: 12px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 .projectGrid h3 {
@@ -1021,13 +1083,18 @@ function scrollToRegister() {
   row-gap: 4px;
   align-items: center;
   margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
+  padding: 12px;
+  border: 1px solid #c6d9f4;
+  border-radius: 8px;
+  background: #f7fbff;
 }
 
 .projectFoot strong {
   color: var(--primary-strong);
-  font-size: 20px;
+  font-size: 19px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
   line-height: 1;
   white-space: nowrap;
 }
@@ -1036,7 +1103,7 @@ function scrollToRegister() {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding-top: 12px;
+  padding-top: 10px;
 }
 
 .projectFoot .skillBadges {
@@ -1139,7 +1206,8 @@ function scrollToRegister() {
 
 @media (max-width: 620px) {
   .landingShell {
-    padding-top: 132px;
+    --landing-scroll-offset: calc(var(--safe-top) + var(--landing-header-height, 132px) + 14px);
+    padding-top: calc(var(--safe-top) + var(--landing-header-height, 132px));
   }
 
   .headerInner {
@@ -1179,7 +1247,8 @@ function scrollToRegister() {
 
 @media (max-width: 420px) {
   .landingShell {
-    padding-top: 176px;
+    --landing-scroll-offset: calc(var(--safe-top) + var(--landing-header-height, 176px) + 12px);
+    padding-top: calc(var(--safe-top) + var(--landing-header-height, 176px));
   }
 
   .headerInner {
@@ -1268,10 +1337,10 @@ function scrollToRegister() {
     position: relative;
     z-index: 1;
     color: var(--primary-strong);
-    font-size: 26px;
-    font-weight: 900;
+    font-size: 24px;
+    font-weight: 800;
     line-height: 1.1;
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
   }
 
   .stats dd {
@@ -1399,7 +1468,7 @@ function scrollToRegister() {
     row-gap: 6px;
     align-items: center;
     margin-top: 18px;
-    padding-top: 14px;
+    padding: 12px;
   }
 
   .projectFoot strong,

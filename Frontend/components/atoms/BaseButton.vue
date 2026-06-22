@@ -50,11 +50,12 @@ const variantClass = computed(() => ({
   gap: 8px;
   max-width: 100%;
   min-width: 0;
-  min-height: 38px;
-  padding: 8px 14px;
+  min-height: 40px;
+  padding: 9px 14px;
   border-radius: 6px;
   background: linear-gradient(180deg, var(--primary), var(--primary-strong));
   color: white;
+  font-size: 14px;
   font-weight: 800;
   line-height: 1.35;
   text-align: center;

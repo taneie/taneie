@@ -16,10 +16,10 @@ const { toastMessage, toastVisible } = useFreelinkRuntime();
 <style module>
 .toast {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  right: max(18px, var(--safe-right));
+  bottom: max(18px, var(--safe-bottom));
   z-index: 30;
-  max-width: min(420px, calc(100vw - 36px));
+  max-width: min(420px, calc(100vw - 36px - var(--safe-left) - var(--safe-right)));
   background: #102033;
   color: #fff;
   border-radius: 8px;

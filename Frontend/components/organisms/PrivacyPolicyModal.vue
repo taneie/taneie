@@ -85,13 +85,18 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { toRef } from "vue";
+import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
+
+const props = defineProps<{
   open: boolean;
 }>();
 
 defineEmits<{
   close: [];
 }>();
+
+useBodyScrollLock(toRef(props, "open"));
 </script>
 
 <style module>
@@ -101,14 +106,14 @@ defineEmits<{
   z-index: 80;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: max(20px, var(--safe-top)) max(20px, var(--safe-right)) max(20px, var(--safe-bottom)) max(20px, var(--safe-left));
   background: rgba(7, 24, 48, 0.48);
   backdrop-filter: blur(10px);
 }
 
 .modal {
   width: min(720px, 100%);
-  max-height: min(760px, calc(100vh - 40px));
+  max-height: min(760px, calc(100dvh - 40px - var(--safe-top) - var(--safe-bottom)));
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;

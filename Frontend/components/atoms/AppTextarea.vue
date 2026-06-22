@@ -41,9 +41,11 @@ function onInput(event: Event) {
   min-height: 94px;
   border: 1px solid #c6d5e8;
   border-radius: 6px;
-  padding: 10px 11px;
+  padding: 10px 12px;
   background: #fff;
   color: var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
   outline: none;
   resize: vertical;
 }

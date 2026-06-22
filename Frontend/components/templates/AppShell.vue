@@ -39,14 +39,15 @@ watch(
 
 <style module>
 .appShell {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-rows: 1fr;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   overflow-x: hidden;
-  padding-top: calc(var(--app-header-height, 72px) + var(--app-header-gap, 14px));
+  padding-top: calc(var(--safe-top) + var(--app-header-height, 72px) + var(--app-header-gap, 14px));
+  padding-inline: var(--safe-left) var(--safe-right);
 }
 
 .workspace {
@@ -54,7 +55,7 @@ watch(
   max-width: 100%;
   min-width: 0;
   margin: 0;
-  padding: 22px clamp(14px, 1.4vw, 24px) 42px;
+  padding: 22px var(--page-inline) calc(42px + var(--safe-bottom));
 }
 
 .panel {
@@ -71,12 +72,12 @@ watch(
 
 @media (max-width: 620px) {
   .appShell {
-    padding-top: calc(var(--app-header-height, 132px) + var(--app-header-gap, 12px));
+    padding-top: calc(var(--safe-top) + var(--app-header-height, 132px) + var(--app-header-gap, 12px));
     margin-bottom: 40px;
   }
 
   .workspace {
-    padding: 14px 10px 28px;
+    padding: 14px var(--page-inline) calc(28px + var(--safe-bottom));
   }
 
   .panelBody {
