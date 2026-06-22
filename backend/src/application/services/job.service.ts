@@ -131,6 +131,27 @@ export class JobService {
     return jobs.map(mapJob);
   }
 
+  async getById(context: AuthContext | undefined, id: string) {
+    if (context?.role === "freelancer") {
+      await assertFreelancerCanViewJobs(this.db, context.userId);
+    }
+
+    const where: Prisma.JobWhereInput = { id };
+    if (context?.role !== "sales") {
+      where.isActive = true;
+    }
+
+    const job = await this.db.job.findFirst({
+      where,
+      include: jobInclude,
+    });
+    if (!job) {
+      throw new AppError(404, "案件が見つかりません。", "JOB_NOT_FOUND");
+    }
+
+    return mapJob(job);
+  }
+
   async create(input: JobInput, createdBy: string) {
     const client = await this.db.client.upsert({
       where: { name: input.client || "未設定" },

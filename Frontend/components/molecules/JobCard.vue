@@ -1,5 +1,13 @@
 <template>
-  <article :class="$style.card">
+  <article
+    :class="[$style.card, selected ? $style.selected : '']"
+    role="button"
+    tabindex="0"
+    :aria-pressed="selected"
+    @click="$emit('select', job.id)"
+    @keydown.enter.prevent="$emit('select', job.id)"
+    @keydown.space.prevent="$emit('select', job.id)"
+  >
     <div :class="$style.desktopCard">
       <div :class="$style.cardMain">
         <div :class="$style.cardHead">
@@ -37,7 +45,7 @@
             :class="$style.applyButton"
             icon="send"
             :disabled="applied || !canApplyMore"
-            @click="$emit('apply', job.id)"
+            @click.stop="$emit('apply', job.id)"
           >
             {{ applyButtonLabel }}
           </BaseButton>
@@ -46,7 +54,7 @@
             :class="$style.applyButton"
             variant="secondary"
             icon="briefcase"
-            @click="$emit('openAdmin')"
+            @click.stop="$emit('openAdmin')"
           >
             営業管理で確認
           </BaseButton>
@@ -92,7 +100,7 @@
             v-if="role === 'freelancer'"
             icon="send"
             :disabled="applied || !canApplyMore"
-            @click="$emit('apply', job.id)"
+            @click.stop="$emit('apply', job.id)"
           >
             {{ applyButtonLabel }}
           </BaseButton>
@@ -100,7 +108,7 @@
             v-else
             variant="secondary"
             icon="briefcase"
-            @click="$emit('openAdmin')"
+            @click.stop="$emit('openAdmin')"
           >
             営業管理で確認
           </BaseButton>
@@ -121,13 +129,16 @@ const props = withDefaults(
     role: Role | null;
     applied: boolean;
     canApplyMore?: boolean;
+    selected?: boolean;
   }>(),
   {
     canApplyMore: true,
+    selected: false,
   },
 );
 
 defineEmits<{
+  select: [jobId: string];
   apply: [jobId: string];
   openAdmin: [];
 }>();
@@ -149,6 +160,19 @@ const applyButtonLabel = computed(() => {
   padding: 14px;
   min-width: 0;
   box-shadow: 0 8px 22px rgba(29, 78, 137, 0.05);
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.card:focus-visible,
+.selected {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 3px rgba(29, 78, 137, 0.16),
+    0 10px 24px rgba(29, 78, 137, 0.12);
 }
 
 .desktopCard {

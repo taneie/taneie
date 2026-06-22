@@ -551,6 +551,7 @@ GET  /api/profile/me
 PUT  /api/profile/me
 
 GET  /api/jobs
+GET  /api/jobs/:id
 POST /api/jobs
 
 GET  /api/applications

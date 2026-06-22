@@ -24,6 +24,7 @@
 | GET      | `/auth/me`                     | 必要 | freelancer / sales | ログインユーザー情報取得     |
 | GET      | `/bootstrap`                   | 必要 | freelancer / sales | 初期表示データ取得           |
 | GET      | `/jobs`                        | 必要 | freelancer / sales | 案件一覧取得                 |
+| GET      | `/jobs/:id`                    | 必要 | freelancer / sales | 案件詳細取得                 |
 | POST     | `/jobs`                        | 必要 | sales              | 案件登録                     |
 | PATCH    | `/jobs/:id`                    | 必要 | sales              | 案件の優先表示・公開状態更新 |
 | GET      | `/freelancers`                 | 必要 | sales              | 求職者一覧取得               |
@@ -119,7 +120,15 @@
 - sales: 全案件を取得
 - freelancer: 公開中案件のみ取得。ただしプロフィール要件未完了の場合は403
 
-### 4.2 案件登録
+### 4.2 案件詳細取得
+
+`GET /api/jobs/:id`
+
+- sales: 指定案件を取得
+- freelancer: 公開中案件のみ取得。ただしプロフィール要件未完了の場合は403
+- スカウトメッセージに紐づく案件情報の表示に利用する
+
+### 4.3 案件登録
 
 `POST /api/jobs`
 
@@ -139,7 +148,7 @@
 }
 ```
 
-### 4.3 案件フラグ更新
+### 4.4 案件フラグ更新
 
 `PATCH /api/jobs/:id`
 

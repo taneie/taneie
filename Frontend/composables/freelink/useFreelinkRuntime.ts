@@ -81,6 +81,7 @@ const jobPagination = ref<JobPagination>({
   hasMore: false,
 });
 const jobsLoading = ref(false);
+const selectedJobId = ref("");
 const scoutFilters = ref<ScoutFilters>({
   skill: "",
   availability: "",
@@ -770,7 +771,7 @@ const activeChatMessages = computed(() => {
       if (meetingThreadMode.value === "job") {
         return Boolean(message.jobId);
       }
-      return !message.jobId;
+      return !message.jobId || message.messageType === "scout";
     })
     .sort((a, b) => b.at.localeCompare(a.at));
 });
@@ -2324,6 +2325,44 @@ function getJob(id = "") {
   );
 }
 
+function selectJob(jobId: string) {
+  selectedJobId.value = jobId;
+}
+
+function upsertJobToTop(job: Job) {
+  state.value.jobs = [
+    job,
+    ...state.value.jobs.filter((item) => item.id !== job.id),
+  ];
+}
+
+async function openScoutJob(jobId: string) {
+  if (!jobId) return;
+  if (currentRole.value === "freelancer" && !canViewJobs.value) {
+    await setView("jobs");
+    return;
+  }
+
+  try {
+    const job = getJob(jobId) || (await apiRequest<Job>(`/jobs/${jobId}`));
+    upsertJobToTop(job);
+    selectJob(job.id);
+    const previousView = state.value.activeView;
+    await setView("jobs");
+    if (previousView === "jobs" || state.value.activeView === "jobs") {
+      persist();
+      scrollToPageTop();
+      showToast("スカウトに紐づく案件を表示しました。");
+    }
+  } catch (error) {
+    showToast(
+      error instanceof Error
+        ? error.message
+        : "スカウト案件の取得に失敗しました。",
+    );
+  }
+}
+
 function meetingCandidatesForProfile(profileId: string) {
   return state.value.meetingRequests
     .filter((meeting) => meeting.freelancerId === profileId)
@@ -2408,6 +2447,7 @@ export function useFreelinkRuntime() {
     adminMatchedFreelancerId,
     jobPagination,
     jobsLoading,
+    selectedJobId,
     hasUnsavedChanges,
     isLoading,
     toastMessage,
@@ -2470,6 +2510,7 @@ export function useFreelinkRuntime() {
     saveProfileMeeting,
     resetProfile,
     createJob,
+    selectJob,
     clearJobFilter,
     searchJobs,
     loadMoreJobs,
@@ -2482,6 +2523,7 @@ export function useFreelinkRuntime() {
     selectScoutJob,
     sendSelectedScout,
     sendScout,
+    openScoutJob,
     selectPreview,
     toggleJobSort,
     toggleJobActive,

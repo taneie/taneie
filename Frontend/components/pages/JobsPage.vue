@@ -93,6 +93,8 @@
           :role="currentRole"
           :applied="hasApplied(job.id)"
           :can-apply-more="canApplyMoreJobs"
+          :selected="selectedJobId === job.id"
+          @select="selectJob"
           @apply="applyJob"
           @open-admin="setView('admin')"
         />
@@ -130,6 +132,7 @@ const {
   filteredJobs,
   jobPagination,
   jobsLoading,
+  selectedJobId,
   currentRole,
   canViewJobs,
   profileRequirementItems,
@@ -138,6 +141,7 @@ const {
   clearJobFilter,
   searchJobs,
   loadMoreJobs,
+  selectJob,
   hasApplied,
   canApplyMoreJobs,
   applyJob,

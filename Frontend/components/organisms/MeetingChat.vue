@@ -195,6 +195,16 @@
             </div>
             <div :class="$style.messageBubble">
               <div :class="$style.messageBody">{{ message.body }}</div>
+              <button
+                v-if="canOpenScoutJob(message)"
+                type="button"
+                :class="$style.scoutJobLink"
+                @click="openScoutJob(message.jobId || '')"
+              >
+                <span>紹介案件</span>
+                <strong>{{ scoutJobTitle(message.jobId) }}</strong>
+                <span>案件情報を見る</span>
+              </button>
             </div>
             <span
               v-if="isOwnMessage(message) && message.readAt"
@@ -256,6 +266,7 @@ const {
   markDirty,
   clearUnsavedChanges,
   getJob,
+  openScoutJob,
 } = useFreelinkRuntime();
 
 const candidates = ref<string[]>([""]);
@@ -304,6 +315,18 @@ function displayDateTime(value = "") {
 
 function jobTitle(jobId: string) {
   return getJob(jobId)?.title || "案件未選択";
+}
+
+function scoutJobTitle(jobId = "") {
+  return getJob(jobId)?.title || "紹介された案件";
+}
+
+function canOpenScoutJob(message: Message) {
+  return (
+    currentRole.value === "freelancer" &&
+    message.messageType === "scout" &&
+    Boolean(message.jobId)
+  );
 }
 
 function onApplicationChange(event: Event) {
@@ -748,6 +771,37 @@ textarea.control {
   color: var(--ink);
   line-height: 1.65;
   overflow-wrap: anywhere;
+}
+
+.scoutJobLink {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  color: #10294f;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(29, 78, 137, 0.18);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.scoutJobLink span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.scoutJobLink strong {
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.scoutJobLink:hover {
+  border-color: var(--primary);
+  box-shadow: 0 6px 16px rgba(29, 78, 137, 0.12);
 }
 
 .other .messageBubble {

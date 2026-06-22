@@ -41,6 +41,14 @@ export function registerJobRoutes(app: Express, jobService: JobService) {
     }),
   );
 
+  app.get(
+    "/api/jobs/:id",
+    requireAuth,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(await jobService.getById(req.auth, routeParam(req.params.id)));
+    }),
+  );
+
   app.post(
     "/api/jobs",
     requireAuth,
