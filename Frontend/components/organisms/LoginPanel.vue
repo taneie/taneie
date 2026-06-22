@@ -438,6 +438,40 @@ onBeforeUnmount(() => {
     linear-gradient(180deg, #eef6ff 0%, #f7faff 42%, #f4f7fb 100%);
 }
 
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes softFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes ctaBreath {
+  0%,
+  100% {
+    box-shadow: 0 10px 22px rgba(29, 95, 211, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 14px 28px rgba(29, 95, 211, 0.27);
+  }
+}
+
 :global(#features),
 :global(#projects),
 :global(#flow),
@@ -454,6 +488,7 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid rgba(215, 224, 236, 0.78);
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(16px);
+  animation: fadeSlideUp 0.42s ease-out both;
 }
 
 .headerInner {
@@ -502,11 +537,16 @@ onBeforeUnmount(() => {
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .headerNav a:hover {
   background: var(--primary-soft);
   color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .headerActions {
@@ -528,6 +568,11 @@ onBeforeUnmount(() => {
   padding: 0 14px;
   font-weight: 900;
   text-decoration: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .loginTrigger {
@@ -543,6 +588,17 @@ onBeforeUnmount(() => {
   box-shadow: 0 10px 22px rgba(29, 95, 211, 0.2);
 }
 
+.headerCta:hover,
+.primaryCta:hover,
+.secondaryCta:hover,
+.loginTrigger:hover {
+  transform: translateY(-1px);
+}
+
+.primaryCta {
+  animation: ctaBreath 5.5s ease-in-out infinite;
+}
+
 .loginPopover {
   position: absolute;
   top: calc(100% + 10px);
@@ -553,6 +609,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #fff;
   box-shadow: var(--shadow);
+  animation: fadeSlideUp 0.18s ease-out both;
 }
 
 .popoverHead {
@@ -627,6 +684,7 @@ onBeforeUnmount(() => {
 .heroContent {
   min-width: 0;
   padding: 18px 0 0;
+  animation: fadeSlideUp 0.48s ease-out 0.06s both;
 }
 
 .eyebrow {
@@ -701,6 +759,18 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 22px rgba(29, 78, 137, 0.06);
 }
 
+.stats div:nth-child(1) {
+  animation: fadeSlideUp 0.42s ease-out 0.18s both;
+}
+
+.stats div:nth-child(2) {
+  animation: fadeSlideUp 0.42s ease-out 0.26s both;
+}
+
+.stats div:nth-child(3) {
+  animation: fadeSlideUp 0.42s ease-out 0.34s both;
+}
+
 .stats div::before {
   content: "";
   position: absolute;
@@ -740,6 +810,9 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 18px 42px rgba(29, 78, 137, 0.12);
+  animation:
+    fadeSlideUp 0.52s ease-out 0.14s both,
+    softFloat 7s ease-in-out 1.1s infinite;
 }
 
 .heroVisual img {
@@ -790,6 +863,7 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 10px 28px rgba(29, 78, 137, 0.08);
   scrollbar-gutter: stable;
+  animation: fadeSlideUp 0.5s ease-out 0.2s both;
 }
 
 .registerHead {
@@ -893,6 +967,22 @@ onBeforeUnmount(() => {
   margin-top: 42px;
 }
 
+.infoSection {
+  animation: fadeSlideUp 0.48s ease-out 0.24s both;
+}
+
+.visualSection {
+  animation: fadeSlideUp 0.48s ease-out 0.3s both;
+}
+
+.projectsSection {
+  animation: fadeSlideUp 0.48s ease-out 0.36s both;
+}
+
+.flowSection {
+  animation: fadeSlideUp 0.48s ease-out 0.42s both;
+}
+
 .sectionHead {
   max-width: 760px;
   margin-bottom: 18px;
@@ -931,6 +1021,18 @@ onBeforeUnmount(() => {
   background: #fff;
   padding: 16px;
   box-shadow: 0 8px 22px rgba(29, 78, 137, 0.06);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.featureGrid article:hover,
+.projectGrid article:hover,
+.flowList li:hover {
+  border-color: rgba(169, 197, 237, 0.95);
+  box-shadow: 0 14px 28px rgba(29, 78, 137, 0.1);
+  transform: translateY(-2px);
 }
 
 .featureGrid strong,
@@ -1018,6 +1120,14 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: linear-gradient(180deg, #ffffff, #f6faff);
   box-shadow: 0 16px 34px rgba(29, 78, 137, 0.09);
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.visualSection:hover {
+  box-shadow: 0 18px 38px rgba(29, 78, 137, 0.12);
+  transform: translateY(-2px);
 }
 
 .visualSection img {
@@ -1632,6 +1742,46 @@ onBeforeUnmount(() => {
     padding: 18px 12px 28px;
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landingHeader,
+  .heroContent,
+  .heroVisual,
+  .registerPanel,
+  .stats div,
+  .infoSection,
+  .visualSection,
+  .projectsSection,
+  .flowSection,
+  .primaryCta,
+  .loginPopover {
+    animation: none;
+  }
+
+  .headerNav a,
+  .loginTrigger,
+  .headerCta,
+  .primaryCta,
+  .secondaryCta,
+  .featureGrid article,
+  .projectGrid article,
+  .flowList li,
+  .visualSection {
+    transition: none;
+  }
+
+  .headerNav a:hover,
+  .headerCta:hover,
+  .primaryCta:hover,
+  .secondaryCta:hover,
+  .loginTrigger:hover,
+  .featureGrid article:hover,
+  .projectGrid article:hover,
+  .flowList li:hover,
+  .visualSection:hover {
+    transform: none;
   }
 }
 </style>
