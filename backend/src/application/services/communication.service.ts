@@ -145,14 +145,6 @@ export class CommunicationService {
           });
 
     if (input.jobId && messageType !== "scout") {
-      if (!profile.initialMeetingCompleted) {
-        throw new AppError(
-          403,
-          "初回面談が完了していないため案件面談チャットは利用できません。",
-          "INITIAL_MEETING_REQUIRED",
-        );
-      }
-
       const application = await this.db.application.findUnique({
         where: {
           jobId_freelancerProfileId: {

@@ -874,16 +874,15 @@ function selectChatFreelancer(freelancerId: string) {
     state.value.applications.find(
       (application) => application.freelancerId === freelancer.id,
     )?.id || "";
-  if (!freelancer.initialMeetingCompleted) meetingThreadMode.value = "initial";
   void setView("meeting");
   void markActiveChatAsRead();
   persist();
 }
 
 function setMeetingThreadMode(mode: "initial" | "job") {
-  if (mode === "job" && !canUseJobMeeting.value) {
+  if (mode === "job" && !activeFreelancerApplications.value.length) {
     meetingThreadMode.value = "initial";
-    showToast("案件面談は初回面談の完了後に利用できます。");
+    showToast("応募済み案件がないため案件チャットはまだ利用できません。");
     return;
   }
   meetingThreadMode.value = mode;

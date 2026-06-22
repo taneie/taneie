@@ -186,6 +186,8 @@
 }
 ```
 
+プロフィール要件を満たしていれば、初回面談の完了前でも応募を作成できる。
+
 ### 7.3 応募ステータス変更
 
 `PATCH /api/applications/:id/status`
@@ -250,6 +252,7 @@ salesは `freelancerProfileId` クエリで対象者を指定できる。
 ```
 
 `messageType` は `chat`, `scout`, `alive_check`, `system` のいずれか。
+`jobId` を指定した `chat` は応募済み案件に紐づく案件チャットとして扱う。案件チャットの送信は初回面談完了を必須にしない。
 
 ## 10. Web Push API
 

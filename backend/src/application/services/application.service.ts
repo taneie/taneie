@@ -33,13 +33,6 @@ export class ApplicationService {
       where: { userId },
     });
 
-    if (!profile.initialMeetingCompleted) {
-      throw new AppError(
-        403,
-        "初回面談が完了していないため応募できません。営業担当との初回面談後に応募できます。",
-        "INITIAL_MEETING_REQUIRED",
-      );
-    }
     const application = await this.db.application
       .create({
         data: {
