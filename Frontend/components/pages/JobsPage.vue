@@ -20,11 +20,19 @@
         :key="item.label"
         :class="item.done ? $style.done : $style.pending"
       >
-        <span>{{ item.done ? "完了" : "未完了" }}</span
-        >{{ item.label }}
+        <span>{{ item.done ? "完了" : "未完了" }}</span>
+        <strong>{{ item.label }}</strong>
+        <button
+          v-if="!item.done"
+          type="button"
+          :class="$style.requirementAction"
+          @click="openProfileStep(item.step)"
+        >
+          入力する
+        </button>
       </li>
     </ul>
-    <BaseButton icon="user" @click="setView('profile')"
+    <BaseButton icon="user" @click="openProfileStep(firstPendingProfileStep)"
       >プロフィールを入力する</BaseButton
     >
   </section>
@@ -109,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
 
 const {
@@ -129,9 +137,13 @@ const {
   canApplyMoreJobs,
   applyJob,
   setView,
+  openProfileStep,
 } = useFreelinkRuntime();
 
 const loadMoreTrigger = ref<HTMLElement | null>(null);
+const firstPendingProfileStep = computed(
+  () => profileRequirementItems.value.find((item) => !item.done)?.step || 1,
+);
 let observer: IntersectionObserver | null = null;
 
 onMounted(() => {
@@ -300,6 +312,7 @@ onBeforeUnmount(() => {
 
 .requirementList li {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   padding: 10px 12px;
@@ -308,6 +321,11 @@ onBeforeUnmount(() => {
   border: 1px solid var(--line);
   color: #263f63;
   font-weight: 800;
+}
+
+.requirementList strong {
+  flex: 1 1 160px;
+  min-width: 0;
 }
 
 .requirementList span {
@@ -325,6 +343,17 @@ onBeforeUnmount(() => {
 
 .pending span {
   background: #c1741f;
+}
+
+.requirementAction {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #a9c5ed;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 @media (max-width: 980px) {

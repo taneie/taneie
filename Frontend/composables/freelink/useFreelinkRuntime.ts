@@ -602,14 +602,17 @@ const profileRequirementItems = computed(() => {
   return [
     {
       label: "基本情報",
+      step: 1,
       done: Boolean(p.name && p.email && p.phone && p.role),
     },
     {
       label: "スキル詳細",
+      step: 2,
       done: Boolean(p.languages && p.db && p.frameworks && p.years),
     },
     {
       label: "稼働条件",
+      step: 3,
       done: Boolean(
         p.desiredRate &&
           p.startDate &&
@@ -618,15 +621,16 @@ const profileRequirementItems = computed(() => {
           p.availability,
       ),
     },
-    { label: "レジュメ", done: Boolean(p.resumeName) },
+    { label: "レジュメ", step: 3, done: Boolean(p.resumeName) },
     {
       label: "面談候補",
+      step: 4,
       done:
         state.value.meetingRequests.some(
           (meeting) => meeting.freelancerId === p.id,
         ) || Boolean(p.meetingCandidates.length),
     },
-    { label: "誓約同意", done: Boolean(p.pledgeAccepted || p.pledgedAt) },
+    { label: "誓約同意", step: 4, done: Boolean(p.pledgeAccepted || p.pledgedAt) },
   ];
 });
 
@@ -844,6 +848,21 @@ async function setView(view: ViewKey) {
   } finally {
     finishLoading();
   }
+}
+
+async function openProfileStep(step: number) {
+  if (!canAccess("profile")) {
+    showToast("プロフィール画面は現在の権限では表示できません。");
+    return;
+  }
+
+  if (state.value.activeView !== "profile" && !(await confirmDiscardChanges()))
+    return;
+
+  state.value.activeView = "profile";
+  state.value.wizardStep = Math.min(Math.max(step, 1), 4);
+  persist();
+  scrollToPageTop();
 }
 
 function ensureChatSelection() {
@@ -2378,6 +2397,7 @@ export function useFreelinkRuntime() {
     ensureActiveView,
     setAuthMode,
     setView,
+    openProfileStep,
     selectChatFreelancer,
     setMeetingThreadMode,
     selectMeetingApplication,
