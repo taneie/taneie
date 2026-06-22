@@ -1,4 +1,4 @@
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import {
   API_BASE_FALLBACK,
   JOB_APPLICATION_LIMIT,
@@ -156,10 +156,16 @@ function beginLoading() {
 
 function scrollToPageTop() {
   if (!import.meta.client) return;
-  requestAnimationFrame(() => {
+  const reset = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
+  };
+
+  reset();
+  void nextTick(() => {
+    reset();
+    requestAnimationFrame(reset);
   });
 }
 
@@ -308,6 +314,7 @@ function setAuth(
   };
   state.value.activeView = defaultViewByRole[user.role];
   persist();
+  scrollToPageTop();
 }
 
 async function restoreSession() {
@@ -800,6 +807,7 @@ function ensureActiveView() {
   if (!canAccess(state.value.activeView)) {
     state.value.activeView = defaultViewByRole[role];
     persist();
+    scrollToPageTop();
   }
 }
 
@@ -963,6 +971,7 @@ function loginWithAccount(account: Account) {
   };
   state.value.activeView = account.startView || defaultViewByRole[account.role];
   persist();
+  scrollToPageTop();
   showToast(`${roleLabel(account.role)}としてログインしました。`);
 }
 
@@ -993,6 +1002,7 @@ async function register(values: RegisterInput) {
     setAuth(result.token, result.user);
     state.value.activeView = "profile";
     state.value.wizardStep = 1;
+    scrollToPageTop();
     await loadWorkspace();
     startChatPolling();
     void requestBrowserNotificationPermission();
@@ -1015,6 +1025,7 @@ async function logout() {
     ? defaultViewByRole[previousRole]
     : "jobs";
   persist();
+  scrollToPageTop();
   showToast("ログアウトしました。");
 }
 
@@ -1134,6 +1145,7 @@ async function resetProfile() {
     (meeting) => meeting.freelancerId !== profileId,
   );
   persist();
+  scrollToPageTop();
   showToast("プロフィールを初期状態に戻しました。");
 }
 

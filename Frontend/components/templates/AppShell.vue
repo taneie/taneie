@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
-import { watch } from "vue";
+import { nextTick, watch } from "vue";
 const { state, currentRole, ensureActiveView, setView } =
   useFreelinkRuntime();
 
@@ -34,6 +34,17 @@ watch(
   () => [state.value.auth?.role, state.value.activeView],
   ensureActiveView,
   { immediate: true },
+);
+
+watch(
+  () => state.value.activeView,
+  async () => {
+    if (!import.meta.client) return;
+    await nextTick();
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  },
 );
 </script>
 
