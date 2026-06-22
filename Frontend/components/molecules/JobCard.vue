@@ -15,7 +15,8 @@
             <h3>{{ job.title }}</h3>
             <p :class="$style.metaLine">
               {{ job.client }} / {{ job.rateMin }}-{{ job.rateMax }}万円 /
-              マージン{{ job.marginRate ?? 12 }}% / {{ job.remote }}
+              マージン{{ job.marginRate ?? 12 }}%（{{ marginAmountLabel }}） /
+              {{ job.remote }}
             </p>
           </div>
         </div>
@@ -70,7 +71,8 @@
         </span>
         <p :class="$style.metaLine">
           {{ job.client }} / {{ job.rateMin }}-{{ job.rateMax }}万円 /
-          マージン{{ job.marginRate ?? 12 }}% / {{ job.remote }}
+          マージン{{ job.marginRate ?? 12 }}%（{{ marginAmountLabel }}） /
+          {{ job.remote }}
         </p>
         <span :class="$style.mobileBadges">
           <TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge>
@@ -150,6 +152,17 @@ const applyButtonLabel = computed(() => {
   if (!props.canApplyMore) return "応募上限";
   return "応募する";
 });
+
+const marginAmountLabel = computed(() => {
+  const marginRate = Number(props.job.marginRate ?? 12);
+  const min = formatMarginAmount((props.job.rateMin * marginRate) / 100);
+  const max = formatMarginAmount((props.job.rateMax * marginRate) / 100);
+  return `${min}-${max}万円`;
+});
+
+function formatMarginAmount(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
 </script>
 
 <style module>
