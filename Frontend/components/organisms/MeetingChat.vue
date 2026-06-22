@@ -27,9 +27,11 @@
             <span :class="$style.chatUserHead">
               <strong>{{ freelancer.name }}</strong>
               <span :class="$style.chatUserBadges">
-                <TagBadge v-if="freelancer.unreadCount" tone="amber"
-                  >未読 {{ freelancer.unreadCount }}</TagBadge
-                >
+                <span
+                  v-if="freelancer.unreadCount"
+                  :class="$style.unreadDot"
+                  aria-label="未読あり"
+                />
                 <TagBadge
                   :tone="
                     freelancer.availability === '即稼働可' ? 'teal' : 'amber'
@@ -626,9 +628,18 @@ textarea.control {
 
 .chatUserBadges {
   display: inline-flex;
+  align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 5px;
+}
+
+.unreadDot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #d92d20;
 }
 
 .chatUserMeta,
