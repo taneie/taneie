@@ -631,6 +631,38 @@ onBeforeUnmount(() => {
   }
 }
 
+@keyframes accentGlow {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes imageDrift {
+  0%,
+  100% {
+    transform: scale(1.01) translateX(0);
+  }
+
+  50% {
+    transform: scale(1.035) translateX(-6px);
+  }
+}
+
+@keyframes softSweep {
+  from {
+    transform: translateX(-120%) skewX(-14deg);
+  }
+
+  to {
+    transform: translateX(220%) skewX(-14deg);
+  }
+}
+
 :global(#features),
 :global(#projects),
 :global(#flow),
@@ -940,6 +972,10 @@ onBeforeUnmount(() => {
     linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 255, 0.96)),
     #fff;
   box-shadow: 0 8px 22px rgba(29, 78, 137, 0.06);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .stats div:nth-child(1) {
@@ -960,6 +996,28 @@ onBeforeUnmount(() => {
   inset: 0 auto 0 0;
   width: 4px;
   background: linear-gradient(180deg, var(--primary), var(--cyan));
+  animation: accentGlow 4.8s ease-in-out infinite;
+}
+
+.stats div::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 18%, rgba(255, 255, 255, 0.44), transparent 46%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-120%) skewX(-14deg);
+}
+
+.stats div:hover {
+  border-color: rgba(169, 197, 237, 0.95);
+  box-shadow: 0 14px 28px rgba(29, 78, 137, 0.1);
+  transform: translateY(-2px);
+}
+
+.stats div:hover::after {
+  opacity: 1;
+  animation: softSweep 0.8s ease-out both;
 }
 
 .stats dt {
@@ -998,12 +1056,23 @@ onBeforeUnmount(() => {
     softFloat 7s ease-in-out 1.1s infinite;
 }
 
+.heroVisual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(105deg, transparent 24%, rgba(255, 255, 255, 0.28), transparent 46%);
+  pointer-events: none;
+  animation: softSweep 5.8s ease-in-out 1.4s infinite;
+}
+
 .heroVisual img {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 7.2;
   object-fit: cover;
   object-position: left center;
+  animation: imageDrift 14s ease-in-out 0.8s infinite;
 }
 
 .heroVisual::after {
@@ -1018,7 +1087,7 @@ onBeforeUnmount(() => {
   position: absolute;
   right: 14px;
   bottom: 14px;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -1037,6 +1106,19 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: 900;
   backdrop-filter: blur(8px);
+  animation: fadeSlideUp 0.34s ease-out both;
+}
+
+.heroVisual figcaption span:nth-child(1) {
+  animation-delay: 0.48s;
+}
+
+.heroVisual figcaption span:nth-child(2) {
+  animation-delay: 0.58s;
+}
+
+.heroVisual figcaption span:nth-child(3) {
+  animation-delay: 0.68s;
 }
 
 .registerPanel {
@@ -1208,6 +1290,25 @@ onBeforeUnmount(() => {
     border-color 0.18s ease,
     box-shadow 0.18s ease,
     transform 0.18s ease;
+  animation: fadeSlideUp 0.42s ease-out both;
+}
+
+.featureGrid article:nth-child(1),
+.projectGrid article:nth-child(1),
+.flowList li:nth-child(1) {
+  animation-delay: 0.08s;
+}
+
+.featureGrid article:nth-child(2),
+.projectGrid article:nth-child(2),
+.flowList li:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.featureGrid article:nth-child(3),
+.projectGrid article:nth-child(3),
+.flowList li:nth-child(3) {
+  animation-delay: 0.24s;
 }
 
 .featureGrid article:hover,
@@ -1252,6 +1353,7 @@ onBeforeUnmount(() => {
   border-radius: 0 999px 999px 0;
   background: linear-gradient(180deg, var(--primary), var(--cyan));
   pointer-events: none;
+  animation: accentGlow 4.8s ease-in-out infinite;
 }
 
 .featureIcon {
@@ -1314,6 +1416,11 @@ onBeforeUnmount(() => {
   aspect-ratio: 16 / 7.5;
   object-fit: cover;
   object-position: center;
+  transition: transform 0.6s ease;
+}
+
+.visualSection:hover img {
+  transform: scale(1.025);
 }
 
 .visualText {
@@ -1382,6 +1489,14 @@ onBeforeUnmount(() => {
   border: 1px solid #c6d9f4;
   border-radius: 8px;
   background: #f7fbff;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.projectGrid article:hover .projectFoot {
+  border-color: #a9c5ed;
+  background: #f1f7ff;
 }
 
 .projectFoot strong {
@@ -1452,6 +1567,14 @@ onBeforeUnmount(() => {
   background: var(--primary);
   color: #fff;
   font-weight: 900;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.flowList li:hover::before {
+  box-shadow: 0 0 0 4px rgba(29, 95, 211, 0.12);
+  transform: scale(1.04);
 }
 
 .landingFooter {
@@ -1927,8 +2050,14 @@ onBeforeUnmount(() => {
   .landingHeader,
   .heroContent,
   .heroVisual,
+  .heroVisual::before,
+  .heroVisual img,
+  .heroVisual figcaption span,
   .registerPanel,
   .stats div,
+  .stats div::before,
+  .stats div::after,
+  .featureGrid article::before,
   .infoSection,
   .visualSection,
   .projectsSection,
@@ -1945,8 +2074,11 @@ onBeforeUnmount(() => {
   .secondaryCta,
   .featureGrid article,
   .projectGrid article,
+  .projectFoot,
   .flowList li,
-  .visualSection {
+  .flowList li::before,
+  .visualSection,
+  .visualSection img {
     transition: none;
   }
 
@@ -1958,7 +2090,9 @@ onBeforeUnmount(() => {
   .featureGrid article:hover,
   .projectGrid article:hover,
   .flowList li:hover,
-  .visualSection:hover {
+  .flowList li:hover::before,
+  .visualSection:hover,
+  .visualSection:hover img {
     transform: none;
   }
 }
