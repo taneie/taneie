@@ -50,7 +50,7 @@ Freelink/
     src/
       styles.css
     nuxt.config.ts
-  Backend/
+  backend/
     src/
       application/
       domain/

@@ -77,7 +77,7 @@ Zod
 主な配置は以下です。
 
 ```txt
-Backend/src/
+backend/src/
   application/
   domain/
   infrastructure/
@@ -96,7 +96,7 @@ Prisma Seed
 主な配置は以下です。
 
 ```txt
-Backend/prisma/
+backend/prisma/
   schema.prisma
   seed.ts
   migrations/
@@ -480,25 +480,25 @@ npm run db:seed
 現在のスクリプト:
 
 ```txt
-Backend/scripts/add-sales-user/create-sales-users-from-config.mjs
+backend/scripts/add-sales-user/create-sales-users-from-config.mjs
 ```
 
 実行例:
 
 ```bash
-node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target local
+node backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target local
 ```
 
 Windows PowerShellの場合:
 
 ```powershell
-node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target local
+node backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target local
 ```
 
 検証環境で事前確認する場合は `--dryRun` を付けます。
 
 ```bash
-node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging --dryRun
+node backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging --dryRun
 ```
 
 ---
@@ -775,7 +775,7 @@ CORS_ORIGIN="http://127.0.0.1:5173,http://localhost:5173"
 │   │   └── styles.css
 │   ├── nuxt.config.ts
 │   └── tsconfig.json
-├── Backend/
+├── backend/
 │   ├── src/
 │   │   ├── application/
 │   │   ├── domain/

@@ -6,10 +6,10 @@ const databaseUrl =
   "postgresql://freelink:freelink@localhost:5432/freelink?schema=public";
 
 export default defineConfig({
-  schema: "Backend/prisma/schema.prisma",
+  schema: "backend/prisma/schema.prisma",
   migrations: {
-    path: "Backend/prisma/migrations",
-    seed: "tsx Backend/prisma/seed.ts",
+    path: "backend/prisma/migrations",
+    seed: "tsx backend/prisma/seed.ts",
   },
   datasource: {
     url: databaseUrl,

@@ -14,7 +14,7 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 const DEFAULT_CONFIG_PATH =
-  "Backend/scripts/add-sales-user/config/sales-users.config.json";
+  "backend/scripts/add-sales-user/config/sales-users.config.json";
 const LOCAL_DATABASE_URL =
   "postgresql://freelink:freelink@localhost:5432/freelink?schema=public";
 const ENCRYPTION_PREFIX = "enc:v1:";
@@ -40,9 +40,9 @@ function printUsage() {
 営業ユーザーを設定ファイルからDBへ追加するスクリプトです。
 
 使い方:
-  node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs
-  node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging
-  node Backend/scripts/add-sales-user/create-sales-users-from-config.mjs --config Backend/scripts/add-sales-user/config/sales-users.config.json --dryRun
+  node backend/scripts/add-sales-user/create-sales-users-from-config.mjs
+  node backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target staging
+  node backend/scripts/add-sales-user/create-sales-users-from-config.mjs --config backend/scripts/add-sales-user/config/sales-users.config.json --dryRun
 
 オプション:
   -c, --config <path>  設定ファイルパス。未指定時: ${DEFAULT_CONFIG_PATH}
