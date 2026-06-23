@@ -12,6 +12,8 @@ const databaseUrl =
   "postgresql://freelink:freelink@localhost:5432/freelink?schema=public";
 const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
 
+const demoEmails = ["sales@freelink.jp", "freelancer@example.com"];
+
 async function upsertSkill(
   name: string,
   category: "language" | "database" | "framework" | "cloud" | "tool" | "other",
@@ -40,6 +42,25 @@ async function upsertSeedUser(input: {
     phone: input.phone ? encryptText(input.phone) : null,
     isActive: true,
   };
+  if (demoEmails.includes(input.email)) {
+    const existingDemoUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { emailHash },
+          { email: input.email },
+        ],
+      },
+      select: { id: true },
+    });
+    await prisma.user.deleteMany({
+      where: {
+        id: { in: existingDemoUsers.map((user) => user.id) },
+      },
+    });
+
+    return prisma.user.create({ data: encryptedData });
+  }
+
   const user = await prisma.user.findUnique({ where: { emailHash } });
   if (user) {
     return prisma.user.update({ where: { id: user.id }, data: encryptedData });
