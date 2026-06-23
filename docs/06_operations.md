@@ -443,6 +443,8 @@ Vercelでフロントエンドを配信する場合は、リポジトリルー�
 | 求職者 | `freelancer@example.com` | `freelance123` |
 | 営業   | `sales@freelink.jp`      | `sales123`     |
 
+デモログイン導線はローカル開発環境とVercel環境で表示する。Vercelでログインを成功させるには、接続先DBに上記デモユーザーを作成しておく。
+
 ## 14. macOSでNuxt/Vite socketエラーが出る場合
 
 このプロジェクトでは `Frontend/scripts/nuxt-short-tmp.mjs` を経由してNuxtを起動し、`TMPDIR=/tmp` を自動設定する。直接 `npx nuxt dev` は使わず `npm run dev` を使用する。

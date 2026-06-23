@@ -364,6 +364,7 @@ const {
 
 const heroImageSrc = "/images/lp-hero-engineer.png";
 const flowImageSrc = "/images/lp-flow-visual.png";
+const runtimeConfig = useRuntimeConfig();
 
 const showLogin = ref(false);
 const showPrivacyPolicy = ref(false);
@@ -371,7 +372,9 @@ const privacyAccepted = ref(false);
 const passwordResetMode = ref<"login" | "request" | "confirm">("login");
 const devPasswordResetToken = ref("");
 const landingHeaderRef = ref<HTMLElement | null>(null);
-const showDemoLogin = import.meta.dev;
+const showDemoLogin = computed(
+  () => import.meta.dev || runtimeConfig.public.showDemoLogin === true,
+);
 const registerErrors = reactive<Record<string, string>>({});
 const passwordResetErrors = reactive<Record<string, string>>({});
 let landingHeaderObserver: ResizeObserver | undefined;
