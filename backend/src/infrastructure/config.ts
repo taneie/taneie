@@ -3,7 +3,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 function readEnv(name: string, fallback: string) {
-  return process.env[name] || fallback;
+  const value = process.env[name];
+  if (!value) return fallback;
+
+  return value.trim().replace(/^["']|["']$/g, "");
 }
 
 export const config = {

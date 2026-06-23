@@ -387,13 +387,26 @@ async function uploadResumeFile(file: File) {
     }),
   });
   const { upload } = await import("@vercel/blob/client");
+  const multipart = file.size > 5 * 1024 * 1024;
+  await rawApiRequest("/resumes/blob-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "blob.generate-client-token",
+      payload: {
+        pathname: intent.pathname,
+        clientPayload: intent.clientPayload,
+        multipart,
+      },
+    }),
+  });
   const blob = await upload(intent.pathname, file, {
     access: "private",
     handleUploadUrl: `${getApiBase()}/resumes/blob-upload`,
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     clientPayload: intent.clientPayload,
     contentType: mimeType,
-    multipart: file.size > 5 * 1024 * 1024,
+    multipart,
   });
   await apiRequest("/resumes/complete", {
     method: "POST",
