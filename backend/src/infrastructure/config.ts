@@ -30,8 +30,7 @@ export const config = {
 };
 
 export function hasValidBlobReadWriteToken() {
-  return (
-    config.blobReadWriteToken.startsWith("vercel_blob_rw_") &&
-    !config.blobReadWriteToken.includes("xxxxx")
-  );
+  const token = config.blobReadWriteToken.trim();
+
+  return Boolean(token) && !/x{5,}|dummy|placeholder/i.test(token);
 }
