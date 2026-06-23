@@ -13,6 +13,17 @@ const databaseUrl =
 const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
 
 const demoEmails = ["sales@freelink.jp", "freelancer@example.com"];
+const demoFreelancerPublicCode = "tf-demo-yamada";
+
+async function resetDemoFreelancerProfile() {
+  const profile = await prisma.freelancerProfile.findUnique({
+    where: { publicCode: demoFreelancerPublicCode },
+    select: { userId: true },
+  });
+  if (!profile) return;
+
+  await prisma.user.delete({ where: { id: profile.userId } });
+}
 
 async function upsertSkill(
   name: string,
@@ -90,6 +101,8 @@ async function main() {
     bcrypt.hash("sales123", 12),
   ]);
 
+  await resetDemoFreelancerProfile();
+
   const sales = await upsertSeedUser({
     email: "sales@freelink.jp",
     passwordHash: salesPassword,
@@ -116,7 +129,7 @@ async function main() {
   const profile = await prisma.freelancerProfile.upsert({
     where: { userId: freelancer.id },
     update: {
-      publicCode: "tf-demo-yamada",
+      publicCode: demoFreelancerPublicCode,
       roleTitle: "バックエンドエンジニア",
       yearsExperience: 6,
       desiredRate: 85,
@@ -129,7 +142,7 @@ async function main() {
     },
     create: {
       userId: freelancer.id,
-      publicCode: "tf-demo-yamada",
+      publicCode: demoFreelancerPublicCode,
       roleTitle: "バックエンドエンジニア",
       yearsExperience: 6,
       desiredRate: 85,
