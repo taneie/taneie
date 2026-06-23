@@ -108,6 +108,7 @@ model User {
   contactInquiries   ContactInquiry[]       @relation("ContactInquiryCreatedBy")
   answeredContactInquiries ContactInquiry[] @relation("ContactInquiryAnsweredBy")
   passwordResetTokens PasswordResetToken[]
+  uploadedFiles UploadedFile[]
 
   @@map("users")
 }
@@ -188,6 +189,7 @@ model FreelancerSkill {
 model Resume {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   freelancerProfileId String   @map("freelancer_profile_id") @db.Uuid
+  uploadedFileId      String?  @map("uploaded_file_id") @db.Uuid
   originalFilename    String   @map("original_filename") @db.VarChar(1000)
   mimeType            String?  @map("mime_type") @db.VarChar(100)
   fileSizeBytes       Int?     @map("file_size_bytes")
@@ -196,9 +198,33 @@ model Resume {
   uploadedAt          DateTime @default(now()) @map("uploaded_at") @db.Timestamptz(6)
 
   freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+  uploadedFile      UploadedFile?     @relation(fields: [uploadedFileId], references: [id], onDelete: SetNull)
 
   @@index([freelancerProfileId, isLatest])
+  @@index([uploadedFileId])
   @@map("resumes")
+}
+
+model UploadedFile {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  applicationId    String?  @map("application_id") @db.Uuid
+  originalFileName String   @map("original_file_name")
+  blobPath         String   @map("blob_path")
+  blobUrl          String?  @map("blob_url")
+  mimeType         String   @map("mime_type") @db.VarChar(255)
+  sizeBytes        BigInt   @map("size_bytes")
+  visibility       String   @default("private") @db.VarChar(50)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  resumes     Resume[]
+
+  @@index([userId, createdAt])
+  @@index([applicationId])
+  @@map("uploaded_files")
 }
 
 model Client {
@@ -266,6 +292,7 @@ model Application {
   freelancerProfile FreelancerProfile          @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
   histories         ApplicationStatusHistory[]
   meetingRequests   MeetingRequest[]
+  uploadedFiles     UploadedFile[]
 
   @@unique([jobId, freelancerProfileId])
   @@index([status])

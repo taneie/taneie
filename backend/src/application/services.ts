@@ -12,4 +12,6 @@ export type {
   ProfileInput,
   PushSubscriptionInput,
   ResumeMetadataInput,
+  ResumeUploadCompleteInput,
+  ResumeUploadIntentInput,
 } from "./services/shared.js";

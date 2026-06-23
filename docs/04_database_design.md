@@ -46,6 +46,7 @@ erDiagram
 | `Skill`                    | `skills`                       | スキルマスタ                               |
 | `FreelancerSkill`          | `freelancer_skills`            | 求職者とスキルの関連                       |
 | `Resume`                   | `resumes`                      | レジュメメタ情報                           |
+| `UploadedFile`             | `uploaded_files`               | Blob保存ファイルのメタ情報                 |
 | `Client`                   | `clients`                      | クライアント企業                           |
 | `Job`                      | `jobs`                         | 案件                                       |
 | `JobSkill`                 | `job_skills`                   | 案件とスキルの関連                         |

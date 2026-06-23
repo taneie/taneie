@@ -371,7 +371,10 @@ const privacyAccepted = ref(false);
 const passwordResetMode = ref<"login" | "request" | "confirm">("login");
 const devPasswordResetToken = ref("");
 const landingHeaderRef = ref<HTMLElement | null>(null);
-const showDemoLogin = import.meta.dev;
+const runtimeConfig = useRuntimeConfig();
+const showDemoLogin = computed(
+  () => import.meta.dev || runtimeConfig.public.showDemoLogin === true,
+);
 const registerErrors = reactive<Record<string, string>>({});
 const passwordResetErrors = reactive<Record<string, string>>({});
 let landingHeaderObserver: ResizeObserver | undefined;

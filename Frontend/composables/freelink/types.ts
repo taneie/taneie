@@ -232,6 +232,24 @@ export interface ProfileTermsInput {
   resume?: File | null;
 }
 
+export interface ResumeUploadIntent {
+  pathname: string;
+  clientPayload: string;
+  allowedContentTypes: string[];
+  maximumSizeInBytes: number;
+}
+
+export interface ResumePreviewFile {
+  freelancerName: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  previewUrl: string;
+  html: string;
+  previewKind: "pdf" | "html" | "download";
+  expiresAt: string;
+}
+
 export interface JobInput {
   title: string;
   client: string;

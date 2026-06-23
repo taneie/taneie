@@ -38,6 +38,8 @@ import type {
   Profile,
   ProfileTermsInput,
   RegisterInput,
+  ResumePreviewFile,
+  ResumeUploadIntent,
   Role,
   ScoutFilters,
   ScoutJobPickerState,
@@ -66,6 +68,22 @@ function getApiBase() {
 }
 
 const state = ref<FreelinkState>(createSeedState());
+
+const RESUME_ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+const RESUME_EXTENSION_MIME_TYPES: Record<string, string> = {
+  ".pdf": "application/pdf",
+  ".doc": "application/msword",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".xls": "application/vnd.ms-excel",
+  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
 
 const filters = ref<JobFilters>({
   keyword: "",
@@ -109,6 +127,9 @@ const chatBannerVisible = ref(false);
 const chatBannerTitle = ref("");
 const chatBannerBody = ref("");
 const chatBannerFreelancerId = ref("");
+const resumePreview = ref<ResumePreviewFile | null>(null);
+const resumePreviewLoading = ref(false);
+const resumePreviewError = ref("");
 const meetingThreadMode = ref<"initial" | "job">("initial");
 const activeMeetingApplicationId = ref("");
 const initialized = ref(false);
@@ -299,6 +320,93 @@ async function apiRequest<T>(
   } finally {
     finishLoading?.();
   }
+}
+
+async function rawApiRequest(path: string, options: ApiRequestOptions = {}) {
+  const { silent = false, ...requestOptions } = options;
+  const finishLoading = silent ? undefined : beginLoading();
+  const headers = new Headers(options.headers);
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  try {
+    const response = await fetch(`${getApiBase()}${path}`, {
+      ...requestOptions,
+      headers,
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      throw new Error(data?.error?.message || "API通信に失敗しました。");
+    }
+    return response;
+  } finally {
+    finishLoading?.();
+  }
+}
+
+function getResumeUploadMaxBytes() {
+  const runtimeConfig = useRuntimeConfig();
+  const configured = Number(runtimeConfig.public.resumeUploadMaxBytes);
+
+  return Number.isFinite(configured) && configured > 0
+    ? configured
+    : 10 * 1024 * 1024;
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${Math.ceil(bytes / 1024 / 1024)}MB`;
+
+  return `${Math.ceil(bytes / 1024)}KB`;
+}
+
+function resolveResumeMimeType(file: File) {
+  const extension = file.name.trim().toLowerCase().match(/\.[^.]+$/)?.[0] || "";
+
+  return file.type || RESUME_EXTENSION_MIME_TYPES[extension] || "";
+}
+
+async function uploadResumeFile(file: File) {
+  const maxBytes = getResumeUploadMaxBytes();
+  const mimeType = resolveResumeMimeType(file);
+  if (!RESUME_ALLOWED_MIME_TYPES.includes(mimeType)) {
+    showToast("PDF、Word、Excelファイルのみアップロードできます。");
+    return false;
+  }
+  if (file.size > maxBytes) {
+    showToast(`ファイルサイズは${formatFileSize(maxBytes)}以内にしてください。`);
+    return false;
+  }
+
+  const intent = await apiRequest<ResumeUploadIntent>("/resumes/upload-intent", {
+    method: "POST",
+    body: JSON.stringify({
+      originalFilename: file.name,
+      mimeType,
+      fileSizeBytes: file.size,
+    }),
+  });
+  const { upload } = await import("@vercel/blob/client");
+  const blob = await upload(intent.pathname, file, {
+    access: "private",
+    handleUploadUrl: `${getApiBase()}/resumes/blob-upload`,
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    clientPayload: intent.clientPayload,
+    contentType: mimeType,
+    multipart: file.size > 5 * 1024 * 1024,
+  });
+  await apiRequest("/resumes/complete", {
+    method: "POST",
+    body: JSON.stringify({
+      originalFilename: file.name,
+      mimeType,
+      fileSizeBytes: file.size,
+      blobPath: blob.pathname,
+      blobUrl: blob.url,
+    }),
+  });
+
+  return true;
 }
 
 function setAuth(
@@ -1123,23 +1231,21 @@ async function saveProfileTerms(values: ProfileTermsInput) {
   });
 
   if (values.resume?.name) {
-    state.value.profile.resumeName = values.resume.name;
-    state.value.profile.resumeType =
-      values.resume.type || "application/octet-stream";
-    state.value.profile.resumeSize = `${Math.ceil(values.resume.size / 1024)}KB`;
-    await apiRequest("/resumes", {
-      method: "POST",
-      body: JSON.stringify({
-        originalFilename: values.resume.name,
-        mimeType: values.resume.type || "application/octet-stream",
-        fileSizeBytes: values.resume.size,
-        storageKey: `local/${Date.now()}-${values.resume.name}`,
-      }),
-    }).catch((error) =>
+    try {
+      const uploaded = await uploadResumeFile(values.resume);
+      if (!uploaded) return;
+      state.value.profile.resumeName = values.resume.name;
+      state.value.profile.resumeType =
+        values.resume.type || "application/octet-stream";
+      state.value.profile.resumeSize = formatFileSize(values.resume.size);
+    } catch (error) {
       showToast(
-        error instanceof Error ? error.message : "レジュメ保存に失敗しました。",
-      ),
-    );
+        error instanceof Error
+          ? `レジュメ保存に失敗しました。${error.message}`
+          : "レジュメ保存に失敗しました。",
+      );
+      return;
+    }
   }
 
   state.value.wizardStep = 4;
@@ -1504,13 +1610,57 @@ async function sendScout(freelancerId: string, jobId: string) {
   }
 }
 
-function selectPreview(freelancerId: string) {
+async function selectPreview(freelancerId: string) {
   const freelancer = getFreelancer(freelancerId);
   state.value.previewFreelancerId = freelancer?.id || "";
+  resumePreview.value = null;
+  resumePreviewError.value = "";
   persist();
-  showToast(
-    `${freelancer?.resumeName || "レジュメ未登録"} を管理プレビューで確認中です。`,
-  );
+  if (!freelancer?.id) return;
+  if (!freelancer.resumeName) {
+    resumePreviewError.value = "レジュメが登録されていません。";
+    showToast("レジュメが登録されていません。");
+    return;
+  }
+  resumePreviewLoading.value = true;
+  try {
+    resumePreview.value = await apiRequest<ResumePreviewFile>(
+      `/resumes/freelancers/${freelancer.id}/preview`,
+    );
+    showToast(`${freelancer.resumeName} を管理プレビューで確認中です。`);
+  } catch (error) {
+    resumePreviewError.value =
+      error instanceof Error
+        ? error.message
+        : "レジュメプレビューを取得できませんでした。";
+    showToast(resumePreviewError.value);
+  } finally {
+    resumePreviewLoading.value = false;
+  }
+}
+
+async function downloadResumePreview() {
+  const freelancerId = state.value.previewFreelancerId;
+  const fileName = resumePreview.value?.fileName || "resume";
+  if (!freelancerId) return;
+  try {
+    const response = await rawApiRequest(
+      `/resumes/freelancers/${freelancerId}/download`,
+    );
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch (error) {
+    showToast(
+      error instanceof Error ? error.message : "レジュメをダウンロードできませんでした。",
+    );
+  }
 }
 
 async function toggleJobSort(jobId: string) {
@@ -2277,6 +2427,8 @@ async function saveProfileToApi(message: string) {
     state.value.profile = {
       ...nextProfile,
       resumeName: previousProfile.resumeName,
+      resumeType: previousProfile.resumeType,
+      resumeSize: previousProfile.resumeSize,
       meetingCandidates: previousProfile.meetingCandidates,
       pledgeAccepted:
         nextProfile.pledgeAccepted || previousProfile.pledgeAccepted,
@@ -2466,6 +2618,9 @@ export function useFreelinkRuntime() {
     chatBannerVisible,
     chatBannerTitle,
     chatBannerBody,
+    resumePreview,
+    resumePreviewLoading,
+    resumePreviewError,
     meetingThreadMode,
     activeMeetingApplicationId,
     navItems,
@@ -2535,6 +2690,7 @@ export function useFreelinkRuntime() {
     sendScout,
     openScoutJob,
     selectPreview,
+    downloadResumePreview,
     toggleJobSort,
     toggleJobActive,
     changeApplicationStatus,

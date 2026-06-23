@@ -249,6 +249,18 @@ export const resumeMetadataSchema = z.object({
   storageKey: z.string().trim().min(1).max(500),
 });
 
+export const resumeUploadIntentSchema = z.object({
+  originalFilename: z.string().trim().min(1).max(255),
+  mimeType: z.string().trim().min(1).max(255),
+  fileSizeBytes: z.coerce.number().int().positive(),
+  applicationId: z.string().uuid().optional(),
+});
+
+export const resumeUploadCompleteSchema = resumeUploadIntentSchema.extend({
+  blobPath: z.string().trim().min(1).max(500),
+  blobUrl: z.string().url().max(2000).optional(),
+});
+
 export const pushSubscriptionSchema = z.object({
   endpoint: z.string().url().max(500),
   keys: z.object({

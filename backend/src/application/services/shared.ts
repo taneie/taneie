@@ -70,6 +70,23 @@ export interface ResumeMetadataInput {
   storageKey: string;
 }
 
+export interface ResumeUploadIntentInput {
+  originalFilename: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  applicationId?: string;
+}
+
+export interface ResumeBlobPayload extends ResumeUploadIntentInput {
+  userId: string;
+  pathname: string;
+}
+
+export interface ResumeUploadCompleteInput extends ResumeUploadIntentInput {
+  blobPath: string;
+  blobUrl?: string;
+}
+
 export interface PushSubscriptionInput {
   endpoint: string;
   keys: {

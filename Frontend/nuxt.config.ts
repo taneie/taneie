@@ -34,7 +34,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://127.0.0.1:8787/api"
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://127.0.0.1:8787/api",
+      resumeUploadMaxBytes: Number(
+        process.env.NUXT_PUBLIC_RESUME_UPLOAD_MAX_BYTES || "10485760",
+      ),
+      showDemoLogin: process.env.NUXT_PUBLIC_SHOW_DEMO_LOGIN === "true",
     }
   },
 });

@@ -1,5 +1,5 @@
 {
-  "target": "local",
+  "target": "staging",
   "dryRun": false,
   "defaults": {
     "onExisting": "fail",
@@ -28,11 +28,11 @@
   },
   "users": [
     {
-      "email": "sales2@freelink.jp",
-      "name": "Freelink 営業2",
-      "nameKana": "トライアングル エイギョウニ",
+      "email": "taneie@tangle.co.jp",
+      "name": "種家鷹音",
+      "nameKana": "たねいえたかね",
       "phone": "03-0000-0000",
-      "password": "change-me-12chars-or-more",
+      "password": "P0keMOn-masTer",
       "isActive": true,
       "onExisting": "fail",
       "skipPolicyConsent": false

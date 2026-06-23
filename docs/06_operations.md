@@ -393,6 +393,11 @@ docker compose down -v
 | `WEB_PUSH_PRIVATE_KEY`   | 通知利用時○ | 空                                                                               | VAPID秘密鍵                           |
 | `WEB_PUSH_SUBJECT`       | 通知利用時○ | `mailto:admin@example.com`                                                       | VAPID subject                         |
 | `DATA_ENCRYPTION_KEY`    |       本番○ | 空                                                                               | 個人情報暗号化鍵                      |
+| `BLOB_READ_WRITE_TOKEN`   |  Blob利用時○ | 空                                                                               | Vercel Blob private store の読み書きトークン |
+| `BLOB_UPLOAD_CALLBACK_URL` | Vercel外API時○ | 空                                                                            | `/api/resumes/blob-upload` の公開URL。Render等でAPIを動かす場合に設定 |
+| `RESUME_UPLOAD_MAX_BYTES` |           - | `10485760`                                                                       | API側のレジュメアップロード上限       |
+| `NUXT_PUBLIC_RESUME_UPLOAD_MAX_BYTES` | - | `10485760`                                                               | フロント表示・事前検証用の上限        |
+| `NUXT_PUBLIC_SHOW_DEMO_LOGIN` | Devのみ | `false`                                                                    | ログイン画面のデモアカウント入口表示  |
 
 ## 9. 暗号化鍵生成
 
@@ -435,6 +440,12 @@ npm run db:generate
 | `npm run api:start` | コンパイル済みAPIを起動                                    |
 
 Vercelでフロントエンドを配信する場合は、リポジトリルートの `vercel.json` を利用する。Build Command は `npm run generate`、Output Directory は `Frontend/.vercel/output/static` とし、Vercel Project Settings 側で `public` を指定しない。Vercel環境では Nitro preset が `vercel-static` になり、このディレクトリに静的成果物が生成される。
+
+Vercel Blob を利用する場合は private Blob Store を作成し、Blobトークンを発行するAPI実行環境に `BLOB_READ_WRITE_TOKEN` を設定する。フロントは `@vercel/blob/client` で直接Blobへアップロードし、APIはトークン発行と完了後のメタデータ保存のみを行う。RenderでAPIを運用する場合は `BLOB_UPLOAD_CALLBACK_URL` に `https://<api-host>/api/resumes/blob-upload` を設定する。
+
+ローカル画面からデプロイ済みDev環境へアップロードする場合は、ローカル `.env` の `NUXT_PUBLIC_API_BASE` をDev APIへ向ける。これにより認証、Blob token発行、メタデータ保存が同じDev環境に揃う。Dev API側の `CORS_ORIGIN` にはローカルの `http://127.0.0.1:5173` / `http://localhost:5173` を追加する。ローカルAPIを使ってBlob tokenだけ発行する場合は、同じ `BLOB_READ_WRITE_TOKEN` をローカルAPIにも設定し、`BLOB_UPLOAD_CALLBACK_URL` をDev APIの `/api/resumes/blob-upload` に向ける。
+
+Dev環境では `NUXT_PUBLIC_SHOW_DEMO_LOGIN=true` を設定するとデモログイン入口を表示できる。デモアカウントは `npm run db:seed` で投入され、Renderの `startCommand` では `npm run deploy:start` により `db:deploy` の後に `db:seed` が実行される。
 
 ## 13. デモログイン
 

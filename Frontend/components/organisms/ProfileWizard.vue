@@ -207,11 +207,11 @@
             @update:model-value="markDirty"
           />
           <label :class="$style.field"
-            >レジュメ（PDF / Word）
+            >レジュメ（PDF / Word / Excel）
             <input
               :class="$style.control"
               type="file"
-              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               @change="onResumeChange"
             />
           </label>

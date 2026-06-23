@@ -22,4 +22,16 @@ export const config = {
   webPushPrivateKey: readEnv("WEB_PUSH_PRIVATE_KEY", ""),
   webPushSubject: readEnv("WEB_PUSH_SUBJECT", "mailto:admin@example.com"),
   dataEncryptionKey: readEnv("DATA_ENCRYPTION_KEY", ""),
+  blobReadWriteToken: readEnv("BLOB_READ_WRITE_TOKEN", ""),
+  blobUploadCallbackUrl: readEnv("BLOB_UPLOAD_CALLBACK_URL", ""),
+  resumeUploadMaxBytes: Number(
+    readEnv("RESUME_UPLOAD_MAX_BYTES", String(10 * 1024 * 1024)),
+  ),
 };
+
+export function hasValidBlobReadWriteToken() {
+  return (
+    config.blobReadWriteToken.startsWith("vercel_blob_rw_") &&
+    !config.blobReadWriteToken.includes("xxxxx")
+  );
+}

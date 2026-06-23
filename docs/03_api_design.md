@@ -190,6 +190,30 @@
 
 ## 6. レジュメAPI
 
+`POST /api/resumes/upload-intent`
+
+ログイン済みの freelancer が、Vercel Blob client upload 用のアップロード情報を取得する。ファイル本体はAPIに送らず、MIME type、サイズ、元ファイル名だけを検証する。
+
+```json
+{
+  "originalFilename": "職務経歴書.pdf",
+  "mimeType": "application/pdf",
+  "fileSizeBytes": 384000
+}
+```
+
+`POST /api/resumes/blob-upload`
+
+Vercel Blob client upload の `handleUploadUrl`。JWTで認可したユーザーだけBlob upload tokenを発行し、アップロード完了後に `uploaded_files` と `resumes` へメタデータを保存する。
+
+`GET /api/resumes/freelancers/:freelancerId/preview`
+
+営業または本人がレジュメを確認するためのプレビュー情報を返す。PDFはprivate Blobの短時間署名付きURLを返し、DOCX / ExcelはAPI側でHTMLへ変換して返す。旧形式のDOCなどHTML変換できない形式はダウンロード確認にフォールバックする。
+
+`GET /api/resumes/freelancers/:freelancerId/download`
+
+営業または本人がprivate Blob上のレジュメを認証付きでダウンロードする。
+
 `POST /api/resumes`
 
 このAPIはファイル本体ではなく、レジュメのメタ情報を登録する。既存レジュメは `isLatest=false` に更新され、新規レジュメが最新扱いになる。
