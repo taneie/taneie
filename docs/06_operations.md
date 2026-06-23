@@ -434,7 +434,7 @@ npm run db:generate
 | `npm run api:build` | バックエンドTypeScriptをコンパイル                         |
 | `npm run api:start` | コンパイル済みAPIを起動                                    |
 
-Vercelでフロントエンドを配信する場合は、リポジトリルートの `vercel.json` を利用する。Build Command は `npm run generate`、Output Directory は `Frontend/.output/public` とし、Vercel Project Settings 側で `public` を指定しない。
+Vercelでフロントエンドを配信する場合は、リポジトリルートの `vercel.json` を利用する。Build Command は `npm run generate`、Output Directory は `Frontend/.vercel/output/static` とし、Vercel Project Settings 側で `public` を指定しない。Vercel環境では Nitro preset が `vercel-static` になり、このディレクトリに静的成果物が生成される。
 
 ## 13. デモログイン
 

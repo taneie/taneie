@@ -5,6 +5,7 @@
 .cache
 dist
 Frontend/.output
+Frontend/.vercel
 Frontend/.nuxt
 Frontend/.nitro
 Frontend/.cache
