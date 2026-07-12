@@ -125,7 +125,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 
 const {
   filters,
@@ -147,7 +147,7 @@ const {
   applyJob,
   setView,
   openProfileStep,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const loadMoreTrigger = ref<HTMLElement | null>(null);
 const firstPendingProfileStep = computed(

@@ -301,7 +301,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import type { ProfileTermsInput } from "~/composables/freelink/types";
 
 const {
@@ -323,7 +323,7 @@ const {
   frameworkSkillOptions,
   cloudSkillOptions,
   roleTitleOptions,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候補"];
 const profile = computed(() => state.value.profile);

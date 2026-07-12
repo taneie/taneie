@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import type { Freelancer } from "~/composables/freelink/types";
 
 const props = defineProps<{
@@ -52,7 +52,7 @@ defineEmits<{
   preview: [freelancerId: string];
 }>();
 
-const { today } = useFreelinkRuntime();
+const { today } = useFrichyRuntime();
 
 const daysOld = computed(() => {
   return Math.floor(

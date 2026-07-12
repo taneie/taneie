@@ -205,7 +205,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, useCssModule } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import type { ContactInquiryInput } from "~/composables/freelink/types";
 
 const {
@@ -217,7 +217,7 @@ const {
   answerContactInquiry,
   markDirty,
   clearUnsavedChanges,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 const styles = useCssModule();
 
 const inquiryTypeOptions = [

@@ -159,7 +159,7 @@ export interface AliveCheck {
   at: string;
 }
 
-export interface FreelinkState {
+export interface FrichyState {
   auth: AuthUser | null;
   authMode: AuthMode;
   accounts: Account[];

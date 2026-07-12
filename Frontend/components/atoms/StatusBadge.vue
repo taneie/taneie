@@ -4,12 +4,12 @@
 
 <script setup lang="ts">
 import { computed, useCssModule } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 const props = defineProps<{
   value: string;
 }>();
 
-const { availabilityClass } = useFreelinkRuntime();
+const { availabilityClass } = useFrichyRuntime();
 const css = useCssModule();
 const toneClass = computed(
   () => css[availabilityClass(props.value)] || css.pause,

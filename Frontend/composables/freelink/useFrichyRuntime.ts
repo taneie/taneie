@@ -43,7 +43,7 @@ import type {
   Role,
   ScoutFilters,
   ScoutJobPickerState,
-  FreelinkState,
+  FrichyState,
   ViewKey,
 } from "./types";
 import {
@@ -67,7 +67,7 @@ function getApiBase() {
   return String(runtimeConfig.public.apiBase || API_BASE_FALLBACK).replace(/\/$/, "");
 }
 
-const state = ref<FreelinkState>(createSeedState());
+const state = ref<FrichyState>(createSeedState());
 
 const RESUME_ALLOWED_MIME_TYPES = [
   "application/pdf",
@@ -198,7 +198,7 @@ function init() {
   try {
     const saved = JSON.parse(
       localStorage.getItem(STORAGE_KEY) || "null",
-    ) as Partial<FreelinkState> | null;
+    ) as Partial<FrichyState> | null;
     state.value = saved
       ? normalizeLoadedState(mergeState(createSeedState(), saved))
       : createSeedState();
@@ -214,9 +214,9 @@ function init() {
 }
 
 function mergeState(
-  base: FreelinkState,
-  saved: Partial<FreelinkState>,
-): FreelinkState {
+  base: FrichyState,
+  saved: Partial<FrichyState>,
+): FrichyState {
   return {
     ...clone(base),
     ...saved,
@@ -235,7 +235,7 @@ function mergeState(
   };
 }
 
-function normalizeLoadedState(loadedState: FreelinkState): FreelinkState {
+function normalizeLoadedState(loadedState: FrichyState): FrichyState {
   if (isLegacySampleProfile(loadedState.profile)) {
     loadedState.profile = blankProfile("fr-current");
     loadedState.selectedFreelancerId = "fr-current";
@@ -255,7 +255,7 @@ function isLegacySampleProfile(profile: Profile) {
 
 function normalizeMessages(
   messages: Message[],
-  base: FreelinkState,
+  base: FrichyState,
 ): Message[] {
   return messages.map((message) => ({
     ...message,
@@ -264,7 +264,7 @@ function normalizeMessages(
   }));
 }
 
-function inferMessageFreelancerId(message: Message, base: FreelinkState) {
+function inferMessageFreelancerId(message: Message, base: FrichyState) {
   const names = [message.from, message.to];
   const matchedFreelancer = base.freelancers.find((freelancer) =>
     names.includes(freelancer.name),
@@ -602,9 +602,9 @@ function showBrowserChatNotification(message: Message) {
     Notification.permission !== "granted"
   )
     return;
-  const notification = new Notification("Freelink", {
+  const notification = new Notification("Frichy", {
     body: `${message.from || "相手"}: ${message.body}`,
-    tag: `freelink-chat-${message.id}`,
+    tag: `frichy-chat-${message.id}`,
   });
   notification.onclick = () => {
     window.focus();
@@ -2145,7 +2145,7 @@ function renderAnonymousSheetCanvas(
 
   ctx.fillStyle = "#1d5fd3";
   ctx.font = '700 30px "Hiragino Sans", "Yu Gothic", sans-serif';
-  ctx.fillText("Freelink", margin, 92);
+  ctx.fillText("Frichy", margin, 92);
   ctx.fillStyle = "#10294f";
   ctx.font = '700 54px "Hiragino Sans", "Yu Gothic", sans-serif';
   ctx.fillText("匿名スキルシート", margin, 164);
@@ -2179,7 +2179,7 @@ function renderAnonymousSheetCanvas(
       value: `${profile.startDate || "未登録"}開始 / ${profile.workRate || "未登録"} / ${profile.remote || "未登録"}`,
     },
     { label: "ステータス", value: profile.availability || "未登録" },
-    { label: "人物確認", value: "Freelink営業による初回面談調整中" },
+    { label: "人物確認", value: "Frichy営業による初回面談調整中" },
     {
       label: "匿名化",
       value: "氏名・メール・電話・固有社名は非表示。提案先へ共有しやすい内容に整形しています。",
@@ -2214,7 +2214,7 @@ function renderAnonymousSheetCanvas(
   ctx.font = '400 24px "Hiragino Sans", "Yu Gothic", sans-serif';
   drawWrappedText(
     ctx,
-    "本資料はクライアント提案用の匿名プロフィールです。詳細な職務経歴書、連絡先、本人確認情報はFreelink営業管理画面で確認してください。",
+    "本資料はクライアント提案用の匿名プロフィールです。詳細な職務経歴書、連絡先、本人確認情報はFrichy営業管理画面で確認してください。",
     margin,
     y,
     bodyWidth,
@@ -2225,7 +2225,7 @@ function renderAnonymousSheetCanvas(
   ctx.font = '400 20px "Hiragino Sans", "Yu Gothic", sans-serif';
   ctx.fillText(`Generated: ${today()}`, margin, page.height - 72);
   ctx.fillText(
-    "Freelink Confidential",
+    "Frichy Confidential",
     page.width - 420,
     page.height - 72,
   );
@@ -2611,7 +2611,7 @@ function saveAndNotify(message: string) {
   showToast(message);
 }
 
-export function useFreelinkRuntime() {
+export function useFrichyRuntime() {
   return {
     state,
     filters,

@@ -1,7 +1,7 @@
 <template>
   <img
-    src="/brand/freelink-logo.svg"
-    alt="Freelink"
+    src="/brand/frichy-logo.svg"
+    alt="Frichy"
     :class="$style.brandLogo"
     width="240"
     height="60"

@@ -39,9 +39,9 @@
 <script setup lang="ts">
 import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
 import { useModalA11y } from "~/composables/freelink/useModalA11y";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 
-const { unsavedConfirmVisible, resolveUnsavedConfirm } = useFreelinkRuntime();
+const { unsavedConfirmVisible, resolveUnsavedConfirm } = useFrichyRuntime();
 
 useBodyScrollLock(unsavedConfirmVisible);
 

@@ -16,7 +16,7 @@ import { parseArgs } from "node:util";
 const DEFAULT_CONFIG_PATH =
   "backend/scripts/add-sales-user/config/sales-users.config.json";
 const LOCAL_DATABASE_URL =
-  "postgresql://freelink:freelink@localhost:5432/freelink?schema=public";
+  "postgresql://frichy:frichy@localhost:5432/frichy?schema=public";
 const ENCRYPTION_PREFIX = "enc:v1:";
 
 const parsed = parseArgs({

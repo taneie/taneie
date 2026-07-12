@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 
 const {
   chatBannerVisible,
@@ -29,7 +29,7 @@ const {
   chatBannerBody,
   openChatBanner,
   dismissChatBanner,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 </script>
 
 <style module>

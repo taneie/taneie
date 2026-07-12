@@ -21,9 +21,9 @@
 </template>
 
 <script setup lang="ts">
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import { onMounted } from "vue";
-const { state, isLoading, init } = useFreelinkRuntime();
+const { state, isLoading, init } = useFrichyRuntime();
 
 onMounted(() => {
   init();

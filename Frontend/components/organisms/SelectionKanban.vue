@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import { computed } from "vue";
 import type { Application } from "~/composables/freelink/types";
 
@@ -54,7 +54,7 @@ const {
   getJob,
   changeApplicationStatus,
   sendApplicationFollowup,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const props = defineProps<{
   applications?: Application[];

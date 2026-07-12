@@ -160,7 +160,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import type { ApplicationStatus, JobInput } from "~/composables/freelink/types";
 
 const {
@@ -176,7 +176,7 @@ const {
   loadAdminMatchedJobs,
   getFreelancer,
   getJob,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const initialJobForm = (): JobInput => ({
   title: "",

@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 
 const {
   state,
@@ -64,7 +64,7 @@ const {
   setView,
   logout,
   roleLabel,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const topbarRef = ref<HTMLElement | null>(null);
 let headerObserver: ResizeObserver | undefined;

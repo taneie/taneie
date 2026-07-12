@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import { computed } from "vue";
 const {
   state,
@@ -76,7 +76,7 @@ const {
   resumePreviewLoading,
   resumePreviewError,
   downloadResumePreview,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const freelancer = computed(() => {
   state.value.previewFreelancerId;

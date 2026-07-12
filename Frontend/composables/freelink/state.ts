@@ -1,6 +1,6 @@
-import type { Profile, FreelinkState } from "./types";
+import type { Profile, FrichyState } from "./types";
 
-export function createSeedState(): FreelinkState {
+export function createSeedState(): FrichyState {
   return {
     auth: null,
     authMode: "login",

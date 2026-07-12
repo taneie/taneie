@@ -45,7 +45,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import type { Job } from "~/composables/freelink/types";
 
 const props = defineProps<{
@@ -54,7 +54,7 @@ const props = defineProps<{
 }>();
 
 const { state, streamTone, toggleJobSort, toggleJobActive } =
-  useFreelinkRuntime();
+  useFrichyRuntime();
 
 const displayJobs = computed(() => props.jobs ?? state.value.jobs);
 </script>

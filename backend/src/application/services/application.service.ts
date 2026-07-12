@@ -103,10 +103,10 @@ export class ApplicationService {
     statusLabel: string,
   ) {
     await notifyUser(this.db, application.freelancerProfile.userId, {
-      title: "Freelink",
+      title: "Frichy",
       body: `${application.job.title}の選考ステータスが「${statusLabel}」になりました。`,
       url: "/",
-      tag: `freelink-application-${application.id}-${statusLabel}`,
+      tag: `frichy-application-${application.id}-${statusLabel}`,
     });
   }
 }

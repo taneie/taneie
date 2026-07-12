@@ -47,7 +47,7 @@ node backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target 
   "environments": {
     "local": {
       "enabled": true,
-      "databaseUrl": "postgresql://freelink:freelink@localhost:5432/freelink?schema=public",
+      "databaseUrl": "postgresql://frichy:frichy@localhost:5432/frichy?schema=public",
       "dataEncryptionKey": "",
       "privacyPolicyVersion": "2026-06-10"
     },
@@ -67,8 +67,8 @@ node backend/scripts/add-sales-user/create-sales-users-from-config.mjs --target 
   },
   "users": [
     {
-      "email": "sales2@freelink.jp",
-      "name": "Freelink 営業2",
+      "email": "sales2@frichy.jp",
+      "name": "Frichy 営業2",
       "nameKana": "トライアングル エイギョウニ",
       "phone": "03-0000-0000",
       "password": "change-me-12chars-or-more",

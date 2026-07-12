@@ -1,20 +1,20 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: freelink-postgres
+    container_name: frichy-postgres
     environment:
-      POSTGRES_USER: freelink
-      POSTGRES_PASSWORD: freelink
-      POSTGRES_DB: freelink
+      POSTGRES_USER: frichy
+      POSTGRES_PASSWORD: frichy
+      POSTGRES_DB: frichy
     ports:
       - "5432:5432"
     volumes:
-      - freelink-postgres:/var/lib/postgresql/data
+      - frichy-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U freelink -d freelink"]
+      test: ["CMD-SHELL", "pg_isready -U frichy -d frichy"]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  freelink-postgres:
+  frichy-postgres:

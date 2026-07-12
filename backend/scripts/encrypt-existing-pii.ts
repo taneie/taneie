@@ -8,7 +8,7 @@ import {
 
 const databaseUrl =
   process.env.DATABASE_URL ||
-  "postgresql://freelink:freelink@localhost:5432/freelink?schema=public";
+  "postgresql://frichy:frichy@localhost:5432/frichy?schema=public";
 const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
 
 async function encryptUsers() {

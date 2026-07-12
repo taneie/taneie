@@ -40,7 +40,7 @@
             <div>ステータス</div>
             <div>{{ profile.availability }}</div>
             <div>人物確認</div>
-            <div>Freelink営業による初回面談調整中</div>
+            <div>Frichy営業による初回面談調整中</div>
           </div>
         </article>
       </div>
@@ -68,10 +68,10 @@
 </template>
 
 <script setup lang="ts">
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import { computed } from "vue";
 const { state, splitCsv, maskName, downloadSheetPdf } =
-  useFreelinkRuntime();
+  useFrichyRuntime();
 
 const profile = computed(() => state.value.profile);
 const publicId = computed(

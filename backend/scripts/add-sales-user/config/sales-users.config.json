@@ -8,7 +8,7 @@
   "environments": {
     "local": {
       "enabled": true,
-      "databaseUrl": "postgresql://freelink:freelink@localhost:5432/freelink?schema=public",
+      "databaseUrl": "postgresql://frichy:frichy@localhost:5432/frichy?schema=public",
       "dataEncryptionKey": "",
       "privacyPolicyVersion": "2026-06-10"
     },

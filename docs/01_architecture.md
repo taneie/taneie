@@ -31,7 +31,7 @@ flowchart LR
 ## 3. ディレクトリ構成
 
 ```text
-Freelink/
+Frichy/
   Frontend/
     app.vue
     pages/
@@ -44,7 +44,7 @@ Freelink/
       templates/
     composables/
       freelink/
-        useFreelinkRuntime.ts
+        useFrichyRuntime.ts
     public/
       push-sw.js
     src/
@@ -73,7 +73,7 @@ Freelink/
 | `Frontend/app.vue`                            | Nuxtアプリのルート                                |
 | `Frontend/pages/index.vue`                    | 単一ページアプリとして主要UIを表示                |
 | `Frontend/components/templates/AppShell.vue`  | ログイン後のアプリケーションレイアウト            |
-| `Frontend/composables/freelink/useFreelinkRuntime.ts` | 画面状態、API通信、認証、画面遷移、業務操作を集約 |
+| `Frontend/composables/freelink/useFrichyRuntime.ts` | 画面状態、API通信、認証、画面遷移、業務操作を集約 |
 
 ### 4.2 コンポーネント分類
 

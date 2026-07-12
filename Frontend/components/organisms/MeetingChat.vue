@@ -236,7 +236,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import type { Message } from "~/composables/freelink/types";
 
@@ -265,7 +265,7 @@ const {
   clearUnsavedChanges,
   getJob,
   openScoutJob,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const candidates = ref<string[]>([""]);
 const body = ref("");

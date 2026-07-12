@@ -184,10 +184,10 @@ export class CommunicationService {
     });
     const mapped = mapMessage(message);
     await notifyUser(this.db, receiverUserId, {
-      title: "Freelink",
+      title: "Frichy",
       body: `${decryptText(message.sender.name)}: ${input.body}`,
       url: "/",
-      tag: `freelink-chat-${message.id}`,
+      tag: `frichy-chat-${message.id}`,
     });
     return mapped;
   }

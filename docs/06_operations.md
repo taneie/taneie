@@ -82,7 +82,7 @@ http://127.0.0.1:8787/api/health
 推奨の配置例:
 
 ```text
-/home/<user>/projects/freelink
+/home/<user>/projects/frichy
 ```
 
 ### 4.2 WSL2 UbuntuにDocker Engineをインストール
@@ -160,7 +160,7 @@ npm -v
 mkdir -p ~/projects
 cd ~/projects
 # ZIP展開済みディレクトリ、またはgit cloneしたディレクトリへ移動
-cd freelink
+cd frichy
 
 npm install
 cp .env.example .env
@@ -283,7 +283,7 @@ npm -v
 ### 5.5 プロジェクト配置と依存関係インストール
 
 ```bash
-cd ~/projects/freelink
+cd ~/projects/frichy
 npm install
 cp .env.example .env
 ```
@@ -383,7 +383,7 @@ docker compose down -v
 
 | 変数                     |        必須 | デフォルト/例                                                                    | 説明                                  |
 | ------------------------ | ----------: | -------------------------------------------------------------------------------- | ------------------------------------- |
-| `DATABASE_URL`           |           ○ | `postgresql://freelink:freelink@localhost:5432/freelink?schema=public` | PostgreSQL接続文字列                  |
+| `DATABASE_URL`           |           ○ | `postgresql://frichy:frichy@localhost:5432/frichy?schema=public` | PostgreSQL接続文字列                  |
 | `API_PORT`               |           - | `8787`                                                                           | APIポート                             |
 | `JWT_SECRET`             |           ○ | `replace-with-a-long-random-secret`                                              | JWT署名鍵。本番では長いランダム値必須 |
 | `JWT_EXPIRES_IN`         |           - | `7d`                                                                             | JWT有効期限                           |
@@ -452,7 +452,7 @@ Dev環境では `NUXT_PUBLIC_SHOW_DEMO_LOGIN=true` を設定するとデモロ�
 | ロール | メールアドレス           | パスワード     |
 | ------ | ------------------------ | -------------- |
 | 求職者 | `freelancer@example.com` | `freelance123` |
-| 営業   | `sales@freelink.jp`      | `sales123`     |
+| 営業   | `sales@frichy.jp`      | `sales123`     |
 
 ## 14. macOSでNuxt/Vite socketエラーが出る場合
 

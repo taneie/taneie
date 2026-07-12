@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: freelink
+    name: frichy
     runtime: node
     plan: free
     buildCommand: npm ci --include=dev && npm run deploy:build

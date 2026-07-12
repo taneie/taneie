@@ -119,7 +119,7 @@
             </button>
             <button type="button" @click="startDemoLogin('sales')">
               <strong>営業デモ</strong>
-              <span>sales@freelink.jp</span>
+              <span>sales@frichy.jp</span>
             </button>
           </div>
         </div>
@@ -178,7 +178,7 @@
               <span>FEATURES</span>
               <h2>
                 <span>最短1分で応募まで。</span>
-                <span>Freelinkが案件探しを自動化。</span>
+                <span>Frichyが案件探しを自動化。</span>
               </h2>
             </div>
 
@@ -337,7 +337,7 @@
     </main>
 
     <footer :class="$style.landingFooter">
-      <span>© 2026 Freelink. All rights reserved.</span>
+      <span>© 2026 Frichy. All rights reserved.</span>
       <button type="button" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
     </footer>
 
@@ -348,7 +348,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import type { RegisterInput } from "~/composables/freelink/types";
 
 const {
@@ -360,7 +360,7 @@ const {
   markDirty,
   confirmDiscardChanges,
   requestBrowserNotificationPermission,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const heroImageSrc = "/images/lp-hero-engineer.png";
 const flowImageSrc = "/images/lp-flow-visual.png";

@@ -1,6 +1,6 @@
-# Freelink
+# Frichy
 
-Freelink は、フリーランス人材・案件・応募・スカウト・面談・チャットを管理するためのWebアプリケーションです。
+Frichy は、フリーランス人材・案件・応募・スカウト・面談・チャットを管理するためのWebアプリケーションです。
 
 フロントエンドは Nuxt 3 / Vue 3、バックエンドは Express、DBは PostgreSQL + Prisma で構成されています。
 
@@ -370,7 +370,7 @@ http://127.0.0.1:5173/
   freelance123
 
 営業:
-  sales@freelink.jp
+  sales@frichy.jp
   sales123
 ```
 
@@ -677,7 +677,7 @@ docker compose up -d postgres
 `.env` の `DATABASE_URL` がDocker Composeの設定と一致しているか確認してください。
 
 ```env
-DATABASE_URL="postgresql://freelink:freelink@localhost:5432/freelink?schema=public"
+DATABASE_URL="postgresql://frichy:frichy@localhost:5432/frichy?schema=public"
 ```
 
 ### `5432` ポートが使われている
@@ -694,7 +694,7 @@ ports:
 `.env` も合わせて変更します。
 
 ```env
-DATABASE_URL="postgresql://freelink:freelink@localhost:5433/freelink?schema=public"
+DATABASE_URL="postgresql://frichy:frichy@localhost:5433/frichy?schema=public"
 ```
 
 ### Prisma Client関連のエラーが出る
@@ -774,7 +774,7 @@ CORS_ORIGIN="http://127.0.0.1:5173,http://localhost:5173"
 │   │   └── templates/
 │   ├── composables/
 │   │   └── freelink/
-│   │       └── useFreelinkRuntime.ts
+│   │       └── useFrichyRuntime.ts
 │   ├── public/
 │   ├── scripts/
 │   │   └── nuxt-short-tmp.mjs

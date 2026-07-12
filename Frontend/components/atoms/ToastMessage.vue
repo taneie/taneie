@@ -9,8 +9,8 @@
 </template>
 
 <script setup lang="ts">
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
-const { toastMessage, toastVisible } = useFreelinkRuntime();
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
+const { toastMessage, toastVisible } = useFrichyRuntime();
 </script>
 
 <style module>

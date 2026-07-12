@@ -122,7 +122,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import type { Job, Role } from "~/composables/freelink/types";
 
 const props = withDefaults(
@@ -145,7 +145,7 @@ defineEmits<{
   openAdmin: [];
 }>();
 
-const { streamTone } = useFreelinkRuntime();
+const { streamTone } = useFrichyRuntime();
 
 const applyButtonLabel = computed(() => {
   if (props.applied) return "応募済み";

@@ -225,7 +225,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import type { IconName } from "~/composables/freelink/types";
 
 const {
@@ -240,7 +240,7 @@ const {
   getFreelancer,
   getJob,
   currentUnreadChatCount,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 const prioritySearch = ref("");
 const applicationSearch = ref("");

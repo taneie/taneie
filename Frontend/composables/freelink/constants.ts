@@ -1,7 +1,7 @@
 import type { Account, ApplicationStatus, NavItem, Role, ViewKey } from "./types";
 
-export const STORAGE_KEY = "freelink-state-v1";
-export const TOKEN_KEY = "freelink-token";
+export const STORAGE_KEY = "frichy-state-v1";
+export const TOKEN_KEY = "frichy-token";
 export const API_BASE_FALLBACK = "http://127.0.0.1:8787/api";
 export const JOB_PAGE_SIZE = 10;
 export const JOB_APPLICATION_LIMIT = 5;
@@ -57,7 +57,7 @@ export const demoAccounts: Account[] = [
     freelancerId: "fr-current",
   },
   {
-    email: "sales@freelink.jp",
+    email: "sales@frichy.jp",
     password: "sales123",
     role: "sales",
     name: "営業",

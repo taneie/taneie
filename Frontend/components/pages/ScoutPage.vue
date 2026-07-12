@@ -174,7 +174,7 @@
 import { computed } from "vue";
 import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
 import { useModalA11y } from "~/composables/freelink/useModalA11y";
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 const {
   scoutFilters,
   scoutJobPicker,
@@ -189,7 +189,7 @@ const {
   sendSelectedScout,
   selectPreview,
   streamTone,
-} = useFreelinkRuntime();
+} = useFrichyRuntime();
 
 useBodyScrollLock(computed(() => scoutJobPicker.value.open));
 const scoutModalRef = useModalA11y(

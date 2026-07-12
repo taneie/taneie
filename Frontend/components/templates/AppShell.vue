@@ -25,10 +25,10 @@
 </template>
 
 <script setup lang="ts">
-import { useFreelinkRuntime } from "~/composables/freelink/useFreelinkRuntime";
+import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
 import { nextTick, watch } from "vue";
 const { state, currentRole, ensureActiveView, setView } =
-  useFreelinkRuntime();
+  useFrichyRuntime();
 
 watch(
   () => [state.value.auth?.role, state.value.activeView],

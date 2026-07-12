@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     baseURL: process.env.NUXT_APP_BASE_URL || "/",
     head: {
       htmlAttrs: { lang: "ja" },
-      title: "Freelink",
+      title: "Frichy",
       meta: [
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -26,7 +26,7 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-        { rel: "apple-touch-icon", href: "/brand/freelink-mark.svg" },
+        { rel: "apple-touch-icon", href: "/brand/frichy-mark.svg" },
       ],
     },
   },
