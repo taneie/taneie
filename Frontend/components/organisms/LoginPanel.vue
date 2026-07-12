@@ -119,7 +119,7 @@
             </button>
             <button type="button" @click="startDemoLogin('sales')">
               <strong>営業デモ</strong>
-              <span>sales@frichy.jp</span>
+              <span>sales@freelink.jp</span>
             </button>
           </div>
         </div>

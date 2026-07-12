@@ -106,7 +106,7 @@
 
 ```json
 {
-  "email": "sales@frichy.jp",
+  "email": "sales@freelink.jp",
   "password": "sales123"
 }
 ```

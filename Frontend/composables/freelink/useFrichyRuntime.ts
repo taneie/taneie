@@ -1056,13 +1056,24 @@ function selectMeetingApplication(applicationId: string) {
 }
 
 async function login(email: string, password: string) {
+  const normalizedEmail = email.trim();
+  const demoAccount = demoAccounts.find(
+    (account) =>
+      account.email === normalizedEmail && account.password === password,
+  );
+  if (demoAccount) {
+    loginWithAccount(demoAccount);
+    showToast(`${roleLabel(demoAccount.role)}ログインしました。`);
+    return;
+  }
+
   try {
     const result = await apiRequest<{
       token: string;
       user: { email: string; role: Role; name: string; freelancerId?: string };
     }>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email: email.trim(), password }),
+      body: JSON.stringify({ email: normalizedEmail, password }),
     });
     clearUnsavedChanges();
     setAuth(result.token, result.user);
@@ -1125,7 +1136,7 @@ async function confirmPasswordReset(token: string, password: string) {
 async function loginWithDemo(role: Role) {
   if (!(await confirmDiscardChanges())) return;
   const account = demoAccounts.find((item) => item.role === role);
-  if (account) void login(account.email, account.password);
+  if (account) loginWithAccount(account);
 }
 
 function loginWithAccount(account: Account) {

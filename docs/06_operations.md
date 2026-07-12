@@ -452,7 +452,7 @@ Dev環境では `NUXT_PUBLIC_SHOW_DEMO_LOGIN=true` を設定するとデモロ�
 | ロール | メールアドレス           | パスワード     |
 | ------ | ------------------------ | -------------- |
 | 求職者 | `freelancer@example.com` | `freelance123` |
-| 営業   | `sales@frichy.jp`      | `sales123`     |
+| 営業   | `sales@freelink.jp`      | `sales123`     |
 
 ## 14. macOSでNuxt/Vite socketエラーが出る場合
 
