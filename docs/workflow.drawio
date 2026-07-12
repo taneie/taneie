@@ -1,0 +1,168 @@
+<mxfile host="app.diagrams.net" modified="2026-07-12T16:00:00.000Z" agent="ChatGPT" version="24.7.17" type="device">
+  <diagram id="business-flow" name="業務フロー">
+    <mxGraphModel dx="2200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="フリーランスエンジニア案件マッチングシステム 業務フロー" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="2040" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlanes -->
+        <mxCell id="lane-freelancer" value="フリーランスエンジニア" style="swimlane;html=1;startSize=34;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="500" height="1180" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-system" value="システム" style="swimlane;html=1;startSize=34;horizontal=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="540" y="90" width="520" height="1180" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-sales" value="営業担当" style="swimlane;html=1;startSize=34;horizontal=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1060" y="90" width="500" height="1180" as="geometry" />
+        </mxCell>
+        <mxCell id="lane-company" value="企業担当者" style="swimlane;html=1;startSize=34;horizontal=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1560" y="90" width="520" height="1180" as="geometry" />
+        </mxCell>
+
+        <!-- Section labels -->
+        <mxCell id="section1" value="1. 登録・初回面談・プロフィール整備" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="70" y="105" width="1980" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="section2" value="2. 案件登録・案件公開" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="70" y="385" width="1980" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="section3" value="3. 案件検索・応募・推薦" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="70" y="625" width="1980" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="section4" value="4. 面談調整・企業面談・成約" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="70" y="900" width="1980" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Freelancer registration flow -->
+        <mxCell id="f-start" value="利用登録" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="170" y="160" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f-profile" value="プロフィール・スキル・希望条件を入力" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="120" y="255" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s-save-user" value="ユーザー情報・希望条件を保存" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="660" y="255" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="sales-initial" value="初回面談を実施・完了フラグ更新" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="1170" y="255" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s-initial-flag" value="initial_meeting_completed = true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="660" y="340" width="260" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Job registration flow -->
+        <mxCell id="c-job-info" value="案件情報を提供" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="1700" y="450" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sales-job-create" value="案件登録・条件整理&lt;br&gt;単価/スキル/リモート/商流/開始時期" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="1140" y="445" width="320" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="s-job-save" value="案件DBへ保存" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="680" y="450" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s-match" value="希望条件・スキルに合う案件を表示対象にする" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="640" y="535" width="300" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Application flow -->
+        <mxCell id="f-search" value="案件検索・詳細確認" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="135" y="690" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s-filter" value="条件に合う案件のみ表示" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="670" y="690" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f-apply" value="応募する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="160" y="790" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="s-check-meeting" value="初回面談済み？" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="705" y="770" width="170" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="s-application" value="応募データ作成&lt;br&gt;ステータス: 営業確認中" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="660" y="875" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sales-review" value="応募内容・スキルシート確認" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="1170" y="790" width="260" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sales-recommend" value="企業へ推薦・面談打診" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="1170" y="875" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f-not-eligible" value="初回面談を依頼&lt;br&gt;応募は保留" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00" vertex="1" parent="1">
+          <mxGeometry x="150" y="860" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Interview and closing flow -->
+        <mxCell id="c-review" value="候補者情報を確認" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="1690" y="965" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c-interview-ok" value="面談に進める？" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="1715" y="1040" width="190" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="sales-schedule" value="面談日程を調整" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="1185" y="1045" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="f-interview" value="企業面談に参加" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="140" y="1045" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c-decision" value="成約判断" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
+          <mxGeometry x="1730" y="1150" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="sales-contract" value="条件調整・契約手続き" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="1170" y="1160" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s-status-contract" value="応募/案件ステータス更新&lt;br&gt;成約・稼働開始" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">
+          <mxGeometry x="660" y="1155" width="260" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="f-start-work" value="稼働開始" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="165" y="1160" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="sales-reject" value="見送り通知・別案件提案" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00" vertex="1" parent="1">
+          <mxGeometry x="1165" y="1245" width="270" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="f-reject" value="結果確認&lt;br&gt;別案件を検討" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00" vertex="1" parent="1">
+          <mxGeometry x="150" y="1245" width="200" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Notes -->
+        <mxCell id="note" value="補足: PDF/スキルシート等のファイル本体はVercel Blob private storeへ保存し、Neonにはメタデータのみ保存する想定。" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12" vertex="1" parent="1">
+          <mxGeometry x="70" y="1320" width="760" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="f-start" target="f-profile"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="f-profile" target="s-save-user"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="s-save-user" target="sales-initial"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="sales-initial" target="s-initial-flag"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="c-job-info" target="sales-job-create"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="sales-job-create" target="s-job-save"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="s-job-save" target="s-match"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="s-match" target="s-filter"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="s-filter" target="f-search"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="f-search" target="f-apply"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="f-apply" target="s-check-meeting"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e12" value="はい" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="s-check-meeting" target="s-application"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e13" value="いいえ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="s-check-meeting" target="f-not-eligible"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="s-application" target="sales-review"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="sales-review" target="sales-recommend"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="sales-recommend" target="c-review"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="c-review" target="c-interview-ok"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e18" value="はい" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="c-interview-ok" target="sales-schedule"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="sales-schedule" target="f-interview"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="f-interview" target="c-decision"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e21" value="成約" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="c-decision" target="sales-contract"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="sales-contract" target="s-status-contract"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="s-status-contract" target="f-start-work"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e24" value="見送り" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="c-interview-ok" target="sales-reject"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e25" value="不成立" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="c-decision" target="sales-reject"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1" edge="1" parent="1" source="sales-reject" target="f-reject"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1" edge="1" parent="1" source="f-not-eligible" target="sales-initial"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
