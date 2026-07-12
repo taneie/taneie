@@ -370,7 +370,7 @@ http://127.0.0.1:5173/
   freelance123
 
 営業:
-  sales@frichy.jp
+  sales@freelink.jp
   sales123
 ```
 
