@@ -58,6 +58,7 @@ export interface Profile {
   cloud: string;
   otherSkills: string;
   years: string;
+  skillExperiences: Record<string, string>;
   desiredRate: string;
   startDate: string;
   workRate: string;
@@ -79,6 +80,10 @@ export interface Freelancer {
   name: string;
   role: string;
   skills: string[];
+  skillExperiences?: Array<{
+    name: string;
+    yearsExperience: number;
+  }>;
   desiredRate: number;
   workRate: string;
   remote: string;

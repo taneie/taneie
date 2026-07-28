@@ -167,6 +167,7 @@ export function blankProfile(id = "fr-current"): Profile {
     cloud: "",
     otherSkills: "",
     years: "",
+    skillExperiences: {},
     desiredRate: "",
     startDate: "",
     workRate: "",

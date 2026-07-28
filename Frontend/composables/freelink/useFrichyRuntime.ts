@@ -676,6 +676,12 @@ function freelancerToProfile(
     cloud: categorizedSkills.cloud.join(", "),
     otherSkills: categorizedSkills.other.join(", "),
     years: freelancer.yearsExperience ? String(freelancer.yearsExperience) : "",
+    skillExperiences: Object.fromEntries(
+      (freelancer.skillExperiences || []).map((item) => [
+        item.name,
+        item.yearsExperience ? String(item.yearsExperience) : "",
+      ]),
+    ),
     desiredRate: freelancer.desiredRate ? String(freelancer.desiredRate) : "",
     startDate: freelancer.startDate || "",
     workRate: freelancer.workRate || "",
@@ -706,6 +712,15 @@ function profileToApi(profile: Profile) {
     pledgeAccepted:
       profile.pledgeAccepted || Boolean(profile.pledgedAt) || undefined,
     skills: profileSkillList(profile),
+    skillExperiences: profileSkillList(profile).map((name) => {
+      const yearsExperience = profile.skillExperiences[name];
+      return {
+        name,
+        yearsExperience: yearsExperience
+          ? Number(yearsExperience)
+          : undefined,
+      };
+    }),
   };
 }
 
@@ -1219,7 +1234,13 @@ async function saveProfileBasic(
 async function saveProfileSkills(
   values: Pick<
     Profile,
-    "languages" | "db" | "frameworks" | "cloud" | "otherSkills" | "years"
+    | "languages"
+    | "db"
+    | "frameworks"
+    | "cloud"
+    | "otherSkills"
+    | "years"
+    | "skillExperiences"
   >,
 ) {
   const hasSkill = [

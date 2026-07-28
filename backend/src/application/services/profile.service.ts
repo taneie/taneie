@@ -77,10 +77,17 @@ export class ProfileService {
         where: { freelancerProfileId: profile.id },
       });
       const skills = await upsertSkills(this.db, input.skills, "other");
+      const yearsBySkill = new Map(
+        (input.skillExperiences || []).map((item) => [
+          item.name,
+          item.yearsExperience,
+        ]),
+      );
       await this.db.freelancerSkill.createMany({
         data: skills.map((skill) => ({
           freelancerProfileId: profile.id,
           skillId: skill.id,
+          yearsExperience: yearsBySkill.get(skill.name),
         })),
       });
     }

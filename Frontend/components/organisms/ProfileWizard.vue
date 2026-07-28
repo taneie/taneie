@@ -161,6 +161,21 @@
             type="number"
             @update:model-value="markDirty"
           />
+          <fieldset
+            v-if="selectedSkillNames.length"
+            :class="[$style.skillGroup, $style.skillExperienceGroup]"
+          >
+            <legend>スキルごとの経験年数</legend>
+            <FormInput
+              v-for="skillName in selectedSkillNames"
+              :key="skillName"
+              v-model="skills.skillExperiences[skillName]"
+              :label="skillName"
+              :name="`skillExperience-${skillName}`"
+              type="number"
+              @update:model-value="markDirty"
+            />
+          </fieldset>
           <div :class="$style.actions">
             <BaseButton type="submit" icon="user">保存して次へ</BaseButton>
           </div>
@@ -342,6 +357,7 @@ const skills = reactive({
   cloud: [] as string[],
   other: "",
   years: "",
+  skillExperiences: {} as Record<string, string>,
 });
 const terms = reactive<ProfileTermsInput>({
   desiredRate: "",
@@ -367,6 +383,16 @@ const visibleProfileSkills = computed(() => {
       splitCsv(profile.value.otherSkills),
     )
     .slice(0, 7);
+});
+
+const selectedSkillNames = computed(() => {
+  return [...new Set([
+    ...skills.languages,
+    ...skills.db,
+    ...skills.frameworks,
+    ...skills.cloud,
+    ...splitCsv(skills.other),
+  ])];
 });
 
 watch(() => [state.value.profile.id, state.value.wizardStep], hydrateForms, {
@@ -404,6 +430,7 @@ function hydrateForms() {
       ...savedOther,
     ].join(", "),
     years: p.years,
+    skillExperiences: { ...p.skillExperiences },
   });
   Object.assign(terms, {
     desiredRate: p.desiredRate,
@@ -463,6 +490,12 @@ function saveSkills() {
     cloud: skills.cloud.join(", "),
     otherSkills: otherSkills.join(", "),
     years: skills.years,
+    skillExperiences: Object.fromEntries(
+      selectedSkillNames.value.map((skillName) => [
+        skillName,
+        skills.skillExperiences[skillName] || "",
+      ]),
+    ),
   });
 }
 
@@ -599,6 +632,11 @@ textarea.control {
   color: #263f63;
   font-size: 13px;
   font-weight: 800;
+}
+
+.skillExperienceGroup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .checkboxPill {

@@ -90,6 +90,12 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
     phone: decryptText(profile.user.phone),
     role: profile.roleTitle || "",
     skills: profile.skills.map((item) => item.skill.name),
+    skillExperiences: profile.skills.map((item) => ({
+      name: item.skill.name,
+      yearsExperience: item.yearsExperience
+        ? Number(item.yearsExperience)
+        : 0,
+    })),
     desiredRate: profile.desiredRate || 0,
     yearsExperience: profile.yearsExperience
       ? Number(profile.yearsExperience)

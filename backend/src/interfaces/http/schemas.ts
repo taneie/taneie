@@ -180,6 +180,14 @@ export const updateProfileSchema = z.object({
   availabilityNote: z.string().trim().max(255).optional(),
   pledgeAccepted: z.boolean().optional(),
   skills: z.array(z.string().trim().min(1)).optional(),
+  skillExperiences: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(100),
+        yearsExperience: z.coerce.number().min(0).max(99).optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const updateInitialMeetingSchema = z.object({

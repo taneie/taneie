@@ -61,6 +61,10 @@ export interface ProfileInput {
   pledgeAccepted?: boolean;
   initialMeetingCompleted?: boolean;
   skills?: string[];
+  skillExperiences?: Array<{
+    name: string;
+    yearsExperience?: number;
+  }>;
 }
 
 export interface ResumeMetadataInput {
