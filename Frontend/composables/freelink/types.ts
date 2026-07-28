@@ -84,6 +84,7 @@ export interface Freelancer {
     name: string;
     yearsExperience: number;
   }>;
+  yearsExperience?: number;
   desiredRate: number;
   workRate: string;
   remote: string;
@@ -209,6 +210,7 @@ export interface ScoutFilters {
   skill: string;
   availability: string;
   remote: string;
+  sort: string;
 }
 
 export interface ScoutJobPickerState {

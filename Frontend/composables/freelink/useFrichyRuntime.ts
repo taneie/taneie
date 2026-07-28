@@ -104,6 +104,7 @@ const scoutFilters = ref<ScoutFilters>({
   skill: "",
   availability: "",
   remote: "",
+  sort: "稼働状況順",
 });
 const scoutJobPicker = ref<ScoutJobPickerState>({
   open: false,
@@ -818,8 +819,26 @@ const filteredFreelancers = computed(() => {
       (fr) =>
         !scoutFilters.value.remote || fr.remote === scoutFilters.value.remote,
     )
-    .sort((a, b) => availabilityRank(b) - availabilityRank(a));
+    .sort(compareScoutFreelancers);
 });
+
+function compareScoutFreelancers(a: Freelancer, b: Freelancer) {
+  switch (scoutFilters.value.sort) {
+    case "希望単価が高い順":
+      return b.desiredRate - a.desiredRate;
+    case "希望単価が低い順":
+      return a.desiredRate - b.desiredRate;
+    case "経験年数が多い順":
+      return (b.yearsExperience || 0) - (a.yearsExperience || 0);
+    case "最終更新が新しい順":
+      return (
+        new Date(b.lastUpdated || 0).getTime() -
+        new Date(a.lastUpdated || 0).getTime()
+      );
+    default:
+      return availabilityRank(b) - availabilityRank(a);
+  }
+}
 
 const selectedFreelancer = computed<Freelancer>(() => {
   const found = state.value.freelancers.find(
@@ -834,6 +853,7 @@ const selectedFreelancer = computed<Freelancer>(() => {
       name: profile.name || "未登録プロフィール",
       role: profile.role || "",
       skills: profileSkillList(profile),
+      yearsExperience: Number(profile.years || 0),
       desiredRate: Number(profile.desiredRate || 0),
       workRate: profile.workRate,
       remote: profile.remote,
@@ -1487,7 +1507,12 @@ function buildJobQuery(offset: number) {
 }
 
 function clearScoutFilter() {
-  scoutFilters.value = { skill: "", availability: "", remote: "" };
+  scoutFilters.value = {
+    skill: "",
+    availability: "",
+    remote: "",
+    sort: "稼働状況順",
+  };
 }
 
 async function applyJob(jobId: string) {
@@ -2434,6 +2459,7 @@ function syncProfileToFreelancer() {
     name: profile.name,
     role: profile.role,
     skills: profileSkillList(profile),
+    yearsExperience: Number(profile.years || 0),
     desiredRate: Number(profile.desiredRate || 0),
     workRate: profile.workRate,
     remote: profile.remote,

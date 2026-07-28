@@ -5,7 +5,8 @@
         <h3>{{ freelancer.name }}</h3>
         <p>
           {{ freelancer.role }} / {{ freelancer.desiredRate }}万円 /
-          {{ freelancer.workRate }} / {{ freelancer.remote }}
+          {{ freelancer.yearsExperience || 0 }}年 / {{ freelancer.workRate }} /
+          {{ freelancer.remote }}
         </p>
       </div>
       <StatusBadge :value="freelancer.availability" />
