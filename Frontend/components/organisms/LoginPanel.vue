@@ -176,7 +176,7 @@
           <section id="features" :class="$style.infoSection">
             <div :class="$style.sectionHead">
               <span>FEATURES</span>
-              <h2>
+              <h2 :class="$style.featureTitle">
                 <span>最短1分で応募まで。</span>
                 <span>Frichyが案件探しを自動化。</span>
               </h2>
@@ -1236,6 +1236,13 @@ onBeforeUnmount(() => {
 }
 
 .infoSection {
+  padding: 26px;
+  border: 1px solid rgba(169, 197, 237, 0.7);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(244, 248, 254, 0.96), rgba(255, 255, 255, 0.98)),
+    #fff;
+  box-shadow: 0 14px 34px rgba(29, 78, 137, 0.08);
   animation: fadeSlideUp 0.48s ease-out 0.24s both;
 }
 
@@ -1258,15 +1265,32 @@ onBeforeUnmount(() => {
 
 .sectionHead span {
   color: var(--primary);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
 }
 
 .sectionHead h2 {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   color: #0d2749;
-  font-size: clamp(24px, 2.8vw, 36px);
-  line-height: 1.2;
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.24;
+}
+
+.featureTitle {
+  max-width: 820px;
+  font-weight: 900;
+}
+
+.featureTitle span {
+  display: block;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 0;
+}
+
+.featureTitle span:last-child {
+  color: var(--primary-strong);
 }
 
 .featureGrid,
@@ -1278,6 +1302,7 @@ onBeforeUnmount(() => {
 
 .featureGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .featureGrid article,
@@ -1340,11 +1365,12 @@ onBeforeUnmount(() => {
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   overflow: hidden;
-  padding: 16px 16px 16px 18px;
-  border-color: var(--line);
+  min-height: 112px;
+  padding: 22px 20px 22px 24px;
+  border-color: #c8dbf4;
   background: #fff;
 }
 
@@ -1362,17 +1388,18 @@ onBeforeUnmount(() => {
 .featureIcon {
   position: relative;
   z-index: 1;
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-  border: 1px solid #b8cff0;
+  border: 1px solid #a9c5ed;
   border-radius: 8px;
-  background: #f4f8fe;
-  color: var(--primary-strong);
-  font-size: 18px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+  color: #fff;
+  font-size: 20px;
   font-weight: 900;
   line-height: 1;
+  box-shadow: 0 10px 20px rgba(29, 95, 211, 0.18);
 }
 
 .featureBody {
@@ -1384,8 +1411,8 @@ onBeforeUnmount(() => {
 .featureBody strong {
   display: block;
   color: #0d2749;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 18px;
+  line-height: 1.55;
 }
 
 .featureBody p {
@@ -1797,6 +1824,10 @@ onBeforeUnmount(() => {
     margin-top: 42px;
   }
 
+  .infoSection {
+    padding: 20px;
+  }
+
   .sectionHead {
     margin-bottom: 22px;
   }
@@ -1809,7 +1840,11 @@ onBeforeUnmount(() => {
   .sectionHead h2 {
     margin-top: 7px;
     line-height: 1.3;
-    font-size: 20px;
+    font-size: 24px;
+  }
+
+  .featureTitle span {
+    letter-spacing: 0;
   }
 
   .featureGrid,
@@ -1834,22 +1869,24 @@ onBeforeUnmount(() => {
   }
 
   .featureGrid article {
-    grid-template-columns: 42px minmax(0, 1fr);
-    gap: 12px;
-    padding: 14px 14px 14px 18px;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+    min-height: 104px;
+    padding: 18px 16px 18px 20px;
     border-radius: 8px;
   }
 
   .featureIcon {
-    width: 40px;
-    height: 40px;
+    width: 46px;
+    height: 46px;
     border-radius: 8px;
-    font-size: 18px;
+    font-size: 20px;
     margin: auto 0;
   }
 
   .featureBody strong {
-    line-height: 1.45;
+    font-size: 17px;
+    line-height: 1.55;
   }
 
   .featureBody p {
