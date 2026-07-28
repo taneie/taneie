@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     baseURL: process.env.NUXT_APP_BASE_URL || "/",
     head: {
       htmlAttrs: { lang: "ja" },
-      title: "Frichy",
+      title: "Frichy - フリーランスエンジニアと働き方をつなぐ",
       meta: [
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
