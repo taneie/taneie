@@ -8,7 +8,29 @@
     <div :class="$style.overviewCopy">
       <span :class="$style.eyebrow">営業サマリー</span>
       <h2>{{ dashboardHeadline }}</h2>
-      <p>対応優先度の高い連絡、面談、応募を上から確認できます。</p>
+      <p>
+        {{ selectedSummaryMonthLabel }}の連絡、面談、応募を上から確認できます。
+      </p>
+      <div :class="$style.monthToolbar" aria-label="営業サマリーの対象月">
+        <BaseButton variant="secondary" @click="moveSummaryMonth(-1)">
+          前月
+        </BaseButton>
+        <span :class="$style.monthLabel">{{ selectedSummaryMonthLabel }}</span>
+        <BaseButton
+          variant="secondary"
+          :disabled="isCurrentSummaryMonth"
+          @click="moveSummaryMonth(1)"
+        >
+          翌月
+        </BaseButton>
+        <BaseButton
+          v-if="!isCurrentSummaryMonth"
+          variant="ghost"
+          @click="resetSummaryMonth"
+        >
+          今月へ
+        </BaseButton>
+      </div>
     </div>
     <div :class="$style.focusGrid">
       <button
@@ -29,56 +51,25 @@
     <MetricCard
       label="登録ユーザー"
       :value="registeredUsers"
-      caption="アカウント数"
+      caption="全期間"
     />
     <MetricCard
       label="掲載案件"
       :value="state.jobs.length"
-      caption="商流付き"
+      caption="全期間"
     />
     <MetricCard
       label="即稼働人材"
       :value="readyFreelancers"
-      caption="検索上位対象"
+      caption="全期間"
     />
     <MetricCard
       label="選考中応募"
       :value="activeApplications"
-      caption="ステータス管理"
+      caption="対象月"
     />
-    <MetricCard label="面談候補" :value="pendingMeetings" caption="未確定" />
+    <MetricCard label="面談候補" :value="pendingMeetings" caption="対象月" />
   </section>
-
-  <details :class="$style.panel" open>
-    <summary :class="$style.panelHeader">
-      <div :class="$style.panelHeaderText">
-        <h2 :class="$style.panelTitle">次のアクション</h2>
-        <span :class="$style.panelNote">{{ salesNextActions.length }}件</span>
-      </div>
-    </summary>
-    <div :class="[$style.panelBody, $style.actionList]">
-      <div
-        v-for="action in salesNextActions"
-        :key="action.id"
-        :class="$style.actionItem"
-      >
-        <div :class="$style.actionText">
-          <span :class="$style.actionCount">{{ action.count }}</span>
-          <div>
-            <h3>{{ action.title }}</h3>
-            <p>{{ action.body }}</p>
-          </div>
-        </div>
-        <BaseButton
-          variant="secondary"
-          :icon="action.icon"
-          @click="action.onClick"
-        >
-          {{ action.label }}
-        </BaseButton>
-      </div>
-    </div>
-  </details>
 
   <div :class="[$style.grid, $style.two]">
     <details :class="$style.panel" open>
@@ -177,7 +168,7 @@
           />
           <CoverageCard
             title="稼働状況確認"
-            :body="`${state.aliveChecks.length}回確認 / 最新 ${state.aliveChecks.at(-1)?.at || '未実施'}`"
+            :body="`${summaryAliveChecks.length}回確認 / 最新 ${latestAliveCheckAt || '未実施'}`"
             tone="blue"
           />
         </div>
@@ -226,7 +217,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
-import type { IconName } from "~/composables/frichy/types";
 
 const {
   state,
@@ -239,27 +229,18 @@ const {
   estimateRate,
   getFreelancer,
   getJob,
-  currentUnreadChatCount,
 } = useFrichyRuntime();
 
 const prioritySearch = ref("");
 const applicationSearch = ref("");
 const priorityLimit = ref(5);
 const applicationLimit = ref(5);
+const currentSummaryMonth = getMonthKey(new Date());
+const selectedSummaryMonth = ref(currentSummaryMonth);
 const prioritySentinel = ref<HTMLElement | null>(null);
 const applicationSentinel = ref<HTMLElement | null>(null);
 let priorityObserver: IntersectionObserver | null = null;
 let applicationObserver: IntersectionObserver | null = null;
-
-interface SalesNextAction {
-  id: string;
-  title: string;
-  body: string;
-  count: string;
-  label: string;
-  icon: IconName;
-  onClick: () => void;
-}
 
 interface DashboardFocusItem {
   id: string;
@@ -282,29 +263,58 @@ const readyFreelancers = computed(
 const endDirectJobs = computed(
   () => state.value.jobs.filter((job) => job.stream === "エンド直").length,
 );
+const selectedSummaryMonthLabel = computed(() =>
+  formatMonthLabel(selectedSummaryMonth.value),
+);
+const isCurrentSummaryMonth = computed(
+  () => selectedSummaryMonth.value === currentSummaryMonth,
+);
+const summaryApplications = computed(() =>
+  state.value.applications.filter((application) =>
+    isInSelectedSummaryMonth(application.appliedAt),
+  ),
+);
+const summaryMessages = computed(() =>
+  state.value.messages.filter((message) => isInSelectedSummaryMonth(message.at)),
+);
+const summaryMeetingRequests = computed(() =>
+  state.value.meetingRequests.filter((meeting) =>
+    isInSelectedSummaryMonth(meeting.candidate),
+  ),
+);
+const summaryAliveChecks = computed(() =>
+  state.value.aliveChecks.filter((check) => isInSelectedSummaryMonth(check.at)),
+);
 const activeApplications = computed(
   () =>
-    state.value.applications.filter(
+    summaryApplications.value.filter(
       (application) =>
         application.status !== "成約" && application.status !== "見送り",
     ).length,
 );
 const pendingMeetings = computed(
   () =>
-    state.value.meetingRequests.filter((meeting) => meeting.status !== "確定")
+    summaryMeetingRequests.value.filter((meeting) => meeting.status !== "確定")
       .length,
 );
 const firstUnreadFreelancerId = computed(
   () =>
-    state.value.messages.find(
+    summaryMessages.value.find(
       (message) =>
         message.channel === "freelancer" && !message.readAt && message.freelancerId,
     )?.freelancerId || "",
 );
-const latestAliveCheckAt = computed(() => state.value.aliveChecks.at(-1)?.at || "");
+const monthlyUnreadChatCount = computed(
+  () =>
+    summaryMessages.value.filter(
+      (message) =>
+        message.channel === "freelancer" && !message.readAt && message.freelancerId,
+    ).length,
+);
+const latestAliveCheckAt = computed(() => summaryAliveChecks.value.at(-1)?.at || "");
 const dashboardHeadline = computed(() => {
-  if (currentUnreadChatCount.value > 0) {
-    return `未読チャット ${currentUnreadChatCount.value}件を確認してください`;
+  if (monthlyUnreadChatCount.value > 0) {
+    return `未読チャット ${monthlyUnreadChatCount.value}件を確認してください`;
   }
   if (pendingMeetings.value > 0) {
     return `未確定の面談候補が ${pendingMeetings.value}件あります`;
@@ -318,8 +328,8 @@ const dashboardFocusItems = computed<DashboardFocusItem[]>(() => [
   {
     id: "unread",
     label: "未読チャット",
-    value: `${currentUnreadChatCount.value}件`,
-    caption: "求職者返信",
+    value: `${monthlyUnreadChatCount.value}件`,
+    caption: "対象月",
     tone: "Blue",
     onClick: () => {
       if (firstUnreadFreelancerId.value) {
@@ -333,7 +343,7 @@ const dashboardFocusItems = computed<DashboardFocusItem[]>(() => [
     id: "meeting",
     label: "面談候補",
     value: `${pendingMeetings.value}件`,
-    caption: "未確定",
+    caption: "対象月",
     tone: "Amber",
     onClick: () => void setView("meeting"),
   },
@@ -341,7 +351,7 @@ const dashboardFocusItems = computed<DashboardFocusItem[]>(() => [
     id: "applications",
     label: "選考中応募",
     value: `${activeApplications.value}件`,
-    caption: "要ステータス管理",
+    caption: "対象月",
     tone: "Rose",
     onClick: () => void setView("admin"),
   },
@@ -354,63 +364,6 @@ const dashboardFocusItems = computed<DashboardFocusItem[]>(() => [
     onClick: () => void setView("scout"),
   },
 ]);
-const salesNextActions = computed<SalesNextAction[]>(() => {
-  const actions: SalesNextAction[] = [];
-
-  if (currentUnreadChatCount.value > 0) {
-    actions.push({
-      id: "unread-chat",
-      title: "未読チャットの確認",
-      body: "求職者からの返信を確認して、次の連絡を進めます。",
-      count: `${currentUnreadChatCount.value}件`,
-      label: "チャットへ",
-      icon: "send",
-      onClick: () => {
-        if (firstUnreadFreelancerId.value) {
-          selectChatFreelancer(firstUnreadFreelancerId.value);
-          return;
-        }
-        void setView("meeting");
-      },
-    });
-  }
-
-  if (pendingMeetings.value > 0) {
-    actions.push({
-      id: "pending-meetings",
-      title: "面談候補日の調整",
-      body: "候補または再調整の面談を確認して、確定まで進めます。",
-      count: `${pendingMeetings.value}件`,
-      label: "面談へ",
-      icon: "calendar",
-      onClick: () => void setView("meeting"),
-    });
-  }
-
-  if (activeApplications.value > 0) {
-    actions.push({
-      id: "active-applications",
-      title: "選考中応募の更新",
-      body: "応募状況を更新し、必要なフォロー連絡を行います。",
-      count: `${activeApplications.value}件`,
-      label: "応募管理へ",
-      icon: "briefcase",
-      onClick: () => void setView("admin"),
-    });
-  }
-
-  actions.push({
-    id: "alive-check",
-    title: "稼働状況の確認",
-    body: `即稼働人材へ確認を送信します。最新 ${latestAliveCheckAt.value || "未実施"}`,
-    count: `${readyFreelancers.value}名`,
-    label: "確認を送る",
-    icon: "send",
-    onClick: () => void aliveCheck(),
-  });
-
-  return actions;
-});
 const priorityJobs = computed(() => state.value.jobs.filter((job) => job.sortFlag));
 const filteredPriorityJobs = computed(() => {
   const keyword = prioritySearch.value.trim().toLowerCase();
@@ -428,8 +381,8 @@ const visiblePriorityJobs = computed(() =>
 const diagnosis = computed(() => estimateRate());
 const filteredApplications = computed(() => {
   const keyword = applicationSearch.value.trim().toLowerCase();
-  if (!keyword) return state.value.applications;
-  return state.value.applications.filter((application) =>
+  if (!keyword) return summaryApplications.value;
+  return summaryApplications.value.filter((application) =>
     [
       application.status,
       application.appliedAt,
@@ -455,11 +408,49 @@ function clearApplicationSearch() {
   applicationSearch.value = "";
 }
 
+function moveSummaryMonth(amount: number) {
+  selectedSummaryMonth.value = addMonths(selectedSummaryMonth.value, amount);
+}
+
+function resetSummaryMonth() {
+  selectedSummaryMonth.value = currentSummaryMonth;
+}
+
+function isInSelectedSummaryMonth(value: string) {
+  return getMonthKey(value) === selectedSummaryMonth.value;
+}
+
+function getMonthKey(value: Date | string) {
+  if (value instanceof Date) {
+    return `${value.getFullYear()}-${padMonth(value.getMonth() + 1)}`;
+  }
+  return String(value || "").trim().slice(0, 7);
+}
+
+function addMonths(monthKey: string, amount: number) {
+  const [year = "0", month = "1"] = monthKey.split("-");
+  const date = new Date(Number(year), Number(month) - 1 + amount, 1);
+  return getMonthKey(date);
+}
+
+function formatMonthLabel(monthKey: string) {
+  const [year = "", month = ""] = monthKey.split("-");
+  return `${year}年${Number(month)}月`;
+}
+
+function padMonth(value: number) {
+  return String(value).padStart(2, "0");
+}
+
 watch(prioritySearch, () => {
   priorityLimit.value = 5;
 });
 
 watch(applicationSearch, () => {
+  applicationLimit.value = 5;
+});
+
+watch(selectedSummaryMonth, () => {
   applicationLimit.value = 5;
 });
 
@@ -545,6 +536,27 @@ onBeforeUnmount(() => {
   margin: 0;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.monthToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.monthLabel {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #b9cfee;
+  border-radius: 6px;
+  background: #fff;
+  color: #10294f;
+  font-size: 14px;
+  font-weight: 900;
 }
 
 .focusGrid {
@@ -702,58 +714,6 @@ onBeforeUnmount(() => {
   margin-bottom: 16px;
 }
 
-.actionList {
-  display: grid;
-  gap: 10px;
-}
-
-.actionItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-}
-
-.actionText {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.actionText h3 {
-  margin: 0;
-  color: #10294f;
-  font-size: 15px;
-}
-
-.actionText p {
-  margin: 3px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-
-.actionCount {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  min-height: 40px;
-  flex: 0 0 auto;
-  border-radius: 6px;
-  background: #e9f1fc;
-  color: var(--primary-strong);
-  font-size: 14px;
-  font-weight: 800;
-}
-
 .tableWrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -839,6 +799,12 @@ onBeforeUnmount(() => {
     padding: 12px;
   }
 
+  .monthToolbar,
+  .monthToolbar button,
+  .monthLabel {
+    width: 100%;
+  }
+
   .panelBody,
   .panelHeader {
     padding: 12px;
@@ -858,20 +824,6 @@ onBeforeUnmount(() => {
 
   .headerActions,
   .headerActions button {
-    width: 100%;
-  }
-
-  .actionItem,
-  .actionText {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .actionItem button {
-    width: 100%;
-  }
-
-  .actionCount {
     width: 100%;
   }
 
