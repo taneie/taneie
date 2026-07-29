@@ -17,7 +17,7 @@
 <script setup lang="ts">
 defineProps<{
   name: string;
-  options: string[];
+  options: readonly string[];
   modelValue: string;
   placeholder?: string;
 }>();

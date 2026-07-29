@@ -48,8 +48,6 @@ import type {
 } from "./types";
 import {
   availabilityClass,
-  availabilityRank,
-  categorizeSkills,
   clone,
   maskName,
   nowLabel,
@@ -60,6 +58,12 @@ import {
   today,
   toApiDateTime,
 } from "./utils";
+import { freelancerToProfile, profileToApi } from "./profileMapping";
+import {
+  createDefaultScoutFilters,
+  filterAndSortFreelancers,
+  scoutSortOptions,
+} from "./scoutFilters";
 
 function getApiBase() {
   const runtimeConfig = useRuntimeConfig();
@@ -100,12 +104,7 @@ const jobPagination = ref<JobPagination>({
 });
 const jobsLoading = ref(false);
 const selectedJobId = ref("");
-const scoutFilters = ref<ScoutFilters>({
-  skill: "",
-  availability: "",
-  remote: "",
-  sort: "稼働状況順",
-});
+const scoutFilters = ref<ScoutFilters>(createDefaultScoutFilters());
 const scoutJobPicker = ref<ScoutJobPickerState>({
   open: false,
   freelancerId: "",
@@ -653,78 +652,6 @@ function urlBase64ToUint8Array(value: string) {
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
 
-function freelancerToProfile(
-  freelancer: Freelancer & {
-    nameKana?: string;
-    email?: string;
-    phone?: string | null;
-    yearsExperience?: number;
-    startDate?: string;
-    pledgedAt?: string;
-  },
-): Profile {
-  const categorizedSkills = categorizeSkills(freelancer.skills || []);
-  return {
-    ...blankProfile(freelancer.id),
-    name: freelancer.name || "",
-    nameKana: freelancer.nameKana || "",
-    email: freelancer.email || state.value.auth?.email || "",
-    phone: freelancer.phone || "",
-    role: freelancer.role || "",
-    languages: categorizedSkills.languages.join(", "),
-    db: categorizedSkills.db.join(", "),
-    frameworks: categorizedSkills.frameworks.join(", "),
-    cloud: categorizedSkills.cloud.join(", "),
-    otherSkills: categorizedSkills.other.join(", "),
-    years: freelancer.yearsExperience ? String(freelancer.yearsExperience) : "",
-    skillExperiences: Object.fromEntries(
-      (freelancer.skillExperiences || []).map((item) => [
-        item.name,
-        item.yearsExperience ? String(item.yearsExperience) : "",
-      ]),
-    ),
-    desiredRate: freelancer.desiredRate ? String(freelancer.desiredRate) : "",
-    startDate: freelancer.startDate || "",
-    workRate: freelancer.workRate || "",
-    remote: freelancer.remote,
-    availability: freelancer.availability || "",
-    resumeName: freelancer.resumeName || "",
-    pledgeAccepted: Boolean(freelancer.pledgedAt),
-    pledgedAt: freelancer.pledgedAt || "",
-    initialMeetingCompleted: Boolean(freelancer.initialMeetingCompleted),
-    initialMeetingCompletedAt: freelancer.initialMeetingCompletedAt || "",
-    lastUpdated: freelancer.lastUpdated || "",
-  };
-}
-
-function profileToApi(profile: Profile) {
-  return {
-    name: profile.name,
-    nameKana: profile.nameKana,
-    phone: profile.phone,
-    roleTitle: profile.role,
-    yearsExperience: Number(profile.years || 0),
-    desiredRate: Number(profile.desiredRate || 0),
-    startDate: profile.startDate || undefined,
-    workRate: profile.workRate,
-    remoteType: profile.remote,
-    availabilityStatus: profile.availability,
-    availabilityNote: profile.availability,
-    pledgeAccepted:
-      profile.pledgeAccepted || Boolean(profile.pledgedAt) || undefined,
-    skills: profileSkillList(profile),
-    skillExperiences: profileSkillList(profile).map((name) => {
-      const yearsExperience = profile.skillExperiences[name];
-      return {
-        name,
-        yearsExperience: yearsExperience
-          ? Number(yearsExperience)
-          : undefined,
-      };
-    }),
-  };
-}
-
 const authAccounts = computed(() => [
   ...demoAccounts,
   ...(state.value.accounts || []),
@@ -801,44 +728,8 @@ const canApplyMoreJobs = computed(
 );
 
 const filteredFreelancers = computed(() => {
-  return state.value.freelancers
-    .filter(
-      (fr) =>
-        !scoutFilters.value.skill ||
-        fr.skills
-          .join(" ")
-          .toLowerCase()
-          .includes(scoutFilters.value.skill.toLowerCase()),
-    )
-    .filter(
-      (fr) =>
-        !scoutFilters.value.availability ||
-        fr.availability === scoutFilters.value.availability,
-    )
-    .filter(
-      (fr) =>
-        !scoutFilters.value.remote || fr.remote === scoutFilters.value.remote,
-    )
-    .sort(compareScoutFreelancers);
+  return filterAndSortFreelancers(state.value.freelancers, scoutFilters.value);
 });
-
-function compareScoutFreelancers(a: Freelancer, b: Freelancer) {
-  switch (scoutFilters.value.sort) {
-    case "希望単価が高い順":
-      return b.desiredRate - a.desiredRate;
-    case "希望単価が低い順":
-      return a.desiredRate - b.desiredRate;
-    case "経験年数が多い順":
-      return (b.yearsExperience || 0) - (a.yearsExperience || 0);
-    case "最終更新が新しい順":
-      return (
-        new Date(b.lastUpdated || 0).getTime() -
-        new Date(a.lastUpdated || 0).getTime()
-      );
-    default:
-      return availabilityRank(b) - availabilityRank(a);
-  }
-}
 
 const selectedFreelancer = computed<Freelancer>(() => {
   const found = state.value.freelancers.find(
@@ -1507,12 +1398,7 @@ function buildJobQuery(offset: number) {
 }
 
 function clearScoutFilter() {
-  scoutFilters.value = {
-    skill: "",
-    availability: "",
-    remote: "",
-    sort: "稼働状況順",
-  };
+  scoutFilters.value = createDefaultScoutFilters();
 }
 
 async function applyJob(jobId: string) {
@@ -2494,7 +2380,10 @@ async function saveProfileToApi(message: string) {
       body: JSON.stringify(profileToApi(state.value.profile)),
     });
     const previousProfile = state.value.profile;
-    const nextProfile = freelancerToProfile(profile);
+    const nextProfile = freelancerToProfile(
+      profile,
+      state.value.auth?.email || "",
+    );
     state.value.profile = {
       ...nextProfile,
       resumeName: previousProfile.resumeName,
@@ -2674,6 +2563,7 @@ export function useFrichyRuntime() {
     state,
     filters,
     scoutFilters,
+    scoutSortOptions,
     scoutJobPicker,
     adminMatchedJobs,
     adminMatchedJobsLoading,

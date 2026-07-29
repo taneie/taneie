@@ -187,6 +187,7 @@ const {
   filteredFreelancers,
   availabilityOptions,
   remoteOptions,
+  scoutSortOptions,
   clearScoutFilter,
   openScoutJobPicker,
   closeScoutJobPicker,
@@ -202,13 +203,6 @@ const scoutModalRef = useModalA11y(
   computed(() => scoutJobPicker.value.open),
   closeScoutJobPicker,
 );
-const scoutSortOptions = [
-  "稼働状況順",
-  "希望単価が高い順",
-  "希望単価が低い順",
-  "経験年数が多い順",
-  "最終更新が新しい順",
-];
 
 function clearScoutJobKeyword() {
   scoutJobPicker.value.keyword = "";

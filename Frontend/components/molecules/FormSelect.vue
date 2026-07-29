@@ -14,7 +14,7 @@
 defineProps<{
   label: string;
   name: string;
-  options: string[];
+  options: readonly string[];
   modelValue: string;
   placeholder?: string;
 }>();
