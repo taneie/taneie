@@ -37,9 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
-import { useModalA11y } from "~/composables/freelink/useModalA11y";
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
+import { useBodyScrollLock } from "~/composables/frichy/useBodyScrollLock";
+import { useModalA11y } from "~/composables/frichy/useModalA11y";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 
 const { unsavedConfirmVisible, resolveUnsavedConfirm } = useFrichyRuntime();
 

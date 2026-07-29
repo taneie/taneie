@@ -43,9 +43,9 @@
 </template>
 
 <script setup lang="ts">
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 import { computed } from "vue";
-import type { Application } from "~/composables/freelink/types";
+import type { Application } from "~/composables/frichy/types";
 
 const {
   state,

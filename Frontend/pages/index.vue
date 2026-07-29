@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 import { onMounted } from "vue";
 const { state, isLoading, init } = useFrichyRuntime();
 

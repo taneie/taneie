@@ -205,8 +205,8 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, useCssModule } from "vue";
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
-import type { ContactInquiryInput } from "~/composables/freelink/types";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import type { ContactInquiryInput } from "~/composables/frichy/types";
 
 const {
   state,

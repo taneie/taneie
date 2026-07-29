@@ -88,8 +88,8 @@
 
 <script setup lang="ts">
 import { toRef } from "vue";
-import { useBodyScrollLock } from "~/composables/freelink/useBodyScrollLock";
-import { useModalA11y } from "~/composables/freelink/useModalA11y";
+import { useBodyScrollLock } from "~/composables/frichy/useBodyScrollLock";
+import { useModalA11y } from "~/composables/frichy/useModalA11y";
 
 const props = defineProps<{
   open: boolean;

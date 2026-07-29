@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { computed, useCssModule } from "vue";
-import type { IconName } from "~/composables/freelink/types";
+import type { IconName } from "~/composables/frichy/types";
 
 const props = withDefaults(
   defineProps<{

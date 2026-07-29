@@ -160,8 +160,8 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
-import type { ApplicationStatus, JobInput } from "~/composables/freelink/types";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import type { ApplicationStatus, JobInput } from "~/composables/frichy/types";
 
 const {
   state,

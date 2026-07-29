@@ -225,8 +225,8 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
-import type { IconName } from "~/composables/freelink/types";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import type { IconName } from "~/composables/frichy/types";
 
 const {
   state,

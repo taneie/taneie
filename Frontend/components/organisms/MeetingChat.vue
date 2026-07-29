@@ -236,9 +236,9 @@
 </template>
 
 <script setup lang="ts">
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
-import type { Message } from "~/composables/freelink/types";
+import type { Message } from "~/composables/frichy/types";
 
 const {
   currentRole,

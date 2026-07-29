@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 
 const {
   state,

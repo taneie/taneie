@@ -43,7 +43,7 @@ Frichy/
       pages/
       templates/
     composables/
-      freelink/
+      frichy/
         useFrichyRuntime.ts
     public/
       push-sw.js
@@ -73,7 +73,7 @@ Frichy/
 | `Frontend/app.vue`                            | Nuxtアプリのルート                                |
 | `Frontend/pages/index.vue`                    | 単一ページアプリとして主要UIを表示                |
 | `Frontend/components/templates/AppShell.vue`  | ログイン後のアプリケーションレイアウト            |
-| `Frontend/composables/freelink/useFrichyRuntime.ts` | 画面状態、API通信、認証、画面遷移、業務操作を集約 |
+| `Frontend/composables/frichy/useFrichyRuntime.ts` | 画面状態、API通信、認証、画面遷移、業務操作を集約 |
 
 ### 4.2 コンポーネント分類
 

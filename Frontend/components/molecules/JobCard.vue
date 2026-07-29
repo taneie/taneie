@@ -122,8 +122,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
-import type { Job, Role } from "~/composables/freelink/types";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import type { Job, Role } from "~/composables/frichy/types";
 
 const props = withDefaults(
   defineProps<{

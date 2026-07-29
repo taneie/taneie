@@ -119,7 +119,7 @@
             </button>
             <button type="button" @click="startDemoLogin('sales')">
               <strong>営業デモ</strong>
-              <span>sales@freelink.jp</span>
+              <span>sales@frichy.jp</span>
             </button>
           </div>
         </div>
@@ -348,8 +348,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from "vue";
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
-import type { RegisterInput } from "~/composables/freelink/types";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import type { RegisterInput } from "~/composables/frichy/types";
 
 const {
   login,

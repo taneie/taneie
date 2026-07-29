@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AuthMode } from "~/composables/freelink/types";
+import type { AuthMode } from "~/composables/frichy/types";
 
 defineProps<{
   mode: AuthMode;

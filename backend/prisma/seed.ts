@@ -12,7 +12,7 @@ const databaseUrl =
   "postgresql://frichy:frichy@localhost:5432/frichy?schema=public";
 const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
 
-const demoEmails = ["sales@freelink.jp", "freelancer@example.com"];
+const demoEmails = ["sales@frichy.jp", "freelancer@example.com"];
 const demoFreelancerPublicCode = "tf-demo-yamada";
 
 async function resetDemoFreelancerProfile() {
@@ -104,7 +104,7 @@ async function main() {
   await resetDemoFreelancerProfile();
 
   const sales = await upsertSeedUser({
-    email: "sales@freelink.jp",
+    email: "sales@frichy.jp",
     passwordHash: salesPassword,
     role: "sales",
     name: "営業",

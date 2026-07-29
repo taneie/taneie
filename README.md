@@ -370,7 +370,7 @@ http://127.0.0.1:5173/
   freelance123
 
 営業:
-  sales@freelink.jp
+  sales@frichy.jp
   sales123
 ```
 
@@ -773,7 +773,7 @@ CORS_ORIGIN="http://127.0.0.1:5173,http://localhost:5173"
 │   │   ├── pages/
 │   │   └── templates/
 │   ├── composables/
-│   │   └── freelink/
+│   │   └── frichy/
 │   │       └── useFrichyRuntime.ts
 │   ├── public/
 │   ├── scripts/

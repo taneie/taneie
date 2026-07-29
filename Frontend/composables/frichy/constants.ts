@@ -57,7 +57,7 @@ export const demoAccounts: Account[] = [
     freelancerId: "fr-current",
   },
   {
-    email: "sales@freelink.jp",
+    email: "sales@frichy.jp",
     password: "sales123",
     role: "sales",
     name: "営業",

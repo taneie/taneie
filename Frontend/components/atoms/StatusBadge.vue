@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { computed, useCssModule } from "vue";
-import { useFrichyRuntime } from "~/composables/freelink/useFrichyRuntime";
+import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 const props = defineProps<{
   value: string;
 }>();
