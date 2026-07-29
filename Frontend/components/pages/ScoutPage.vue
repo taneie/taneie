@@ -40,30 +40,12 @@
       </div>
     </section>
 
-    <section :class="$style.panel">
-      <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">
-          候補者 {{ filteredFreelancers.length }}名
-        </h2>
-      </div>
-      <div :class="[$style.panelBody, $style.cardList]">
-        <FreelancerCard
-          v-for="freelancer in filteredFreelancers"
-          :key="freelancer.id"
-          :freelancer="freelancer"
-          @scout="openScoutJobPicker"
-          @preview="selectPreview"
-        />
-        <div v-if="filteredFreelancers.length === 0" :class="$style.empty">
-          <p>該当する候補者がいません。</p>
-          <div :class="$style.emptyActions">
-            <BaseButton variant="secondary" @click="clearScoutFilter">
-              条件をクリア
-            </BaseButton>
-          </div>
-        </div>
-      </div>
-    </section>
+    <ScoutFreelancerList
+      :freelancers="filteredFreelancers"
+      @scout="openScoutJobPicker"
+      @preview="selectPreview"
+      @clear="clearScoutFilter"
+    />
   </div>
 
   <div
@@ -218,8 +200,7 @@ function clearScoutJobKeyword() {
 }
 
 .grid > *,
-.formGrid > *,
-.cardList > * {
+.formGrid > * {
   min-width: 0;
 }
 
@@ -261,8 +242,7 @@ function clearScoutJobKeyword() {
   padding: 16px;
 }
 
-.formGrid,
-.cardList {
+.formGrid {
   display: grid;
   gap: 12px;
 }
