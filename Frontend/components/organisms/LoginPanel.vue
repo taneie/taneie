@@ -173,40 +173,7 @@
             </figure>
           </section>
 
-          <section id="features" :class="$style.infoSection">
-            <div :class="$style.sectionHead">
-              <span>FEATURES</span>
-              <h2 :class="$style.featureTitle">
-                <span>最短1分で応募まで。</span>
-                <span>Frichyが案件探しを自動化。</span>
-              </h2>
-            </div>
-
-            <!-- p要素はPCだと表示するでOK -->
-            <div :class="$style.featureGrid">
-              <article>
-                <span :class="$style.featureIcon" aria-hidden="true">⌕</span>
-                <div :class="$style.featureBody">
-                  <strong>案件探しの時間を1/3に</strong>
-                  <!-- <p>単価・スキルなどで素早く絞り込み</p> -->
-                </div>
-              </article>
-              <article>
-                <span :class="$style.featureIcon" aria-hidden="true">↔</span>
-                <div :class="$style.featureBody">
-                  <strong>応募後の調整がスムーズに進む</strong>
-                  <!-- <p>チャットと面談調整を1画面で管理</p> -->
-                </div>
-              </article>
-              <article>
-                <span :class="$style.featureIcon" aria-hidden="true">✓</span>
-                <div :class="$style.featureBody">
-                  <strong>提案準備が自動で整う</strong>
-                  <!-- <p>スキル・稼働条件を段階的に登録</p> -->
-                </div>
-              </article>
-            </div>
-          </section>
+          <LandingFeatureSection />
 
           <section :class="$style.visualSection">
             <img
@@ -1228,22 +1195,10 @@ onBeforeUnmount(() => {
   margin: 10px 0;
 }
 
-.infoSection,
 .visualSection,
 .projectsSection,
 .flowSection {
   margin-top: 42px;
-}
-
-.infoSection {
-  padding: 26px;
-  border: 1px solid rgba(169, 197, 237, 0.7);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(244, 248, 254, 0.96), rgba(255, 255, 255, 0.98)),
-    #fff;
-  box-shadow: 0 14px 34px rgba(29, 78, 137, 0.08);
-  animation: fadeSlideUp 0.48s ease-out 0.24s both;
 }
 
 .visualSection {
@@ -1276,36 +1231,12 @@ onBeforeUnmount(() => {
   line-height: 1.24;
 }
 
-.featureTitle {
-  max-width: 820px;
-  font-weight: 900;
-}
-
-.featureTitle span {
-  display: block;
-  color: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-  letter-spacing: 0;
-}
-
-.featureTitle span:last-child {
-  color: var(--primary-strong);
-}
-
-.featureGrid,
 .projectGrid,
 .flowList {
   display: grid;
   gap: 14px;
 }
 
-.featureGrid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.featureGrid article,
 .projectGrid article,
 .flowList li {
   min-width: 0;
@@ -1321,25 +1252,21 @@ onBeforeUnmount(() => {
   animation: fadeSlideUp 0.42s ease-out both;
 }
 
-.featureGrid article:nth-child(1),
 .projectGrid article:nth-child(1),
 .flowList li:nth-child(1) {
   animation-delay: 0.08s;
 }
 
-.featureGrid article:nth-child(2),
 .projectGrid article:nth-child(2),
 .flowList li:nth-child(2) {
   animation-delay: 0.16s;
 }
 
-.featureGrid article:nth-child(3),
 .projectGrid article:nth-child(3),
 .flowList li:nth-child(3) {
   animation-delay: 0.24s;
 }
 
-.featureGrid article:hover,
 .projectGrid article:hover,
 .flowList li:hover {
   border-color: rgba(169, 197, 237, 0.95);
@@ -1347,78 +1274,16 @@ onBeforeUnmount(() => {
   transform: translateY(-2px);
 }
 
-.featureGrid strong,
 .flowList strong {
   color: #10294f;
   font-size: 16px;
 }
 
-.featureGrid p,
 .projectGrid p,
 .flowList p {
   margin: 8px 0 0;
   color: var(--muted);
   line-height: 1.7;
-}
-
-.featureGrid article {
-  position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 14px;
-  align-items: center;
-  overflow: hidden;
-  min-height: 112px;
-  padding: 22px 20px 22px 24px;
-  border-color: #c8dbf4;
-  background: #fff;
-}
-
-.featureGrid article::before {
-  content: "";
-  position: absolute;
-  inset: 14px auto 14px 0;
-  width: 4px;
-  border-radius: 0 999px 999px 0;
-  background: linear-gradient(180deg, var(--primary), var(--cyan));
-  pointer-events: none;
-  animation: accentGlow 4.8s ease-in-out infinite;
-}
-
-.featureIcon {
-  position: relative;
-  z-index: 1;
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #a9c5ed;
-  border-radius: 8px;
-  background: linear-gradient(180deg, var(--primary), var(--primary-strong));
-  color: #fff;
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 1;
-  box-shadow: 0 10px 20px rgba(29, 95, 211, 0.18);
-}
-
-.featureBody {
-  position: relative;
-  z-index: 1;
-  min-width: 0;
-}
-
-.featureBody strong {
-  display: block;
-  color: #0d2749;
-  font-size: 18px;
-  line-height: 1.55;
-}
-
-.featureBody p {
-  margin: 9px 0 0;
-  color: var(--muted);
-  line-height: 1.85;
 }
 
 .visualSection {
@@ -1634,7 +1499,6 @@ onBeforeUnmount(() => {
 
 @media (max-width: 980px) {
   .landingLayout,
-  .featureGrid,
   .projectGrid,
   .flowList {
     grid-template-columns: 1fr;
@@ -1817,15 +1681,10 @@ onBeforeUnmount(() => {
     justify-content: flex-start;
   }
 
-  .infoSection,
   .visualSection,
   .projectsSection,
   .flowSection {
     margin-top: 42px;
-  }
-
-  .infoSection {
-    padding: 20px;
   }
 
   .sectionHead {
@@ -1843,56 +1702,17 @@ onBeforeUnmount(() => {
     font-size: 24px;
   }
 
-  .featureTitle span {
-    letter-spacing: 0;
-  }
-
-  .featureGrid,
   .projectGrid {
     gap: 18px;
   }
 
-  .featureGrid article,
   .projectGrid article {
     padding: 18px;
   }
 
-  .featureGrid strong {
-    display: block;
-    line-height: 1.45;
-  }
-
-  .featureGrid p,
   .projectGrid p {
     margin-top: 10px;
     line-height: 1.9;
-  }
-
-  .featureGrid article {
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 14px;
-    min-height: 104px;
-    padding: 18px 16px 18px 20px;
-    border-radius: 8px;
-  }
-
-  .featureIcon {
-    width: 46px;
-    height: 46px;
-    border-radius: 8px;
-    font-size: 20px;
-    margin: auto 0;
-  }
-
-  .featureBody strong {
-    font-size: 17px;
-    line-height: 1.55;
-  }
-
-  .featureBody p {
-    margin-top: 10px;
-    line-height: 1.9;
-    font-size: 14px;
   }
 
   .visualSection {
@@ -2097,8 +1917,6 @@ onBeforeUnmount(() => {
   .stats div,
   .stats div::before,
   .stats div::after,
-  .featureGrid article::before,
-  .infoSection,
   .visualSection,
   .projectsSection,
   .flowSection,
@@ -2112,7 +1930,6 @@ onBeforeUnmount(() => {
   .headerCta,
   .primaryCta,
   .secondaryCta,
-  .featureGrid article,
   .projectGrid article,
   .projectFoot,
   .flowList li,
@@ -2127,7 +1944,6 @@ onBeforeUnmount(() => {
   .primaryCta:hover,
   .secondaryCta:hover,
   .loginTrigger:hover,
-  .featureGrid article:hover,
   .projectGrid article:hover,
   .flowList li:hover,
   .flowList li:hover::before,
