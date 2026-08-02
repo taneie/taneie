@@ -4,7 +4,26 @@
 
 Google Cloud Run + 新規Neon projectを本番環境として構築し、GitHub Actionsからコンテナをビルド・Artifact Registryへpush・Cloud Runへデプロイする。
 
-現行のVercel + Neon環境は開発環境として残す。Vercel側の設定や既存Neon接続情報は変更しない。
+現行のVercel + Neon環境は開発環境として残す。Vercel側は静的フロントの確認環境、本番はCloud Run + 新Neon + GCSを正とする。
+
+## 環境の切り分け
+
+| 環境 | 用途 | デプロイ先 | DB | レジュメ保存 |
+| ---- | ---- | ---------- | -- | ------------ |
+| 開発 | UI確認、営業デモ、軽微な動作確認 | Vercel | 既存Neon Dev | 未設定でよい。アップロード不可でも許容 |
+| 本番 | 実運用 | Google Cloud Run | 新Neon Prod | Google Cloud Storage |
+
+開発環境のVercelでは、Project SettingsのEnvironment Variablesで以下を設定する。
+
+| Variable | 推奨値 |
+| -------- | ------ |
+| `NUXT_PUBLIC_API_BASE` | 開発APIの `/api` URL。未設定ならローカルAPI向けになる |
+| `NUXT_PUBLIC_SHOW_DEMO_LOGIN` | `true` |
+| `NUXT_PUBLIC_RESUME_UPLOAD_MAX_BYTES` | `10485760` |
+
+開発環境では `GCS_BUCKET_NAME` と `BLOB_READ_WRITE_TOKEN` を未設定にしてよい。この場合、レジュメアップロードAPIは利用不可になるが、画面のビルドと通常の閲覧は継続できる。
+
+本番環境のCloud Runでは、GitHub Actionsの `production` environment とGCP Secret Managerを使う。秘密値はGitHub Secretsへ置かない。
 
 ## 推奨構成
 
@@ -212,7 +231,7 @@ GitHub SecretsにはGCPの秘密値を置かない。秘密値はGCP Secret Mana
 .github/workflows/push-artifact-registry.yml
 ```
 
-`deploy-cloud-run.yml` は以下を行う。
+`deploy-cloud-run.yml` はGitHub Actionsの `production` environment で以下を行う。
 
 1. GitHub OIDCでGCPへ認証
 2. Docker imageをbuild
@@ -236,6 +255,58 @@ push後のimage URI:
 ```text
 asia-northeast1-docker.pkg.dev/frichy/frichy/web:<TAG>
 ```
+
+## ローカル変更をGCP本番へ反映する手順
+
+ローカルで修正した内容を本番へ反映する場合は、以下の順で行う。
+
+1. ローカルで検証する。
+
+```bash
+npm run typecheck
+npm run api:build
+```
+
+2. 変更をコミットする。
+
+```bash
+git status --short
+git add <changed-files>
+git commit -m "<変更内容>"
+```
+
+3. GitHubへpushする。
+
+```bash
+git push origin main
+```
+
+4. GitHub Actionsの `Deploy Cloud Run` が成功することを確認する。
+
+5. Cloud Run URLで疎通確認する。
+
+```bash
+curl -i https://frichy-322534405950.asia-northeast1.run.app/api/health
+```
+
+緊急時などGitHub Actionsを経由せずローカルから直接反映する場合は、以下を実行する。
+
+```bash
+gcloud builds submit --tag asia-northeast1-docker.pkg.dev/frichy/frichy/web:manual-YYYYMMDD .
+
+gcloud run deploy frichy \
+  --project frichy \
+  --region asia-northeast1 \
+  --platform managed \
+  --image asia-northeast1-docker.pkg.dev/frichy/frichy/web:manual-YYYYMMDD \
+  --service-account frichy-cloud-run-runtime@frichy.iam.gserviceaccount.com \
+  --allow-unauthenticated \
+  --port 8080 \
+  --set-env-vars NODE_ENV=production,NUXT_PUBLIC_API_BASE=/api,NUXT_PUBLIC_SHOW_DEMO_LOGIN=false,GCS_BUCKET_NAME=frichy-322534405950-resumes \
+  --set-secrets DATABASE_URL=frichy-prod-database-url:latest,JWT_SECRET=frichy-prod-jwt-secret:latest,DATA_ENCRYPTION_KEY=frichy-prod-data-encryption-key:latest,CORS_ORIGIN=frichy-prod-cors-origin:latest
+```
+
+直接反映した場合も、後から同じ内容を必ずGitHubへpushして履歴を揃える。
 
 ## Neon初期化
 
@@ -289,16 +360,9 @@ DNS反映後、Secret Managerの `frichy-prod-cors-origin` に本番ドメイン
 
 ## レジュメ保存について
 
-現状の実装はVercel Blobを利用している。
+本番Cloud Runでは `GCS_BUCKET_NAME` を設定し、Google Cloud Storageへ保存する。営業ユーザーは管理画面からPDFをプレビューでき、その他形式はHTMLプレビューまたはダウンロードで確認する。
 
-選択肢:
-
-| 方針 | 内容 |
-| ---- | ---- |
-| 当面継続 | Cloud Runにも `BLOB_READ_WRITE_TOKEN` をSecretとして渡し、Vercel Blobを使い続ける |
-| GCSへ移行 | Google Cloud Storage用の署名付きアップロード/閲覧実装へ差し替える |
-
-Google Cloudへ完全移行するならGCS移行が自然。ただし実装変更が必要なので、初回移行ではVercel Blob継続でもよい。
+開発Vercelではレジュメ保存用Secretを未設定にしてよい。未設定時はアップロードだけ利用不可になる。
 
 ## 参考
 
