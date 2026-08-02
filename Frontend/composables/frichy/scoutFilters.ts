@@ -24,7 +24,7 @@ export function filterAndSortFreelancers(
   freelancers: Freelancer[],
   filters: ScoutFilters,
 ) {
-  return freelancers
+  return [...freelancers]
     .filter(
       (freelancer) =>
         !filters.skill ||

@@ -329,7 +329,7 @@ function clearScoutJobKeyword() {
   color: var(--primary);
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 
 .modalClose {

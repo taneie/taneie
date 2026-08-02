@@ -125,6 +125,7 @@ export function nowLabel() {
 
 export function toApiDateTime(value: string) {
   const normalized = value.trim().replace(" ", "T");
+  if (!normalized) return "";
   if (/Z$|[+-]\d\d:\d\d$/.test(normalized)) return normalized;
   return normalized.length === 16
     ? `${normalized}:00+09:00`

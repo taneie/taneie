@@ -60,6 +60,10 @@ import {
 } from "./utils";
 import { freelancerToProfile, profileToApi } from "./profileMapping";
 import {
+  isIncomingMessageForRole,
+  isUnreadIncomingMessageForScope,
+} from "./chat";
+import {
   createDefaultScoutFilters,
   filterAndSortFreelancers,
   scoutSortOptions,
@@ -213,6 +217,7 @@ function init() {
   }
 
   syncProfileToFreelancer();
+  syncDemoProfileFromAuth();
   ensureActiveView();
   initialized.value = true;
   if (accessToken) void restoreSession();
@@ -552,7 +557,7 @@ async function refreshMessagesWithNotification() {
     });
     const incoming = messages.filter(
       (message) =>
-        !knownMessageIds.has(message.id) && isIncomingMessage(message),
+        !knownMessageIds.has(message.id) && isUnreadIncomingMessage(message),
     );
     state.value.messages = messages;
     knownMessageIds = new Set(messages.map((message) => message.id));
@@ -580,9 +585,14 @@ function stopChatPolling() {
 }
 
 function isIncomingMessage(message: Message) {
-  return currentRole.value === "sales"
-    ? message.channel === "freelancer"
-    : message.channel === "sales";
+  return isIncomingMessageForRole(message, currentRole.value);
+}
+
+function isUnreadIncomingMessage(message: Message) {
+  return isUnreadIncomingMessageForScope(message, {
+    role: currentRole.value,
+    freelancerId: currentFreelancerId.value,
+  });
 }
 
 function showChatBanner(message: Message) {
@@ -841,8 +851,7 @@ const chatFreelancers = computed(() => {
     const unreadCount = state.value.messages.filter(
       (message) =>
         message.freelancerId === freelancer.id &&
-        isIncomingMessage(message) &&
-        !message.readAt,
+        isUnreadIncomingMessage(message),
     ).length;
 
     return {
@@ -865,7 +874,7 @@ const activeChatMessages = computed(() => {
 const currentUnreadChatCount = computed(
   () =>
     state.value.messages.filter(
-      (message) => isIncomingMessage(message) && !message.readAt,
+      (message) => isUnreadIncomingMessage(message),
     ).length,
 );
 
@@ -1112,9 +1121,61 @@ function loginWithAccount(account: Account) {
     loggedInAt: nowLabel(),
   };
   state.value.activeView = account.startView || defaultViewByRole[account.role];
+  syncDemoProfileFromAuth();
   persist();
   scrollToPageTop();
   showToast(`${roleLabel(account.role)}としてログインしました。`);
+}
+
+function syncDemoProfileFromAuth() {
+  const auth = state.value.auth;
+  if (auth?.role !== "freelancer") return;
+
+  const demoAccount = demoAccounts.find(
+    (account) => account.role === "freelancer" && account.email === auth.email,
+  );
+  if (!demoAccount) return;
+
+  const profileId =
+    demoAccount.freelancerId || auth.freelancerId || state.value.profile.id;
+  state.value.profile = {
+    ...state.value.profile,
+    id: profileId,
+    name: state.value.profile.name || demoAccount.name,
+    email: state.value.profile.email || demoAccount.email,
+    lastUpdated: state.value.profile.lastUpdated || today(),
+  };
+  state.value.selectedFreelancerId = profileId;
+  syncProfileToFreelancer();
+}
+
+function isLocalDemoFreelancerSession() {
+  const auth = state.value.auth;
+  return Boolean(
+    auth?.role === "freelancer" &&
+      !accessToken &&
+      demoAccounts.some(
+        (account) =>
+          account.role === "freelancer" && account.email === auth.email,
+      ),
+  );
+}
+
+function saveLocalDemoMeetingRequests(candidates: string[]) {
+  const profileId = state.value.profile.id;
+  const candidateSet = new Set(candidates);
+  state.value.meetingRequests = [
+    ...state.value.meetingRequests.filter(
+      (meeting) =>
+        meeting.freelancerId !== profileId || !candidateSet.has(meeting.candidate),
+    ),
+    ...candidates.map((candidate, index) => ({
+      id: `local-demo-meeting-${Date.now()}-${index}`,
+      freelancerId: profileId,
+      candidate,
+      status: "候補" as const,
+    })),
+  ];
 }
 
 async function register(values: RegisterInput) {
@@ -1222,6 +1283,15 @@ async function saveProfileTerms(values: ProfileTermsInput) {
   });
 
   if (values.resume?.name) {
+    if (isLocalDemoFreelancerSession()) {
+      state.value.profile.resumeName = values.resume.name;
+      state.value.profile.resumeType =
+        values.resume.type || "application/octet-stream";
+      state.value.profile.resumeSize = formatFileSize(values.resume.size);
+      await saveProfileToApi("稼働条件とレジュメを保存しました。", 4);
+      return;
+    }
+
     try {
       const uploaded = await uploadResumeFile(values.resume);
       if (!uploaded) return;
@@ -1269,6 +1339,14 @@ async function saveProfileMeeting(
   try {
     const saved = await saveProfileToApi("");
     if (!saved) return;
+    if (isLocalDemoFreelancerSession()) {
+      saveLocalDemoMeetingRequests(candidates);
+      clearUnsavedChanges();
+      persist();
+      await setView("jobs");
+      showToast("登録が完了しました。");
+      return;
+    }
     await Promise.all(
       candidates.map((candidate) =>
         apiRequest("/meeting-requests", {
@@ -1766,7 +1844,8 @@ async function sendApplicationFollowup(
 }
 
 async function addMeeting(candidateValue: string) {
-  if (!candidateValue) {
+  const normalizedCandidate = candidateValue.trim();
+  if (!normalizedCandidate) {
     showToast("候補日時を入力してください。");
     return;
   }
@@ -1801,7 +1880,7 @@ async function addMeeting(candidateValue: string) {
           meetingThreadMode.value === "job"
             ? activeMeetingApplication.value?.id
             : undefined,
-        candidateAt: toApiDateTime(candidateValue),
+        candidateAt: toApiDateTime(normalizedCandidate),
       }),
     });
     const candidateLabel = meeting.candidateAt.replace("T", " ").slice(0, 16);
@@ -2023,7 +2102,7 @@ async function markActiveChatAsRead() {
   if (!freelancerId) return;
 
   const unreadIds = activeChatMessages.value
-    .filter((message) => isIncomingMessage(message) && !message.readAt)
+    .filter((message) => isUnreadIncomingMessage(message))
     .map((message) => message.id);
   if (!unreadIds.length) return;
 
@@ -2400,6 +2479,16 @@ function syncProfileToFreelancer() {
 }
 
 async function saveProfileToApi(message: string, nextWizardStep?: number) {
+  if (isLocalDemoFreelancerSession()) {
+    if (nextWizardStep) state.value.wizardStep = nextWizardStep;
+    syncDemoProfileFromAuth();
+    syncProfileToFreelancer();
+    clearUnsavedChanges();
+    persist();
+    if (message) showToast(message);
+    return true;
+  }
+
   try {
     const profile = await apiRequest<
       Freelancer & {

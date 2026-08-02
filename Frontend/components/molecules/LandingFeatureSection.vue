@@ -54,7 +54,7 @@ const features = [
 .sectionHead h2 {
   margin: 5px 0 0;
   color: #0d2749;
-  font-size: clamp(22px, 2.6vw, 32px);
+  font-size: 32px;
   line-height: 1.2;
 }
 
@@ -194,7 +194,7 @@ const features = [
   }
 
   .sectionHead span {
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
   }
 
   .sectionHead h2 {

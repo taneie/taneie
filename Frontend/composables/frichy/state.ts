@@ -125,6 +125,7 @@ export function createSeedState(): FrichyState {
         to: "山田 太郎",
         body: "金融SaaS案件について、初回面談候補を確認しました。",
         at: "2026-06-04 11:20",
+        readAt: "2026-06-04 11:20",
         channel: "sales",
       },
       {
@@ -134,6 +135,7 @@ export function createSeedState(): FrichyState {
         to: "営業",
         body: "6月10日午前で調整可能です。職務経歴書も更新しました。",
         at: "2026-06-04 11:36",
+        readAt: "2026-06-04 11:36",
         channel: "freelancer",
       },
     ],

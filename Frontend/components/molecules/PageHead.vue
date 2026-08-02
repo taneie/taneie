@@ -31,7 +31,7 @@ defineProps<{
   min-width: 0;
   margin: 0;
   color: #0d2749;
-  font-size: clamp(22px, 2vw, 30px);
+  font-size: 30px;
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
@@ -48,6 +48,10 @@ defineProps<{
   .pageHead {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .pageTitle {
+    font-size: 24px;
   }
 }
 </style>

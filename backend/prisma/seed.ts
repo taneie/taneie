@@ -642,6 +642,7 @@ async function main() {
         messageType: "chat",
         body: encryptText("金融SaaS案件について、初回面談候補を確認しました。"),
         sentAt: new Date("2026-06-04T11:20:00+09:00"),
+        readAt: new Date("2026-06-04T11:20:00+09:00"),
       },
       {
         senderUserId: freelancer.id,
@@ -653,6 +654,7 @@ async function main() {
           "6月10日午前で調整可能です。職務経歴書も更新しました。",
         ),
         sentAt: new Date("2026-06-04T11:36:00+09:00"),
+        readAt: new Date("2026-06-04T11:36:00+09:00"),
       },
     ],
   });
