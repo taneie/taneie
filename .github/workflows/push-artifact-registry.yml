@@ -1,0 +1,80 @@
+name: Push Artifact Registry Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Artifact Registry image tag"
+        required: false
+        default: "manual"
+      push_latest:
+        description: "Also push latest tag"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast1' }}
+  GAR_REPOSITORY: ${{ vars.GAR_REPOSITORY || 'frichy' }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'web' }}
+  NUXT_PUBLIC_API_BASE: ${{ vars.NUXT_PUBLIC_API_BASE || '/api' }}
+  NUXT_PUBLIC_SHOW_DEMO_LOGIN: ${{ vars.NUXT_PUBLIC_SHOW_DEMO_LOGIN || 'false' }}
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Build image
+        run: |
+          TAG="${{ inputs.image_tag }}"
+          if [ "${TAG}" = "manual" ]; then
+            TAG="${GITHUB_SHA}"
+          fi
+
+          IMAGE_URI="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GAR_REPOSITORY}/${IMAGE_NAME}:${TAG}"
+          docker build \
+            --build-arg NUXT_PUBLIC_API_BASE="${NUXT_PUBLIC_API_BASE}" \
+            --build-arg NUXT_PUBLIC_SHOW_DEMO_LOGIN="${NUXT_PUBLIC_SHOW_DEMO_LOGIN}" \
+            --tag "${IMAGE_URI}" \
+            .
+
+          if [ "${{ inputs.push_latest }}" = "true" ]; then
+            docker tag "${IMAGE_URI}" "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GAR_REPOSITORY}/${IMAGE_NAME}:latest"
+          fi
+
+          echo "IMAGE_URI=${IMAGE_URI}" >> "${GITHUB_ENV}"
+
+      - name: Push image
+        run: |
+          docker push "${IMAGE_URI}"
+          if [ "${{ inputs.push_latest }}" = "true" ]; then
+            docker push "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GAR_REPOSITORY}/${IMAGE_NAME}:latest"
+          fi
+
+      - name: Show image URI
+        run: echo "Pushed ${IMAGE_URI}"

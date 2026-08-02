@@ -14,6 +14,8 @@
 | `05_auth_security_design.md` | 認証・認可、暗号化、個人情報保護、エラー設計    |
 | `06_operations.md`           | 起動手順、環境変数、DB運用、確認コマンド        |
 | `07_open_items.md`           | 実装から見える未決事項・改善候補                |
+| `08_google_cloud_migration.md` | Google Cloud + Neon移行手順、本番/開発環境の分離 |
+| `09_gcp_console_github_actions.md` | GCPコンソール設定、GitHub Actionsデプロイ手順 |
 
 ## 前提
 

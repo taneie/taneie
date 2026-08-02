@@ -1,0 +1,85 @@
+name: Deploy Cloud Run
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/deploy-cloud-run.yml"
+      - "Dockerfile"
+      - "package.json"
+      - "package-lock.json"
+      - "prisma.config.ts"
+      - "backend/**"
+      - "Frontend/**"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast1' }}
+  GAR_REPOSITORY: ${{ vars.GAR_REPOSITORY || 'frichy' }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || 'web' }}
+  CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'frichy' }}
+  CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT: ${{ vars.CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT }}
+  NUXT_PUBLIC_API_BASE: ${{ vars.NUXT_PUBLIC_API_BASE || '/api' }}
+  NUXT_PUBLIC_SHOW_DEMO_LOGIN: ${{ vars.NUXT_PUBLIC_SHOW_DEMO_LOGIN || 'false' }}
+  SECRET_DATABASE_URL: ${{ vars.SECRET_DATABASE_URL || 'frichy-prod-database-url' }}
+  SECRET_JWT_SECRET: ${{ vars.SECRET_JWT_SECRET || 'frichy-prod-jwt-secret' }}
+  SECRET_DATA_ENCRYPTION_KEY: ${{ vars.SECRET_DATA_ENCRYPTION_KEY || 'frichy-prod-data-encryption-key' }}
+  SECRET_CORS_ORIGIN: ${{ vars.SECRET_CORS_ORIGIN || 'frichy-prod-cors-origin' }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Build container image
+        run: |
+          IMAGE_URI="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GAR_REPOSITORY}/${IMAGE_NAME}:${GITHUB_SHA}"
+          docker build \
+            --build-arg NUXT_PUBLIC_API_BASE="${NUXT_PUBLIC_API_BASE}" \
+            --build-arg NUXT_PUBLIC_SHOW_DEMO_LOGIN="${NUXT_PUBLIC_SHOW_DEMO_LOGIN}" \
+            --tag "${IMAGE_URI}" \
+            .
+          echo "IMAGE_URI=${IMAGE_URI}" >> "${GITHUB_ENV}"
+
+      - name: Push container image
+        run: docker push "${IMAGE_URI}"
+
+      - name: Deploy to Cloud Run
+        run: |
+          SERVICE_ACCOUNT_ARGS=()
+          if [ -n "${CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT}" ]; then
+            SERVICE_ACCOUNT_ARGS=(--service-account "${CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT}")
+          fi
+
+          gcloud run deploy "${CLOUD_RUN_SERVICE}" \
+            --project "${GCP_PROJECT_ID}" \
+            --region "${GCP_REGION}" \
+            --platform managed \
+            --image "${IMAGE_URI}" \
+            "${SERVICE_ACCOUNT_ARGS[@]}" \
+            --allow-unauthenticated \
+            --port 8080 \
+            --set-env-vars "NODE_ENV=production,NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE},NUXT_PUBLIC_SHOW_DEMO_LOGIN=${NUXT_PUBLIC_SHOW_DEMO_LOGIN}" \
+            --set-secrets "DATABASE_URL=${SECRET_DATABASE_URL}:latest,JWT_SECRET=${SECRET_JWT_SECRET}:latest,DATA_ENCRYPTION_KEY=${SECRET_DATA_ENCRYPTION_KEY}:latest,CORS_ORIGIN=${SECRET_CORS_ORIGIN}:latest"

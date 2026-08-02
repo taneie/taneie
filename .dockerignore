@@ -1,0 +1,16 @@
+.git
+.nuxt
+.output
+Frontend/.nuxt
+Frontend/.output
+Frontend/.vercel
+backend/dist
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.example
+gha-creds-*.json
+.DS_Store
+coverage
+dist
