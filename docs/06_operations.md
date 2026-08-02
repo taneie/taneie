@@ -525,15 +525,22 @@ DB migrationがない変更ではこの手順は不要。
 | Push | Artifact Registryへimageをpush |
 | Deploy | Cloud Run service `frichy` へ新revisionをdeploy |
 
-認証方式はworkflow内で自動選択する。`GCP_WORKLOAD_IDENTITY_PROVIDER` と `GCP_DEPLOY_SERVICE_ACCOUNT` が両方あればWorkload Identityを使い、揃っていない場合は `GCP_CREDENTIALS_JSON` を使う。
-どちらも使えない場合、`Select Google Cloud auth method` stepで失敗する。
+認証方式はworkflow手動実行時の `auth_method` で選ぶ。既定は `workload_identity` で、以下のWorkload Identity設定を使う。
+
+| 値 | 既定値 |
+| -- | ------ |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/322534405950/locations/global/workloadIdentityPools/github/providers/github` |
+| `GCP_DEPLOY_SERVICE_ACCOUNT` | `frichy-github-deployer@frichy.iam.gserviceaccount.com` |
+
+別projectへ向ける場合はGitHub Actions Variablesで上書きする。
+Workload Identityを使わない場合は `GCP_CREDENTIALS_JSON` をGitHub Actions Secretsに設定し、workflow実行時の `auth_method` で `credentials_json` を選ぶ。
 
 | 設定場所 | 必要な値 |
 | -------- | -------- |
 | GitHub Actions Variables | `GCP_WORKLOAD_IDENTITY_PROVIDER`、`GCP_DEPLOY_SERVICE_ACCOUNT` |
-| GitHub Actions Secrets | `GCP_CREDENTIALS_JSON` |
+| GitHub Actions Secrets | `GCP_CREDENTIALS_JSON`。`auth_method=credentials_json` の場合だけ必要 |
 
-通常は上記どちらか一方があればよい。両方設定されている場合はWorkload Identityを優先する。
+通常はWorkload Identityを使う。`Select Google Cloud auth method` で落ちる場合は、`auth_method` の選択と上記設定を確認する。
 
 6. 本番URLで疎通確認する。
 
@@ -596,6 +603,8 @@ DB migrationを伴うリリースをrollbackする場合、アプリrevisionだ�
 | `npm run api:start` | コンパイル済みAPIを起動 |
 | `npm run gcp:build` | Cloud Run container build内で使う本番向けbuild |
 | `npm run gcp:start` | Cloud Run runtimeでAPIを起動 |
+
+`npm run generate` / `npm run build` / `npm run typecheck` は、Nuxtの古いlockでCIやVercel buildが止まらないよう `NUXT_IGNORE_LOCK=1` を自動付与する。
 
 ## 13. デモログイン
 

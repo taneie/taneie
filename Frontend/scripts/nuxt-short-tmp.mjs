@@ -13,6 +13,11 @@ if (args.length === 0) {
 }
 
 const env = { ...process.env };
+const [nuxtCommand] = args;
+
+if (nuxtCommand !== "dev") {
+  env.NUXT_IGNORE_LOCK = env.NUXT_IGNORE_LOCK || "1";
+}
 
 // macOS can fail with `connect EINVAL ... nuxt-vite-node-*.sock` when the
 // default TMPDIR path under /var/folders is too long for a Unix domain socket.

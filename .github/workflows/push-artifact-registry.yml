@@ -15,6 +15,14 @@ on:
         options:
           - "false"
           - "true"
+      auth_method:
+        description: "Google Cloud auth method"
+        required: false
+        default: "workload_identity"
+        type: choice
+        options:
+          - "workload_identity"
+          - "credentials_json"
 
 permissions:
   contents: read
@@ -23,6 +31,8 @@ permissions:
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'frichy' }}
   GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast1' }}
+  GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER || 'projects/322534405950/locations/global/workloadIdentityPools/github/providers/github' }}
+  GCP_DEPLOY_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT || 'frichy-github-deployer@frichy.iam.gserviceaccount.com' }}
   GAR_REPOSITORY: ${{ vars.GAR_REPOSITORY || 'frichy' }}
   IMAGE_NAME: ${{ vars.IMAGE_NAME || 'web' }}
   NUXT_PUBLIC_API_BASE: ${{ vars.NUXT_PUBLIC_API_BASE || '/api' }}
@@ -39,10 +49,22 @@ jobs:
       - name: Select Google Cloud auth method
         id: gcp-auth
         env:
-          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          WIF_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          AUTH_METHOD: ${{ inputs.auth_method || 'workload_identity' }}
+          WIF_PROVIDER: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          WIF_SERVICE_ACCOUNT: ${{ env.GCP_DEPLOY_SERVICE_ACCOUNT }}
           CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
         run: |
+          if [ "${AUTH_METHOD}" = "credentials_json" ]; then
+            if [ -n "${CREDENTIALS_JSON}" ]; then
+              echo "method=json" >> "${GITHUB_OUTPUT}"
+              echo "Using credentials JSON."
+              exit 0
+            fi
+
+            echo "::error::auth_method is credentials_json, but GitHub Secret GCP_CREDENTIALS_JSON is not set."
+            exit 1
+          fi
+
           if [ -n "${WIF_PROVIDER}" ] && [ -n "${WIF_SERVICE_ACCOUNT}" ]; then
             echo "method=wif" >> "${GITHUB_OUTPUT}"
             echo "Using Workload Identity."
@@ -59,7 +81,7 @@ jobs:
             echo "::warning::GCP_WORKLOAD_IDENTITY_PROVIDER is set, but GCP_DEPLOY_SERVICE_ACCOUNT is missing."
           fi
 
-          echo "::error::Google Cloud authentication is not configured. Set GitHub Variables GCP_WORKLOAD_IDENTITY_PROVIDER and GCP_DEPLOY_SERVICE_ACCOUNT, or set GitHub Secret GCP_CREDENTIALS_JSON."
+          echo "::error::Workload Identity configuration is missing. Set GitHub Variables GCP_WORKLOAD_IDENTITY_PROVIDER and GCP_DEPLOY_SERVICE_ACCOUNT, or rerun with auth_method=credentials_json after setting GitHub Secret GCP_CREDENTIALS_JSON."
           exit 1
 
       - name: Authenticate to Google Cloud with Workload Identity
@@ -67,8 +89,8 @@ jobs:
         uses: google-github-actions/auth@v3
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_DEPLOY_SERVICE_ACCOUNT }}
 
       - name: Authenticate to Google Cloud with credentials JSON
         if: ${{ steps.gcp-auth.outputs.method == 'json' }}
