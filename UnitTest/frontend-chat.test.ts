@@ -7,7 +7,7 @@ import {
 } from "../Frontend/composables/frichy/chat";
 import { messageFixture } from "../tests/helpers/fixtures";
 
-describe("chat unread methods", () => {
+describe("チャット未読判定", () => {
   it("isIncomingMessageForRole treats opposite-channel messages as incoming", () => {
     assert.equal(
       isIncomingMessageForRole(messageFixture({ channel: "sales" }), "freelancer"),

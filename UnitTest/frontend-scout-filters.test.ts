@@ -6,7 +6,7 @@ import {
 } from "../Frontend/composables/frichy/scoutFilters";
 import { freelancerFixture } from "../tests/helpers/fixtures";
 
-describe("scout filter methods", () => {
+describe("スカウト対象の絞り込み・並び替え", () => {
   it("createDefaultScoutFilters returns the default sort and empty filters", () => {
     assert.deepEqual(createDefaultScoutFilters(), {
       skill: "",

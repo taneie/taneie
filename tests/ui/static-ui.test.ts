@@ -18,7 +18,7 @@ function vueFiles(dir: string): string[] {
   });
 }
 
-describe("UI copy and branding", () => {
+describe("UI文言・ブランド表記", () => {
   it("landing FEATURES section keeps the exact approved copy and component structure", () => {
     const source = read("Frontend/components/molecules/LandingFeatureSection.vue");
 
@@ -57,7 +57,7 @@ describe("UI copy and branding", () => {
   });
 });
 
-describe("UI readability and responsive style", () => {
+describe("UI可読性・レスポンシブスタイル", () => {
   it("Vue components do not use viewport-scaled font-size clamp", () => {
     const offenders = vueFiles(join(frontendRoot, "components")).filter((file) =>
       /font-size:\s*clamp\([^;]*vw/i.test(read(file)),
@@ -90,7 +90,7 @@ describe("UI readability and responsive style", () => {
   });
 });
 
-describe("UI accessibility and loading UX", () => {
+describe("UIアクセシビリティ・ローディング体験", () => {
   it("loading overlay and toast expose polite status announcements", () => {
     const loading = read("Frontend/components/atoms/AppLoadingOverlay.vue");
     const toast = read("Frontend/components/atoms/ToastMessage.vue");

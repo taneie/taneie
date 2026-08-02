@@ -8,7 +8,7 @@ import {
 } from "../backend/src/interfaces/http/schemas";
 import { expectInvalid, expectValid } from "./helpers/schema";
 
-describe("job schemas", () => {
+describe("案件API入力スキーマ", () => {
   it("listJobsQuerySchema coerces numeric query params and rejects invalid pagination", () => {
     const parsed = expectValid(listJobsQuerySchema, {
       keyword: " Java ",

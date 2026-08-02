@@ -12,7 +12,7 @@ import {
 } from "../backend/src/application/mappers";
 import { encryptText } from "../backend/src/infrastructure/crypto";
 
-describe("mapper label methods", () => {
+describe("Mapperの表示ラベル変換", () => {
   it("label helper methods map stored enum values and notes", () => {
     assert.equal(toRemoteLabel("full_remote"), "フルリモート");
     assert.equal(toStreamLabel("end_direct"), "エンド直");
@@ -22,7 +22,7 @@ describe("mapper label methods", () => {
   });
 });
 
-describe("job mapper methods", () => {
+describe("案件Mapper", () => {
   it("mapJob maps relations, enum labels, and default client names", () => {
     const job = mapJob({
       id: "job-id",
@@ -77,7 +77,7 @@ describe("job mapper methods", () => {
   });
 });
 
-describe("freelancer mapper methods", () => {
+describe("求職者Mapper", () => {
   it("mapFreelancer decrypts PII and includes per-skill years", () => {
     const freelancer = mapFreelancer({
       id: "profile-id",
@@ -151,7 +151,7 @@ describe("freelancer mapper methods", () => {
   });
 });
 
-describe("application and message mapper methods", () => {
+describe("応募・メッセージMapper", () => {
   it("mapApplication and mapMessage map relations to UI-friendly labels", () => {
     const application = mapApplication({
       id: "application-id",

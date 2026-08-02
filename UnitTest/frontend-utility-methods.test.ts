@@ -17,7 +17,7 @@ import {
   profileFixture,
 } from "../tests/helpers/fixtures";
 
-describe("frontend utility methods", () => {
+describe("フロントエンド共通ユーティリティ", () => {
   it("clone returns a deep copy without sharing nested references", () => {
     const source = { nested: { value: 1 } };
     const copied = clone(source);

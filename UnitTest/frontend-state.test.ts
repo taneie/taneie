@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { blankProfile, createSeedState } from "../Frontend/composables/frichy/state";
 
-describe("frontend state methods", () => {
+describe("フロントエンド初期状態", () => {
   it("blankProfile returns a safe empty profile", () => {
     const profile = blankProfile("fr-empty");
 

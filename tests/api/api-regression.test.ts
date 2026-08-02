@@ -88,7 +88,7 @@ after(async () => {
   await closePrisma();
 });
 
-describe("API health and auth", () => {
+describe("API疎通・認証フロー", () => {
   it("GET /api/health returns API status", async () => {
     const response = await server.request<{ status: string; service: string }>(
       "/health",
@@ -206,7 +206,7 @@ describe("API health and auth", () => {
   });
 });
 
-describe("API profile and job flows", () => {
+describe("APIプロフィール・案件フロー", () => {
   it("profile can be fetched and updated by freelancer, while sales is forbidden", async () => {
     const freelancer = await login(
       server,
@@ -378,7 +378,7 @@ describe("API profile and job flows", () => {
   });
 });
 
-describe("API meetings, messages, and contact flows", () => {
+describe("API面談・メッセージ・問い合わせフロー", () => {
   it("meeting requests validate date/role and support sales status updates", async () => {
     const freelancer = await login(
       server,

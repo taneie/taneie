@@ -16,9 +16,9 @@
 | --- | --- | --- |
 | 共通HTTPヘルパー | `tests/helpers/http.ts` | Express一時起動、HTTP request、ログイン、エラー検証、ローカルDBガード |
 | 共通fixture | `tests/helpers/fixtures.ts` | 求職者、プロフィール、メッセージの再利用fixture |
-| FE単体 | `UnitTest/frontend-utils.test.ts` | utility、state、mapping、scout filter、chat unread判定 |
-| BE単体 | `UnitTest/backend-core.test.ts` | domain label、暗号化、PII hash、JWT/password、mapper |
-| BE schema単体 | `UnitTest/backend-schemas.test.ts` | exported schemaの正常系/異常系 |
+| FE単体 | `UnitTest/frontend-*.test.ts` | utility、state、mapping、scout filter、chat unread判定 |
+| BE単体 | `UnitTest/backend-domain.test.ts` / `UnitTest/backend-security.test.ts` / `UnitTest/backend-mappers.test.ts` | domain label、暗号化、PII hash、JWT/password、mapper |
+| BE schema単体 | `UnitTest/backend-*-schemas.test.ts` | exported schemaの正常系/異常系 |
 | API横断 | `tests/api/api-regression.test.ts` | 認証、プロフィール、案件、応募、面談、チャット、問い合わせ |
 | UI/UX静的 | `tests/ui/static-ui.test.ts` | FEATURES文言、旧名称混入、可読性CSS、a11y、loading/toast |
 
@@ -64,3 +64,29 @@
 - `test:api` は安全のためlocalhost DB以外では動かないガードを入れている。
 - APIテストでは重複応募の異常系を意図的に踏むため、Prismaの一意制約ログが出る。HTTP結果は409でPASS。
 - Playwright/Cypress等のブラウザE2E依存は未導入のため、実ブラウザ操作の自動E2Eは今回追加していない。既存依存のみで実行できる範囲として、API横断・FE/BE単体・UI/UX静的検査・Nuxt生成確認まで実施した。
+
+## 再確認結果
+
+実施日: 2026-08-03
+
+| 観点 | 現状 | 評価 |
+| --- | --- | --- |
+| UnitTestの役割分離 | BE/FEとも役割別ファイルに分割済み | PASS |
+| テストsuite名 | `describe()` を日本語化し、出力上のテストカテゴリを明確化 | PASS |
+| BE schema | 認証、案件、プロフィール、応募、面談、メッセージ、問い合わせ、レジュメ、push通知の正常系/異常系を確認 | PASS |
+| BE mapper/security/domain | ラベル変換、暗号化/復号、PII hash、password、JWT、主要mapperを確認 | PASS |
+| API回帰 | 認証、登録、プロフィール、案件、応募、面談、チャット、問い合わせ、初回面談更新をHTTP経由で確認 | PASS |
+| FEロジック | プロフィール変換、スカウト絞り込み/ソート、チャット未読、初期状態、共通utilityを確認 | PASS |
+| UI静的検査 | LP文言、旧名称混入、可読性CSS、a11y、loading/toastを確認 | PASS |
+
+## 網羅性の残課題
+
+現状の自動テストは主要な回帰検知として有効だが、以下はまだ「網羅済み」とは言い切れない。
+
+| 不足範囲 | 理由 | 推奨対応 |
+| --- | --- | --- |
+| ブラウザ操作E2E | Playwright/Cypress等が未導入で、実ブラウザ上のクリック、入力、画面遷移、レスポンシブ崩れを自動確認できていない | 主要導線だけPlaywrightを追加 |
+| Vue component単体 | component mountテストがなく、props/emits/slot/フォーム操作の部品単位検証が弱い | Vue Test Utils系の導入を検討 |
+| service層のmock単体 | HTTP経由のAPI回帰はあるが、DB/mockを切ったservice単体の分岐確認は限定的 | repository/mockを使ったservice単体を追加 |
+| レジュメ保存の実ストレージ連携 | ローカルではGCS/Vercel Blobの実アップロードまでは自動確認していない | storage adapterのmock単体とstaging実疎通テストを分離 |
+| GitHub Actions/GCP/Vercel | workflow YAML構文と手順は確認済みだが、外部CI上の実行結果まではローカルテスト対象外 | CI実行後の結果をリリース前チェックに含める |

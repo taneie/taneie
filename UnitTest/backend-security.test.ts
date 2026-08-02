@@ -12,7 +12,7 @@ import {
   verifyToken,
 } from "../backend/src/infrastructure/security";
 
-describe("crypto methods", () => {
+describe("暗号化・個人情報ハッシュ", () => {
   it("encryptText/decryptText round-trip normal, empty, and already encrypted values", () => {
     const encrypted = encryptText("個人情報");
 
@@ -30,7 +30,7 @@ describe("crypto methods", () => {
   });
 });
 
-describe("auth security methods", () => {
+describe("認証セキュリティ", () => {
   it("hashPassword/verifyPassword accept the original password and reject others", async () => {
     const hash = await hashPassword("correct-password");
 

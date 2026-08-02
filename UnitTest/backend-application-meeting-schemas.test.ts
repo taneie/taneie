@@ -10,7 +10,7 @@ import { expectInvalid, expectValid } from "./helpers/schema";
 
 const uuid = "11111111-1111-4111-8111-111111111111";
 
-describe("application schemas", () => {
+describe("応募API入力スキーマ", () => {
   it("applySchema requires a uuid jobId", () => {
     expectValid(applySchema, { jobId: uuid });
     expectInvalid(applySchema, { jobId: "not-uuid" });
@@ -29,7 +29,7 @@ describe("application schemas", () => {
   });
 });
 
-describe("meeting schemas", () => {
+describe("面談API入力スキーマ", () => {
   it("createMeetingSchema requires timezone-aware datetime", () => {
     expectValid(createMeetingSchema, {
       freelancerProfileId: uuid,

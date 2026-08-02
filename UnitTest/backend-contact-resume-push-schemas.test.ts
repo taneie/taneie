@@ -11,7 +11,7 @@ import { expectInvalid, expectValid } from "./helpers/schema";
 
 const uuid = "11111111-1111-4111-8111-111111111111";
 
-describe("contact inquiry schemas", () => {
+describe("問い合わせAPI入力スキーマ", () => {
   it("createContactInquirySchema and answerContactInquirySchema validate required fields", () => {
     expectValid(createContactInquirySchema, {
       inquiryType: "案件相談",
@@ -40,7 +40,7 @@ describe("contact inquiry schemas", () => {
   });
 });
 
-describe("resume schemas", () => {
+describe("レジュメAPI入力スキーマ", () => {
   it("resume schemas validate metadata, intent, and completion", () => {
     expectValid(resumeMetadataSchema, {
       originalFilename: "resume.pdf",
@@ -79,7 +79,7 @@ describe("resume schemas", () => {
   });
 });
 
-describe("push notification schemas", () => {
+describe("プッシュ通知API入力スキーマ", () => {
   it("pushSubscriptionSchema validates endpoint and required keys", () => {
     expectValid(pushSubscriptionSchema, {
       endpoint: "https://example.com/push",

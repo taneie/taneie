@@ -9,7 +9,7 @@ import {
   labelToStreamType,
 } from "../backend/src/domain/types";
 
-describe("domain label methods", () => {
+describe("ドメインの表示ラベル変換", () => {
   it("getKeyByValue returns Japanese label for stored values and passes through unknown values", () => {
     assert.equal(getKeyByValue(labelToRemoteType, "full_remote"), "フルリモート");
     assert.equal(getKeyByValue(labelToStreamType, "prime"), "1次請け");

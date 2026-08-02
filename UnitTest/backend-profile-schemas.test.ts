@@ -6,7 +6,7 @@ import {
 } from "../backend/src/interfaces/http/schemas";
 import { expectInvalid, expectValid } from "./helpers/schema";
 
-describe("profile schemas", () => {
+describe("プロフィールAPI入力スキーマ", () => {
   it("updateProfileSchema accepts labels, numbers, and skill experiences", () => {
     const parsed = expectValid(updateProfileSchema, {
       name: " 山田 太郎 ",

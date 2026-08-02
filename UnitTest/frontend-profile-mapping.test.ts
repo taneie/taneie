@@ -6,7 +6,7 @@ import {
   profileFixture,
 } from "../tests/helpers/fixtures";
 
-describe("frontend profile mapping methods", () => {
+describe("フロントエンドのプロフィール変換", () => {
   it("freelancerToProfile maps API freelancer data to editable form state", () => {
     const profile = freelancerToProfile(
       freelancerFixture({

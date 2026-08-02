@@ -8,7 +8,7 @@ import { expectInvalid, expectValid } from "./helpers/schema";
 
 const uuid = "11111111-1111-4111-8111-111111111111";
 
-describe("message schemas", () => {
+describe("メッセージAPI入力スキーマ", () => {
   it("sendMessageSchema accepts chat messages and defaults messageType", () => {
     const parsed = expectValid(sendMessageSchema, {
       freelancerProfileId: uuid,

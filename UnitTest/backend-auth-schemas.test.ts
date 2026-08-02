@@ -7,7 +7,7 @@ import {
 } from "../backend/src/interfaces/http/schemas";
 import { expectInvalid, expectValid } from "./helpers/schema";
 
-describe("auth schemas", () => {
+describe("認証API入力スキーマ", () => {
   it("registerSchema accepts valid input and rejects invalid email/password/consent", () => {
     expectValid(registerSchema, {
       email: "user@example.com",
