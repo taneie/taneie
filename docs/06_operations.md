@@ -525,6 +525,9 @@ DB migrationがない変更ではこの手順は不要。
 | Push | Artifact Registryへimageをpush |
 | Deploy | Cloud Run service `frichy` へ新revisionをdeploy |
 
+Cloud Run serviceの公開設定は既存のIAMを維持する。
+`Deploy Cloud Run` workflowはrevision更新だけを行い、`--allow-unauthenticated` によるIAM変更は行わない。
+
 認証方式はworkflow手動実行時の `auth_method` で選ぶ。既定は `workload_identity` で、以下のWorkload Identity設定を使う。
 
 | 値 | 既定値 |
