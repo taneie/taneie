@@ -135,6 +135,7 @@ const activeMeetingApplicationId = ref("");
 const initialized = ref(false);
 let accessToken = "";
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
+let pendingToastMessage = "";
 let chatBannerTimer: ReturnType<typeof setTimeout> | undefined;
 let chatPollingTimer: ReturnType<typeof setInterval> | undefined;
 let loadingShowTimer: ReturnType<typeof setTimeout> | undefined;
@@ -168,11 +169,15 @@ function beginLoading() {
       clearTimeout(loadingShowTimer);
       loadingShowTimer = undefined;
     }
-    if (!loadingVisible.value) return;
+    if (!loadingVisible.value) {
+      flushPendingToast();
+      return;
+    }
     const remaining = Math.max(0, 260 - (Date.now() - loadingShownAt));
     loadingHideTimer = setTimeout(() => {
       if (loadingCount.value === 0) loadingVisible.value = false;
       loadingHideTimer = undefined;
+      flushPendingToast();
     }, remaining);
   };
 }
@@ -1162,8 +1167,7 @@ async function saveProfileBasic(
   values: Pick<Profile, "name" | "nameKana" | "email" | "phone" | "role">,
 ) {
   Object.assign(state.value.profile, values, { lastUpdated: today() });
-  state.value.wizardStep = 2;
-  await saveProfileToApi("簡易プロフィールを保存しました。");
+  await saveProfileToApi("簡易プロフィールを保存しました。", 2);
 }
 
 async function saveProfileSkills(
@@ -1196,8 +1200,7 @@ async function saveProfileSkills(
   }
 
   Object.assign(state.value.profile, values, { lastUpdated: today() });
-  state.value.wizardStep = 3;
-  await saveProfileToApi("スキル情報を保存しました。");
+  await saveProfileToApi("スキル情報を保存しました。", 3);
 }
 
 async function saveProfileTerms(values: ProfileTermsInput) {
@@ -1228,8 +1231,7 @@ async function saveProfileTerms(values: ProfileTermsInput) {
     }
   }
 
-  state.value.wizardStep = 4;
-  await saveProfileToApi("稼働条件とレジュメを保存しました。");
+  await saveProfileToApi("稼働条件とレジュメを保存しました。", 4);
 }
 
 async function saveProfileMeeting(
@@ -1257,7 +1259,8 @@ async function saveProfileMeeting(
     state.value.profile.pledgedAt = new Date().toISOString();
   state.value.profile.lastUpdated = today();
   try {
-    await saveProfileToApi("");
+    const saved = await saveProfileToApi("");
+    if (!saved) return;
     await Promise.all(
       candidates.map((candidate) =>
         apiRequest("/meeting-requests", {
@@ -2388,7 +2391,7 @@ function syncProfileToFreelancer() {
   else state.value.freelancers.unshift(item);
 }
 
-async function saveProfileToApi(message: string) {
+async function saveProfileToApi(message: string, nextWizardStep?: number) {
   try {
     const profile = await apiRequest<
       Freelancer & {
@@ -2418,17 +2421,20 @@ async function saveProfileToApi(message: string) {
         nextProfile.pledgeAccepted || previousProfile.pledgeAccepted,
       pledgedAt: nextProfile.pledgedAt || previousProfile.pledgedAt,
     };
+    if (nextWizardStep) state.value.wizardStep = nextWizardStep;
     syncProfileToFreelancer();
     clearUnsavedChanges();
     persist();
     if (currentRole.value === "freelancer") await fetchJobsPage({ reset: true });
     if (message) showToast(message);
+    return true;
   } catch (error) {
     showToast(
       error instanceof Error
         ? error.message
         : "プロフィール保存に失敗しました。",
     );
+    return false;
   }
 }
 
@@ -2567,13 +2573,37 @@ function resolveUnsavedConfirm(discard: boolean) {
   unsavedConfirmResolver = undefined;
 }
 
-function showToast(message: string) {
+function shouldDelayToast() {
+  return (
+    loadingCount.value > 0 ||
+    loadingVisible.value ||
+    Boolean(loadingShowTimer) ||
+    Boolean(loadingHideTimer)
+  );
+}
+
+function displayToast(message: string) {
   toastMessage.value = message;
   toastVisible.value = true;
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toastVisible.value = false;
   }, 2600);
+}
+
+function flushPendingToast() {
+  if (!pendingToastMessage || shouldDelayToast()) return;
+  const message = pendingToastMessage;
+  pendingToastMessage = "";
+  displayToast(message);
+}
+
+function showToast(message: string) {
+  if (shouldDelayToast()) {
+    pendingToastMessage = message;
+    return;
+  }
+  displayToast(message);
 }
 
 function saveAndNotify(message: string) {
