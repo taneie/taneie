@@ -212,9 +212,11 @@ export class ResumeService {
 
     if (mimeType === "application/pdf") {
       if (usesGcsResumeStorage()) {
+        const [buffer] = await this.gcsFile(uploadedFile.blobPath).download();
         return {
           ...basePreview,
-          previewKind: "download" as const,
+          previewKind: "pdf" as const,
+          previewUrl: `data:application/pdf;base64,${buffer.toString("base64")}`,
         };
       }
       const validUntil = Date.now() + 10 * 60 * 1000;
