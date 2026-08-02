@@ -691,7 +691,15 @@ const currentRole = computed<Role | null>(
 );
 const availableNavItems = computed(() => {
   const role = currentRole.value;
-  return role ? navItems.filter((item) => item.roles.includes(role)) : [];
+  return role
+    ? navItems
+        .filter((item) => item.roles.includes(role))
+        .map((item) =>
+          role === "sales" && item.view === "jobs"
+            ? { ...item, label: "案件情報" }
+            : item,
+        )
+    : [];
 });
 
 const filteredJobs = computed(() => {

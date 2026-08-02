@@ -1,7 +1,7 @@
 <template>
   <PageHead
-    title="案件検索・応募"
-    kicker="キーワード、スキル、単価、リモート、商流で絞り込みます。"
+    :title="pageTitle"
+    :kicker="pageKicker"
   />
 
   <section
@@ -40,7 +40,7 @@
   <div v-else :class="[$style.grid, $style.two]">
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">検索条件</h2>
+        <h2 :class="$style.panelTitle">{{ filterTitle }}</h2>
       </div>
       <div :class="$style.panelBody">
         <form :class="[$style.formGrid, $style.one]" @submit.prevent="searchJobs">
@@ -152,6 +152,17 @@ const {
 const loadMoreTrigger = ref<HTMLElement | null>(null);
 const firstPendingProfileStep = computed(
   () => profileRequirementItems.value.find((item) => !item.done)?.step || 1,
+);
+const pageTitle = computed(() =>
+  currentRole.value === "sales" ? "案件情報" : "案件検索・応募",
+);
+const pageKicker = computed(() =>
+  currentRole.value === "sales"
+    ? "登録済み案件の条件、単価、商流、スキル要件を確認します。"
+    : "キーワード、スキル、単価、リモート、商流で絞り込みます。",
+);
+const filterTitle = computed(() =>
+  currentRole.value === "sales" ? "案件情報の絞り込み" : "検索条件",
 );
 let observer: IntersectionObserver | null = null;
 

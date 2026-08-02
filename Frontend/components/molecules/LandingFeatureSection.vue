@@ -32,13 +32,6 @@ const features = [
 <style module>
 .infoSection {
   margin-top: 42px;
-  padding: 26px;
-  border: 1px solid rgba(169, 197, 237, 0.7);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(244, 248, 254, 0.96), rgba(255, 255, 255, 0.98)),
-    #fff;
-  box-shadow: 0 14px 34px rgba(29, 78, 137, 0.08);
   animation: fadeSlideUp 0.48s ease-out 0.24s both;
 }
 
@@ -80,20 +73,20 @@ const features = [
 .featureGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .featureGrid article {
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 14px;
-  align-items: center;
+  gap: 12px;
+  align-items: flex-start;
   min-width: 0;
-  min-height: 112px;
+  min-height: 104px;
   overflow: hidden;
-  padding: 22px 20px 22px 24px;
-  border: 1px solid #c8dbf4;
+  padding: 18px 16px;
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 8px 22px rgba(29, 78, 137, 0.06);
@@ -125,7 +118,7 @@ const features = [
 .featureGrid article::before {
   content: "";
   position: absolute;
-  inset: 14px auto 14px 0;
+  inset: 16px auto 16px 0;
   width: 4px;
   border-radius: 0 999px 999px 0;
   background: linear-gradient(180deg, var(--primary), var(--cyan));
@@ -136,18 +129,18 @@ const features = [
 .featureIcon {
   position: relative;
   z-index: 1;
-  width: 48px;
-  height: 48px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border: 1px solid #a9c5ed;
   border-radius: 8px;
-  background: linear-gradient(180deg, var(--primary), var(--primary-strong));
-  color: #fff;
-  font-size: 20px;
+  background: #f4f8fe;
+  color: var(--primary-strong);
+  font-size: 17px;
   font-weight: 900;
   line-height: 1;
-  box-shadow: 0 10px 20px rgba(29, 95, 211, 0.18);
+  box-shadow: 0 8px 18px rgba(29, 95, 211, 0.08);
 }
 
 .featureBody {
@@ -159,7 +152,7 @@ const features = [
 .featureBody strong {
   display: block;
   color: #0d2749;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.55;
 }
 
@@ -195,7 +188,6 @@ const features = [
 @media (max-width: 620px) {
   .infoSection {
     margin-top: 42px;
-    padding: 20px;
   }
 
   .sectionHead {
@@ -221,21 +213,21 @@ const features = [
   }
 
   .featureGrid article {
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 14px;
-    min-height: 104px;
-    padding: 18px 16px 18px 20px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 12px;
+    min-height: 92px;
+    padding: 16px;
   }
 
   .featureIcon {
-    width: 46px;
-    height: 46px;
-    font-size: 20px;
-    margin: auto 0;
+    width: 34px;
+    height: 34px;
+    font-size: 17px;
+    margin: 0;
   }
 
   .featureBody strong {
-    font-size: 17px;
+    font-size: 16px;
     line-height: 1.55;
   }
 }
