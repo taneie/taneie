@@ -7,6 +7,10 @@ import {
 } from "../tests/helpers/fixtures";
 
 describe("フロントエンドのプロフィール変換", () => {
+  /**
+   * @testData email、複数カテゴリのskills、skillExperiences、pledgedAtを持つfreelancer fixture。
+   * @expected APIの求職者情報がプロフィール編集フォームのカテゴリ別スキル、経験年数、規約同意状態へ変換される。
+   */
   it("freelancerToProfile maps API freelancer data to editable form state", () => {
     const profile = freelancerToProfile(
       freelancerFixture({
@@ -31,6 +35,10 @@ describe("フロントエンドのプロフィール変換", () => {
     assert.equal(profile.pledgeAccepted, true);
   });
 
+  /**
+   * @testData API側emailが未設定のfreelancer fixtureとfallback email。
+   * @expected API emailがない場合はfallback emailがプロフィールフォームに設定される。
+   */
   it("freelancerToProfile uses fallback email when API email is absent", () => {
     const profile = freelancerToProfile(
       freelancerFixture({ email: undefined }),
@@ -40,6 +48,10 @@ describe("フロントエンドのプロフィール変換", () => {
     assert.equal(profile.email, "fallback@example.com");
   });
 
+  /**
+   * @testData 文字列の経験年数/希望単価/開始日とカテゴリ別スキルを持つprofile fixture。
+   * @expected フォーム値はAPI payloadの数値、日付、skills配列、skillExperiences配列へ変換される。
+   */
   it("profileToApi converts form strings into API payload numbers and skill experiences", () => {
     const payload = profileToApi(profileFixture());
 

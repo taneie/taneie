@@ -19,6 +19,10 @@ function vueFiles(dir: string): string[] {
 }
 
 describe("UI文言・ブランド表記", () => {
+  /**
+   * @testData `LandingFeatureSection.vue` のFEATURES見出し、承認済みfeatureHeading/featureLead、旧差し替え文言。
+   * @expected FEATURES表記と承認済み文言/クラス構造が維持され、誤って差し替えた文言は含まれない。
+   */
   it("landing FEATURES section keeps the exact approved copy and component structure", () => {
     const source = read("Frontend/components/molecules/LandingFeatureSection.vue");
 
@@ -30,6 +34,10 @@ describe("UI文言・ブランド表記", () => {
     assert.doesNotMatch(source, /登録から面談調整まで/);
   });
 
+  /**
+   * @testData Frontend主要ディレクトリ、backend/src、backend/prisma内のUI/設定/コード系ファイル。
+   * @expected 旧ブランド名`Freelink`の大小文字混在表記が主要ソース内に残っていない。
+   */
   it("main source files do not contain old Freelink branding", () => {
     const targets = [
       "Frontend/components",
@@ -58,6 +66,10 @@ describe("UI文言・ブランド表記", () => {
 });
 
 describe("UI可読性・レスポンシブスタイル", () => {
+  /**
+   * @testData Frontend components配下の全Vue component。
+   * @expected viewport幅に依存する`font-size: clamp(...vw...)`が残っていない。
+   */
   it("Vue components do not use viewport-scaled font-size clamp", () => {
     const offenders = vueFiles(join(frontendRoot, "components")).filter((file) =>
       /font-size:\s*clamp\([^;]*vw/i.test(read(file)),
@@ -66,6 +78,10 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.deepEqual(offenders, []);
   });
 
+  /**
+   * @testData Frontend components配下の全Vue componentの`letter-spacing`宣言。
+   * @expected 全ての`letter-spacing`は可読性方針どおり`0`に統一されている。
+   */
   it("Vue component letter-spacing declarations are fixed at zero", () => {
     const offenders = vueFiles(join(frontendRoot, "components")).flatMap(
       (file) => {
@@ -79,6 +95,10 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.deepEqual(offenders, []);
   });
 
+  /**
+   * @testData `LandingFeatureSection.vue` のFEATURES grid、card高さ、本文strong、mobile media query。
+   * @expected desktopは3列grid、cardは安定高さ、強調本文は17px、mobileは1列に切り替わる。
+   */
   it("FEATURES cards keep stable grid dimensions and readable text sizes", () => {
     const source = read("Frontend/components/molecules/LandingFeatureSection.vue");
 
@@ -91,6 +111,10 @@ describe("UI可読性・レスポンシブスタイル", () => {
 });
 
 describe("UIアクセシビリティ・ローディング体験", () => {
+  /**
+   * @testData loading overlay componentとtoast componentのstatus announcement属性。
+   * @expected どちらも`role="status"`と`aria-live="polite"`を持ち、支援技術へ穏やかに通知できる。
+   */
   it("loading overlay and toast expose polite status announcements", () => {
     const loading = read("Frontend/components/atoms/AppLoadingOverlay.vue");
     const toast = read("Frontend/components/atoms/ToastMessage.vue");
@@ -101,6 +125,10 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(toast, /aria-live="polite"/);
   });
 
+  /**
+   * @testData runtime composable内のpending toast制御関数とloading中のtoast遅延分岐。
+   * @expected loading overlay表示中はtoastを即時表示せず、pendingとして保持して後からflushできる。
+   */
   it("toast display is delayed while the loading overlay is visible", () => {
     const runtime = read("Frontend/composables/frichy/useFrichyRuntime.ts");
 
@@ -110,6 +138,10 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(runtime, /if \(shouldDelayToast\(\)\)/);
   });
 
+  /**
+   * @testData LoginPanel、PrivacyPolicyModal、UnsavedChangesModalのdialog/close control。
+   * @expected modal/dialogはroleとaria-modalを持ち、close操作には日本語のaria-labelが設定されている。
+   */
   it("modal and popover close controls have accessible labels", () => {
     const loginPanel = read("Frontend/components/organisms/LoginPanel.vue");
     const privacyModal = read("Frontend/components/organisms/PrivacyPolicyModal.vue");
@@ -123,6 +155,10 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(unsavedModal, /aria-modal="true"/);
   });
 
+  /**
+   * @testData LoginPanelの主要anchor/CTAと、AppShellの主要画面component切り替え。
+   * @expected ナビゲーション文言とCTAが行動可能な表記で維持され、主要画面の表示条件が残っている。
+   */
   it("core navigation and CTA labels remain actionable and predictable", () => {
     const loginPanel = read("Frontend/components/organisms/LoginPanel.vue");
     const appShell = read("Frontend/components/templates/AppShell.vue");

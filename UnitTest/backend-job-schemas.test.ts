@@ -9,6 +9,10 @@ import {
 import { expectInvalid, expectValid } from "./helpers/schema";
 
 describe("案件API入力スキーマ", () => {
+  /**
+   * @testData keyword/rate/limit/offsetの文字列query、範囲外limit、負数offset。
+   * @expected query文字列はtrimと数値変換され、pagination範囲外の値は拒否される。
+   */
   it("listJobsQuerySchema coerces numeric query params and rejects invalid pagination", () => {
     const parsed = expectValid(listJobsQuerySchema, {
       keyword: " Java ",
@@ -24,6 +28,10 @@ describe("案件API入力スキーマ", () => {
     expectInvalid(listJobsQuerySchema, { offset: "-1" });
   });
 
+  /**
+   * @testData 前後に空白があるkeyword。
+   * @expected scoutable案件検索のkeywordはtrimされて保持される。
+   */
   it("listScoutableJobsQuerySchema trims optional keyword", () => {
     const parsed = expectValid(listScoutableJobsQuerySchema, {
       keyword: " TypeScript ",
@@ -31,6 +39,10 @@ describe("案件API入力スキーマ", () => {
     assert.equal(parsed.keyword, "TypeScript");
   });
 
+  /**
+   * @testData 日本語ラベルの商流/リモート種別、単価範囲、必須/尚可スキル、逆転した単価範囲、空title。
+   * @expected 日本語ラベルと数値文字列は保存値へ正規化され、単価逆転や空titleは拒否される。
+   */
   it("createJobSchema accepts Japanese labels and rejects invalid ranges", () => {
     const parsed = expectValid(createJobSchema, {
       title: "案件",
@@ -66,6 +78,10 @@ describe("案件API入力スキーマ", () => {
     });
   });
 
+  /**
+   * @testData `isPinned`または`isActive`だけを含むpartial objectと、文字列のboolean風値。
+   * @expected booleanの部分更新だけが受理され、boolean以外の値はvalidation errorになる。
+   */
   it("updateJobFlagsSchema accepts partial flags and rejects non-booleans", () => {
     expectValid(updateJobFlagsSchema, { isPinned: true });
     expectValid(updateJobFlagsSchema, { isActive: false });

@@ -7,6 +7,10 @@ import {
 import { freelancerFixture } from "../tests/helpers/fixtures";
 
 describe("スカウト対象の絞り込み・並び替え", () => {
+  /**
+   * @testData フィルタ未指定の初期状態。
+   * @expected skill/availability/remoteは空、sortは「稼働状況順」で初期化される。
+   */
   it("createDefaultScoutFilters returns the default sort and empty filters", () => {
     assert.deepEqual(createDefaultScoutFilters(), {
       skill: "",
@@ -16,6 +20,10 @@ describe("スカウト対象の絞り込み・並び替え", () => {
     });
   });
 
+  /**
+   * @testData TypeScript/フルリモートの求職者とGo/常駐の求職者、skill/availability/remote条件。
+   * @expected 条件に一致する求職者だけが絞り込み結果に残る。
+   */
   it("filterAndSortFreelancers filters by skill, availability, and remote", () => {
     const result = filterAndSortFreelancers(
       [
@@ -33,6 +41,10 @@ describe("スカウト対象の絞り込み・並び替え", () => {
     assert.deepEqual(result.map((freelancer) => freelancer.id), ["a"]);
   });
 
+  /**
+   * @testData 希望単価、経験年数、稼働状況、最終更新日が異なる3名の求職者。
+   * @expected 各sort条件で期待順に並び替わり、入力配列の元順は破壊されない。
+   */
   it("filterAndSortFreelancers sorts by rate, experience, update date, and availability without mutating source order", () => {
     const freelancers = [
       freelancerFixture({

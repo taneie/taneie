@@ -13,6 +13,10 @@ import {
 import { encryptText } from "../backend/src/infrastructure/crypto";
 
 describe("Mapperの表示ラベル変換", () => {
+  /**
+   * @testData remote、stream、availability、application statusの保存値と、availability note。
+   * @expected 保存値は画面表示ラベルへ変換され、availability noteがある場合はnote表示を優先する。
+   */
   it("label helper methods map stored enum values and notes", () => {
     assert.equal(toRemoteLabel("full_remote"), "フルリモート");
     assert.equal(toStreamLabel("end_direct"), "エンド直");
@@ -23,6 +27,10 @@ describe("Mapperの表示ラベル変換", () => {
 });
 
 describe("案件Mapper", () => {
+  /**
+   * @testData client未設定、必須/尚可スキル、Decimal相当のmarginRate、保存値の商流/リモートを持つ案件record。
+   * @expected client未設定は「未設定」になり、スキル配列・marginRate数値・表示ラベルがUI向けに変換される。
+   */
   it("mapJob maps relations, enum labels, and default client names", () => {
     const job = mapJob({
       id: "job-id",
@@ -78,6 +86,10 @@ describe("案件Mapper", () => {
 });
 
 describe("求職者Mapper", () => {
+  /**
+   * @testData 暗号化済み氏名/email/電話、スキル別経験年数、最新レジュメを持つ求職者profile record。
+   * @expected PIIとレジュメ名が復号され、スキル別経験年数が数値でUI payloadへ含まれる。
+   */
   it("mapFreelancer decrypts PII and includes per-skill years", () => {
     const freelancer = mapFreelancer({
       id: "profile-id",
@@ -152,6 +164,10 @@ describe("求職者Mapper", () => {
 });
 
 describe("応募・メッセージMapper", () => {
+  /**
+   * @testData 応募record、関連案件、暗号化済み求職者user、営業senderの暗号化メッセージrecord。
+   * @expected 応募status/案件/求職者名と、メッセージ送信者名/body/channel/readAtがUI向けに整形される。
+   */
   it("mapApplication and mapMessage map relations to UI-friendly labels", () => {
     const application = mapApplication({
       id: "application-id",

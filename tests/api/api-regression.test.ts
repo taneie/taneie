@@ -89,6 +89,10 @@ after(async () => {
 });
 
 describe("API疎通・認証フロー", () => {
+  /**
+   * @testData 認証なしの`GET /api/health` request。
+   * @expected HTTP 200、status `ok`、service `Frichy API` が返る。
+   */
   it("GET /api/health returns API status", async () => {
     const response = await server.request<{ status: string; service: string }>(
       "/health",
@@ -99,6 +103,10 @@ describe("API疎通・認証フロー", () => {
     assert.equal(response.data.service, "Frichy API");
   });
 
+  /**
+   * @testData デモ求職者/営業の正しい認証情報と、求職者emailに誤passwordを指定したlogin request。
+   * @expected デモユーザーはrole付きでlogin成功し、不正passwordは401 `INVALID_CREDENTIALS` になる。
+   */
   it("auth login succeeds for demo accounts and fails for invalid credentials", async () => {
     const freelancer = await login(
       server,
@@ -121,6 +129,10 @@ describe("API疎通・認証フロー", () => {
     expectErrorCode(invalid, 401, "INVALID_CREDENTIALS");
   });
 
+  /**
+   * @testData tokenなしの`/auth/me` requestと、デモ求職者token付きrequest。
+   * @expected 未認証は401 `AUTH_REQUIRED`、認証済みはroleとfreelancerIdを含むcurrent userを返す。
+   */
   it("GET /api/auth/me requires auth and returns current user", async () => {
     const unauthorized = await server.request("/auth/me");
     expectErrorCode(unauthorized, 401, "AUTH_REQUIRED");
@@ -141,6 +153,10 @@ describe("API疎通・認証フロー", () => {
     assert.ok(me.data.freelancerId);
   });
 
+  /**
+   * @testData 一意なemailの新規登録payload、同一emailの重複登録payload、作成ユーザーのmessage一覧。
+   * @expected 新規求職者は201でtoken/freelancerIdを返し、重複emailは409、初期未読営業messageは0件になる。
+   */
   it("register creates a new freelancer and rejects duplicate emails", async () => {
     const email = `api-regression-${Date.now()}@example.com`;
     const createdUser = await server.request<{
@@ -184,6 +200,10 @@ describe("API疎通・認証フロー", () => {
     );
   });
 
+  /**
+   * @testData 未登録emailのpassword reset requestと、存在しない32文字tokenのconfirm request。
+   * @expected 未登録emailでも安全な200応答を返し、無効tokenでの確定は400 `INVALID_PASSWORD_RESET_TOKEN` になる。
+   */
   it("password reset request is safe for unknown email and invalid confirm token is rejected", async () => {
     const request = await server.request<{ message: string }>(
       "/auth/password-reset/request",
@@ -207,6 +227,10 @@ describe("API疎通・認証フロー", () => {
 });
 
 describe("APIプロフィール・案件フロー", () => {
+  /**
+   * @testData デモ求職者token、デモ営業token、プロフィール更新payload、範囲外yearsExperience。
+   * @expected 営業のprofile/me参照は403、求職者は取得/更新でき、範囲外経験年数は400 validation errorになる。
+   */
   it("profile can be fetched and updated by freelancer, while sales is forbidden", async () => {
     const freelancer = await login(
       server,
@@ -267,6 +291,10 @@ describe("APIプロフィール・案件フロー", () => {
     expectErrorCode(invalid, 400, "VALIDATION_ERROR");
   });
 
+  /**
+   * @testData 求職者による案件作成payload、営業による案件作成/flag更新payload、求職者の一覧/詳細/応募request。
+   * @expected 求職者の案件作成は403、営業作成/更新は成功し、求職者は一覧/詳細取得と初回応募だけ成功する。
+   */
   it("sales can create/update jobs and freelancer can list/get/apply once", async () => {
     const sales = await login(server, "sales@frichy.jp", "sales123");
     const freelancer = await login(
@@ -379,6 +407,10 @@ describe("APIプロフィール・案件フロー", () => {
 });
 
 describe("API面談・メッセージ・問い合わせフロー", () => {
+  /**
+   * @testData timezoneなし日時、営業のprofile未指定request、求職者のtimezone付き面談候補、求職者/営業のstatus更新request。
+   * @expected 不正日時と営業profile未指定は400、求職者は候補作成可、求職者status更新は403、営業status更新は成功する。
+   */
   it("meeting requests validate date/role and support sales status updates", async () => {
     const freelancer = await login(
       server,
@@ -442,6 +474,10 @@ describe("API面談・メッセージ・問い合わせフロー", () => {
     assert.equal(updated.data.status, "confirmed");
   });
 
+  /**
+   * @testData 初期message一覧、空body、求職者のscout送信、営業のchat送信、求職者の既読化request。
+   * @expected 初期未読は0件、空bodyは400、求職者scoutは403、営業chatは作成され、受信者既読化でreadAtが入る。
+   */
   it("messages enforce scout rules, support chat sending, and mark reads by receiver", async () => {
     const freelancer = await login(
       server,
@@ -516,6 +552,10 @@ describe("API面談・メッセージ・問い合わせフロー", () => {
     assert.ok(read.data.find((message) => message.id === chat.data.id)?.readAt);
   });
 
+  /**
+   * @testData 求職者の問い合わせ作成payload、営業の問い合わせ一覧request、求職者/営業の回答request。
+   * @expected 問い合わせ作成と営業一覧は成功し、求職者回答は403、営業回答後はstatus `answered` と回答本文が返る。
+   */
   it("contact inquiries can be created, listed, and answered by sales only", async () => {
     const freelancer = await login(
       server,
@@ -585,6 +625,10 @@ describe("API面談・メッセージ・問い合わせフロー", () => {
     assert.ok(list.data.some((item) => item.id === inquiry.data.id));
   });
 
+  /**
+   * @testData デモ求職者profileId、求職者token/営業token、initial meeting completed更新payload。
+   * @expected 求職者自身の更新は403、営業更新は200で`initialMeetingCompleted`がtrueになる。
+   */
   it("sales can update initial meeting completion and freelancer cannot", async () => {
     const freelancer = await login(
       server,

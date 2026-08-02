@@ -8,6 +8,10 @@ import {
 import { messageFixture } from "../tests/helpers/fixtures";
 
 describe("チャット未読判定", () => {
+  /**
+   * @testData sales channel、freelancer channelのmessage fixtureと、閲覧者role。
+   * @expected 閲覧者と逆channelのmessageだけがincoming扱いになり、自role発信はincomingにならない。
+   */
   it("isIncomingMessageForRole treats opposite-channel messages as incoming", () => {
     assert.equal(
       isIncomingMessageForRole(messageFixture({ channel: "sales" }), "freelancer"),
@@ -23,6 +27,10 @@ describe("チャット未読判定", () => {
     );
   });
 
+  /**
+   * @testData 現在の求職者IDと一致/不一致のmessage fixture、sales roleのscope。
+   * @expected 求職者scopeでは自分のmessageだけ対象になり、sales scopeでは全求職者messageが対象になる。
+   */
   it("isMessageInChatScope limits freelancer unread checks to the current freelancer", () => {
     assert.equal(
       isMessageInChatScope(messageFixture({ freelancerId: "fr-test" }), {
@@ -46,6 +54,10 @@ describe("チャット未読判定", () => {
     );
   });
 
+  /**
+   * @testData 未読sales message、既読message、freelancer発信message、別求職者のmessage。
+   * @expected 現在scope内の未読incoming messageだけが未読扱いになる。
+   */
   it("isUnreadIncomingMessageForScope requires current scope, incoming channel, and missing readAt", () => {
     const scope = { role: "freelancer" as const, freelancerId: "fr-test" };
 
