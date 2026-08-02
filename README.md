@@ -197,11 +197,11 @@ cp .env.example .env
 
 ローカルDBをDocker Composeで使う場合、通常は `DATABASE_URL` を変更する必要はありません。
 
-レジュメアップロードを検証する場合は、Vercel Blob の private Blob Store を作成し、Blobトークンを発行するAPI実行環境に `BLOB_READ_WRITE_TOKEN` を設定します。RenderでAPIを動かす場合はRender側、Vercel側でAPIを動かす場合はVercel側に設定してください。RenderなどVercel外で `/api/resumes/blob-upload` を受ける場合は、公開API URLを `BLOB_UPLOAD_CALLBACK_URL` に設定します。
+本番のレジュメ保存はGoogle Cloud Storageを利用するため、Cloud Run環境では `GCS_BUCKET_NAME` を設定します。ローカルやVercel開発環境では、レジュメアップロードを使わない場合は未設定で問題ありません。
 
 ローカル画面からデプロイ済みDev環境にアップロードする場合は、ローカル `.env` の `NUXT_PUBLIC_API_BASE` をDev APIのURLに向けます。Dev API側の `CORS_ORIGIN` には `http://127.0.0.1:5173` と `http://localhost:5173` を含めてください。
 
-Dev環境で一時的にデモログイン入口を表示する場合は、フロントビルド時の環境変数に `NUXT_PUBLIC_SHOW_DEMO_LOGIN=true` を設定します。デモアカウントの初期データは `npm run db:seed` で投入され、Renderでは `npm run deploy:start` 内で `db:deploy` 後に `db:seed` が実行されます。
+Dev環境で一時的にデモログイン入口を表示する場合は、フロントビルド時の環境変数に `NUXT_PUBLIC_SHOW_DEMO_LOGIN=true` を設定します。デモアカウントの初期データは `npm run db:seed` で投入します。
 
 ### 4. PostgreSQLを起動
 
