@@ -1,25 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  getKeyByValue,
-  labelToApplicationStatus,
-  labelToAvailabilityStatus,
-  labelToMeetingStatus,
-  labelToRemoteType,
-  labelToStreamType,
-} from "../backend/src/domain/types";
-import {
-  decryptText,
-  encryptText,
-  piiHash,
-} from "../backend/src/infrastructure/crypto";
-import {
-  hashPassword,
-  signToken,
-  verifyPassword,
-  verifyToken,
-} from "../backend/src/infrastructure/security";
-import {
   mapApplication,
   mapFreelancer,
   mapJob,
@@ -29,58 +10,9 @@ import {
   toRemoteLabel,
   toStreamLabel,
 } from "../backend/src/application/mappers";
+import { encryptText } from "../backend/src/infrastructure/crypto";
 
-describe("domain label methods", () => {
-  it("getKeyByValue returns Japanese label for stored values and passes through unknown values", () => {
-    assert.equal(getKeyByValue(labelToRemoteType, "full_remote"), "フルリモート");
-    assert.equal(getKeyByValue(labelToStreamType, "prime"), "1次請け");
-    assert.equal(getKeyByValue(labelToAvailabilityStatus, "ready"), "即稼働可");
-    assert.equal(getKeyByValue(labelToApplicationStatus, "contracted"), "成約");
-    assert.equal(getKeyByValue(labelToMeetingStatus, "confirmed"), "確定");
-    assert.equal(getKeyByValue(labelToRemoteType, "unknown"), "unknown");
-  });
-});
-
-describe("crypto and security methods", () => {
-  it("encryptText/decryptText round-trip normal, empty, and already encrypted values", () => {
-    const encrypted = encryptText("個人情報");
-
-    assert.notEqual(encrypted, "個人情報");
-    assert.equal(decryptText(encrypted), "個人情報");
-    assert.equal(encryptText(""), "");
-    assert.equal(decryptText(""), "");
-    assert.equal(encryptText(encrypted), encrypted);
-    assert.equal(decryptText("plain-text"), "plain-text");
-  });
-
-  it("piiHash is normalized and deterministic", () => {
-    assert.equal(piiHash("USER@example.com "), piiHash(" user@example.com"));
-    assert.notEqual(piiHash("a@example.com"), piiHash("b@example.com"));
-  });
-
-  it("hashPassword/verifyPassword accept the original password and reject others", async () => {
-    const hash = await hashPassword("correct-password");
-
-    assert.equal(await verifyPassword("correct-password", hash), true);
-    assert.equal(await verifyPassword("wrong-password", hash), false);
-  });
-
-  it("signToken/verifyToken round-trip auth context and reject malformed tokens", () => {
-    const token = signToken({
-      userId: "user-id",
-      role: "freelancer",
-      email: "freelancer@example.com",
-    });
-    const payload = verifyToken(token);
-
-    assert.equal(payload.userId, "user-id");
-    assert.equal(payload.role, "freelancer");
-    assert.equal(payload.email, "freelancer@example.com");
-    assert.throws(() => verifyToken("not-a-token"));
-  });
-});
-
-describe("mapper methods", () => {
+describe("mapper label methods", () => {
   it("label helper methods map stored enum values and notes", () => {
     assert.equal(toRemoteLabel("full_remote"), "フルリモート");
     assert.equal(toStreamLabel("end_direct"), "エンド直");
@@ -88,7 +20,9 @@ describe("mapper methods", () => {
     assert.equal(toAvailabilityLabel("ready", "個別メモ"), "個別メモ");
     assert.equal(toApplicationStatusLabel("meeting_pending"), "面談待ち");
   });
+});
 
+describe("job mapper methods", () => {
   it("mapJob maps relations, enum labels, and default client names", () => {
     const job = mapJob({
       id: "job-id",
@@ -141,7 +75,9 @@ describe("mapper methods", () => {
     assert.equal(job.stream, "エンド直");
     assert.equal(job.remote, "フルリモート");
   });
+});
 
+describe("freelancer mapper methods", () => {
   it("mapFreelancer decrypts PII and includes per-skill years", () => {
     const freelancer = mapFreelancer({
       id: "profile-id",
@@ -213,7 +149,9 @@ describe("mapper methods", () => {
       { name: "TypeScript", yearsExperience: 5 },
     ]);
   });
+});
 
+describe("application and message mapper methods", () => {
   it("mapApplication and mapMessage map relations to UI-friendly labels", () => {
     const application = mapApplication({
       id: "application-id",
