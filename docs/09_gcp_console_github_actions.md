@@ -201,6 +201,7 @@ Workload Identity User
 ## GitHub側の設定
 
 GitHub repositoryの `Settings` -> `Secrets and variables` -> `Actions` -> `Variables` に以下を設定する。
+`GCP_WORKLOAD_IDENTITY_PROVIDER` と `GCP_DEPLOY_SERVICE_ACCOUNT` は、Workload Identityで認証する場合だけ設定する。
 
 | Variable | 例 |
 | -------- | -- |
@@ -220,7 +221,15 @@ GitHub repositoryの `Settings` -> `Secrets and variables` -> `Actions` -> `Vari
 | `SECRET_DATA_ENCRYPTION_KEY` | `frichy-prod-data-encryption-key` |
 | `SECRET_CORS_ORIGIN` | `frichy-prod-cors-origin` |
 
-GitHub SecretsにはGCPの秘密値を置かない。秘密値はGCP Secret Managerに保存する。
+GCP認証は以下のどちらか片方だけを設定する。
+
+| 方式 | 設定 |
+| ---- | ---- |
+| Workload Identity | GitHub Variablesに `GCP_WORKLOAD_IDENTITY_PROVIDER` と `GCP_DEPLOY_SERVICE_ACCOUNT` を設定する |
+| Service Account JSON | GitHub Actions Secretsに `GCP_CREDENTIALS_JSON` を設定し、`GCP_WORKLOAD_IDENTITY_PROVIDER` は空にする |
+
+GitHub Secretsにはアプリの秘密値を置かない。`DATABASE_URL` などのアプリ秘密値はGCP Secret Managerに保存する。
+`GCP_CREDENTIALS_JSON` はWorkload Identityを使わない場合のGCP認証用secretとしてのみ使う。
 
 ## 追加済みGitHub Actions
 
@@ -231,14 +240,15 @@ GitHub SecretsにはGCPの秘密値を置かない。秘密値はGCP Secret Mana
 .github/workflows/push-artifact-registry.yml
 ```
 
-`deploy-cloud-run.yml` はGitHub Actionsの `production` environment で以下を行う。
+`deploy-cloud-run.yml` はGitHub Actionsの `production` environment で、手動実行時に以下を行う。
 
-1. GitHub OIDCでGCPへ認証
+1. Workload Identityまたは `GCP_CREDENTIALS_JSON` でGCPへ認証
 2. Docker imageをbuild
 3. Artifact Registryへpush
 4. Cloud Runへdeploy
 
-`main` branchへのpush、またはGitHub Actions画面からの手動実行で動く。
+Vercel開発環境へのpushとGCP本番deployが混ざらないよう、`main` branchへのpushでは自動実行しない。
+本番反映が必要な場合だけ、GitHub Actions画面から `Deploy Cloud Run` を手動実行する。
 
 `push-artifact-registry.yml` はArtifact Registryへのimage pushだけを行う。Cloud Runへはdeployしない。
 
@@ -281,9 +291,11 @@ git commit -m "<変更内容>"
 git push origin main
 ```
 
-4. GitHub Actionsの `Deploy Cloud Run` が成功することを確認する。
+4. GitHub Actions画面から `Deploy Cloud Run` を手動実行する。
 
-5. Cloud Run URLで疎通確認する。
+5. `Deploy Cloud Run` が成功することを確認する。
+
+6. Cloud Run URLで疎通確認する。
 
 ```bash
 curl -i https://frichy-322534405950.asia-northeast1.run.app/api/health

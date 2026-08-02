@@ -36,12 +36,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
+      - name: Validate Google Cloud auth config
+        env:
+          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          WIF_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+          CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+        run: |
+          if [ -n "${WIF_PROVIDER}" ] && [ -n "${CREDENTIALS_JSON}" ]; then
+            echo "Set either GCP_WORKLOAD_IDENTITY_PROVIDER or GCP_CREDENTIALS_JSON, not both."
+            exit 1
+          fi
+
+          if [ -z "${WIF_PROVIDER}" ] && [ -z "${CREDENTIALS_JSON}" ]; then
+            echo "Set GCP_WORKLOAD_IDENTITY_PROVIDER + GCP_DEPLOY_SERVICE_ACCOUNT vars, or GCP_CREDENTIALS_JSON secret."
+            exit 1
+          fi
+
+          if [ -n "${WIF_PROVIDER}" ] && [ -z "${WIF_SERVICE_ACCOUNT}" ]; then
+            echo "GCP_DEPLOY_SERVICE_ACCOUNT var is required when using Workload Identity."
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud with Workload Identity
+        if: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' }}
         uses: google-github-actions/auth@v3
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to Google Cloud with credentials JSON
+        if: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER == '' }}
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v3
