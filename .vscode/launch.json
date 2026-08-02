@@ -13,49 +13,119 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run api:dev",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Frichy: Start Postgres"
+    },
+    {
+      "name": "Frichy: Dev DB",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "docker compose up -d postgres",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Frichy: Stop DB",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "docker compose stop postgres",
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "Frichy: UnitTest",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "npm run UnitTest",
-      "cwd": "${workspaceFolder}"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "UnitTest"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     },
     {
       "name": "Frichy: Test UI",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "npm run test:ui",
-      "cwd": "${workspaceFolder}"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "test:ui"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     },
     {
       "name": "Frichy: Test API",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "npm run test:api",
-      "cwd": "${workspaceFolder}"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "test:api"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "preLaunchTask": "Frichy: Start Postgres",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     },
     {
       "name": "Frichy: Test All",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "npm test",
-      "cwd": "${workspaceFolder}"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "test"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "preLaunchTask": "Frichy: Start Postgres",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     },
     {
       "name": "Frichy: Typecheck",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "npm run typecheck",
-      "cwd": "${workspaceFolder}"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "typecheck"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     },
     {
       "name": "Frichy: Build",
-      "type": "node-terminal",
+      "type": "node",
       "request": "launch",
-      "command": "npm run build",
-      "cwd": "${workspaceFolder}"
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "build"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     }
   ],
   "compounds": [
