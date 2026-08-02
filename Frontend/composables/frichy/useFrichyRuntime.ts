@@ -366,6 +366,16 @@ function resolveResumeMimeType(file: File) {
   return file.type || RESUME_EXTENSION_MIME_TYPES[extension] || "";
 }
 
+function encodeHeaderPayload(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 async function uploadResumeFile(file: File) {
   const maxBytes = getResumeUploadMaxBytes();
   const mimeType = resolveResumeMimeType(file);
@@ -391,7 +401,8 @@ async function uploadResumeFile(file: File) {
       method: "POST",
       headers: {
         "Content-Type": mimeType,
-        "X-Client-Payload": intent.clientPayload,
+        "X-Client-Payload": encodeHeaderPayload(intent.clientPayload),
+        "X-Client-Payload-Encoding": "base64url",
       },
       body: file,
     });

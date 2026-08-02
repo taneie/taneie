@@ -28,6 +28,23 @@ function readBearerToken(authorization: string | undefined) {
   return token;
 }
 
+function readSingleHeader(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function decodeClientPayload(
+  payload: string | undefined,
+  encoding: string | undefined,
+) {
+  if (encoding !== "base64url" || !payload) return payload;
+
+  try {
+    return Buffer.from(payload, "base64url").toString("utf8");
+  } catch {
+    throw new AppError(400, "アップロード情報が不正です。", "INVALID_UPLOAD");
+  }
+}
+
 export function registerResumeRoutes(
   app: Express,
   resumeService: ResumeService,
@@ -94,9 +111,10 @@ export function registerResumeRoutes(
     requireRole("freelancer"),
     express.raw({ type: "*/*", limit: config.resumeUploadMaxBytes }),
     asyncHandler<AuthedRequest>(async (req, res) => {
-      const clientPayload = Array.isArray(req.headers["x-client-payload"])
-        ? req.headers["x-client-payload"][0]
-        : req.headers["x-client-payload"];
+      const clientPayload = decodeClientPayload(
+        readSingleHeader(req.headers["x-client-payload"]),
+        readSingleHeader(req.headers["x-client-payload-encoding"]),
+      );
       const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from([]);
       res
         .status(201)
