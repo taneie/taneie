@@ -525,6 +525,16 @@ DB migrationがない変更ではこの手順は不要。
 | Push | Artifact Registryへimageをpush |
 | Deploy | Cloud Run service `frichy` へ新revisionをdeploy |
 
+認証方式はworkflow内で自動選択する。`GCP_WORKLOAD_IDENTITY_PROVIDER` と `GCP_DEPLOY_SERVICE_ACCOUNT` が両方あればWorkload Identityを使い、揃っていない場合は `GCP_CREDENTIALS_JSON` を使う。
+どちらも使えない場合、`Select Google Cloud auth method` stepで失敗する。
+
+| 設定場所 | 必要な値 |
+| -------- | -------- |
+| GitHub Actions Variables | `GCP_WORKLOAD_IDENTITY_PROVIDER`、`GCP_DEPLOY_SERVICE_ACCOUNT` |
+| GitHub Actions Secrets | `GCP_CREDENTIALS_JSON` |
+
+通常は上記どちらか一方があればよい。両方設定されている場合はWorkload Identityを優先する。
+
 6. 本番URLで疎通確認する。
 
 ```bash
