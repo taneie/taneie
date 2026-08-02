@@ -16,9 +16,9 @@
 | --- | --- | --- |
 | 共通HTTPヘルパー | `tests/helpers/http.ts` | Express一時起動、HTTP request、ログイン、エラー検証、ローカルDBガード |
 | 共通fixture | `tests/helpers/fixtures.ts` | 求職者、プロフィール、メッセージの再利用fixture |
-| FE単体 | `tests/unit/frontend-utils.test.ts` | utility、state、mapping、scout filter、chat unread判定 |
-| BE単体 | `tests/unit/backend-core.test.ts` | domain label、暗号化、PII hash、JWT/password、mapper |
-| BE schema単体 | `tests/unit/backend-schemas.test.ts` | exported schemaの正常系/異常系 |
+| FE単体 | `UnitTest/frontend-utils.test.ts` | utility、state、mapping、scout filter、chat unread判定 |
+| BE単体 | `UnitTest/backend-core.test.ts` | domain label、暗号化、PII hash、JWT/password、mapper |
+| BE schema単体 | `UnitTest/backend-schemas.test.ts` | exported schemaの正常系/異常系 |
 | API横断 | `tests/api/api-regression.test.ts` | 認証、プロフィール、案件、応募、面談、チャット、問い合わせ |
 | UI/UX静的 | `tests/ui/static-ui.test.ts` | FEATURES文言、旧名称混入、可読性CSS、a11y、loading/toast |
 

@@ -11,23 +11,23 @@ import {
   streamTone,
   toApiDateTime,
   uid,
-} from "../../Frontend/composables/frichy/utils";
-import { blankProfile, createSeedState } from "../../Frontend/composables/frichy/state";
-import { freelancerToProfile, profileToApi } from "../../Frontend/composables/frichy/profileMapping";
+} from "../Frontend/composables/frichy/utils";
+import { blankProfile, createSeedState } from "../Frontend/composables/frichy/state";
+import { freelancerToProfile, profileToApi } from "../Frontend/composables/frichy/profileMapping";
 import {
   createDefaultScoutFilters,
   filterAndSortFreelancers,
-} from "../../Frontend/composables/frichy/scoutFilters";
+} from "../Frontend/composables/frichy/scoutFilters";
 import {
   isIncomingMessageForRole,
   isMessageInChatScope,
   isUnreadIncomingMessageForScope,
-} from "../../Frontend/composables/frichy/chat";
+} from "../Frontend/composables/frichy/chat";
 import {
   freelancerFixture,
   messageFixture,
   profileFixture,
-} from "../helpers/fixtures";
+} from "../tests/helpers/fixtures";
 
 describe("frontend utility methods", () => {
   it("clone returns a deep copy without sharing nested references", () => {

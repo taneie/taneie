@@ -7,18 +7,18 @@ import {
   labelToMeetingStatus,
   labelToRemoteType,
   labelToStreamType,
-} from "../../backend/src/domain/types";
+} from "../backend/src/domain/types";
 import {
   decryptText,
   encryptText,
   piiHash,
-} from "../../backend/src/infrastructure/crypto";
+} from "../backend/src/infrastructure/crypto";
 import {
   hashPassword,
   signToken,
   verifyPassword,
   verifyToken,
-} from "../../backend/src/infrastructure/security";
+} from "../backend/src/infrastructure/security";
 import {
   mapApplication,
   mapFreelancer,
@@ -28,7 +28,7 @@ import {
   toAvailabilityLabel,
   toRemoteLabel,
   toStreamLabel,
-} from "../../backend/src/application/mappers";
+} from "../backend/src/application/mappers";
 
 describe("domain label methods", () => {
   it("getKeyByValue returns Japanese label for stored values and passes through unknown values", () => {

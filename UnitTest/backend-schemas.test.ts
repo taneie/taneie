@@ -23,7 +23,7 @@ import {
   updateJobFlagsSchema,
   updateMeetingStatusSchema,
   updateProfileSchema,
-} from "../../backend/src/interfaces/http/schemas";
+} from "../backend/src/interfaces/http/schemas";
 
 const uuid = "11111111-1111-4111-8111-111111111111";
 

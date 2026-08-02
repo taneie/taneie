@@ -26,7 +26,8 @@
     "generate": "node ./Frontend/scripts/nuxt-short-tmp.mjs generate Frontend",
     "deploy": "npm run generate && gh-pages -d Frontend/.output/public",
     "test": "npm run test:unit && npm run test:api && npm run test:ui",
-    "test:unit": "tsx --test \"tests/unit/**/*.test.ts\"",
+    "UnitTest": "npm run test:unit",
+    "test:unit": "tsx --test \"UnitTest/**/*.test.ts\"",
     "test:api": "DATABASE_URL='postgresql://frichy:frichy@127.0.0.1:5432/frichy?schema=public' npm run db:deploy && DATABASE_URL='postgresql://frichy:frichy@127.0.0.1:5432/frichy?schema=public' npm run db:seed && TEST_DATABASE_URL='postgresql://frichy:frichy@127.0.0.1:5432/frichy?schema=public' tsx --test \"tests/api/**/*.test.ts\"",
     "test:ui": "tsx --test \"tests/ui/**/*.test.ts\""
   },
