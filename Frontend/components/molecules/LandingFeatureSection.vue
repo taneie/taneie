@@ -3,9 +3,11 @@
     <div :class="$style.sectionHead">
       <span>FEATURES</span>
       <h2 :class="$style.featureTitle">
-        <span>最短1分で応募まで。</span>
-        <span>Frichyが案件探しを自動化。</span>
+        {{ featureHeading }}
       </h2>
+      <p :class="$style.featureLead">
+        {{ featureLead }}
+      </p>
     </div>
 
     <div :class="$style.featureGrid">
@@ -22,6 +24,9 @@
 </template>
 
 <script setup lang="ts">
+const featureHeading = "最短1分で応募まで。";
+const featureLead = "Frichyが案件探しを自動化。";
+
 const features = [
   { icon: "⌕", title: "案件探しの時間を1/3に" },
   { icon: "↔", title: "応募後の調整がスムーズに進む" },
@@ -36,38 +41,32 @@ const features = [
 }
 
 .sectionHead {
-  max-width: 760px;
+  max-width: 680px;
   margin-bottom: 18px;
 }
 
 .sectionHead span {
   color: var(--primary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
 }
 
 .sectionHead h2 {
-  margin: 6px 0 0;
+  margin: 5px 0 0;
   color: #0d2749;
-  font-size: clamp(28px, 3vw, 38px);
-  line-height: 1.24;
+  font-size: clamp(22px, 2.6vw, 32px);
+  line-height: 1.2;
 }
 
 .featureTitle {
-  max-width: 820px;
   font-weight: 900;
 }
 
-.featureTitle span {
-  display: block;
-  color: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-  letter-spacing: 0;
-}
-
-.featureTitle span:last-child {
-  color: var(--primary-strong);
+.featureLead {
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.8;
 }
 
 .featureGrid {
@@ -199,13 +198,8 @@ const features = [
   }
 
   .sectionHead h2 {
-    margin-top: 7px;
     font-size: 24px;
-    line-height: 1.3;
-  }
-
-  .featureTitle span {
-    letter-spacing: 0;
+    line-height: 1.25;
   }
 
   .featureGrid {
