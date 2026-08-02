@@ -86,6 +86,14 @@ export interface ResumeBlobPayload extends ResumeUploadIntentInput {
   pathname: string;
 }
 
+export interface ResumeUploadIntentResult {
+  pathname: string;
+  clientPayload: string;
+  allowedContentTypes: readonly string[];
+  maximumSizeInBytes: number;
+  uploadMode: "api" | "blob";
+}
+
 export interface ResumeUploadCompleteInput extends ResumeUploadIntentInput {
   blobPath: string;
   blobUrl?: string;

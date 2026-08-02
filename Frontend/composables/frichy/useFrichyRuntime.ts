@@ -386,6 +386,19 @@ async function uploadResumeFile(file: File) {
       fileSizeBytes: file.size,
     }),
   });
+  if (intent.uploadMode === "api") {
+    await rawApiRequest("/resumes/gcs-upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": mimeType,
+        "X-Client-Payload": intent.clientPayload,
+      },
+      body: file,
+    });
+
+    return true;
+  }
+
   const { upload } = await import("@vercel/blob/client");
   const multipart = file.size > 5 * 1024 * 1024;
   await rawApiRequest("/resumes/blob-upload", {

@@ -244,6 +244,7 @@ export interface ResumeUploadIntent {
   clientPayload: string;
   allowedContentTypes: string[];
   maximumSizeInBytes: number;
+  uploadMode?: "api" | "blob";
 }
 
 export interface ResumePreviewFile {

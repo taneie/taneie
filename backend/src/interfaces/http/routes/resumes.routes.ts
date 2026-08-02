@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { handleUpload } from "@vercel/blob/client";
 import { Readable } from "node:stream";
 import type { ReadableStream as NodeReadableStream } from "node:stream/web";
@@ -89,6 +89,22 @@ export function registerResumeRoutes(
   );
 
   app.post(
+    "/api/resumes/gcs-upload",
+    requireAuth,
+    requireRole("freelancer"),
+    express.raw({ type: "*/*", limit: config.resumeUploadMaxBytes }),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const clientPayload = Array.isArray(req.headers["x-client-payload"])
+        ? req.headers["x-client-payload"][0]
+        : req.headers["x-client-payload"];
+      const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from([]);
+      res
+        .status(201)
+        .json(await resumeService.uploadToGcs(req.auth!.userId, clientPayload, body));
+    }),
+  );
+
+  app.post(
     "/api/resumes/complete",
     requireAuth,
     requireRole("freelancer"),
@@ -127,9 +143,13 @@ export function registerResumeRoutes(
         "Content-Disposition",
         `attachment; filename*=UTF-8''${encodeURIComponent(file.fileName)}`,
       );
-      Readable.fromWeb(
-        file.stream as unknown as NodeReadableStream<Uint8Array>,
-      ).pipe(res);
+      const stream =
+        file.stream instanceof Readable
+          ? file.stream
+          : Readable.fromWeb(
+              file.stream as unknown as NodeReadableStream<Uint8Array>,
+            );
+      stream.pipe(res);
     }),
   );
 

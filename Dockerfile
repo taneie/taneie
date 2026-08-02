@@ -3,6 +3,10 @@
 FROM node:22-bookworm-slim AS build
 WORKDIR /app
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV NITRO_TELEMETRY_DISABLED=1
 ARG NUXT_APP_BASE_URL="/"
 ARG NUXT_PUBLIC_API_BASE="/api"
@@ -15,7 +19,7 @@ ENV NUXT_PUBLIC_SHOW_DEMO_LOGIN=${NUXT_PUBLIC_SHOW_DEMO_LOGIN}
 
 COPY package*.json prisma.config.ts ./
 COPY backend/prisma ./backend/prisma
-RUN npm ci --include=dev
+RUN npm ci --include=dev --ignore-scripts --no-audit --no-fund --loglevel=notice
 
 COPY backend ./backend
 COPY Frontend ./Frontend
@@ -23,6 +27,10 @@ RUN npm run gcp:build
 
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV PORT=8080

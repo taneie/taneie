@@ -23,7 +23,6 @@ logs
 .env.*
 !.env.example
 gha-creds-*.json
-package-lock.json
 AGENTS.md
 SKILLS.md
 .DS_Store

@@ -19,12 +19,13 @@ permissions:
   id-token: write
 
 env:
-  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'frichy' }}
   GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast1' }}
   GAR_REPOSITORY: ${{ vars.GAR_REPOSITORY || 'frichy' }}
   IMAGE_NAME: ${{ vars.IMAGE_NAME || 'web' }}
   CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'frichy' }}
-  CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT: ${{ vars.CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT }}
+  CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT: ${{ vars.CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT || 'frichy-cloud-run-runtime@frichy.iam.gserviceaccount.com' }}
+  GCS_BUCKET_NAME: ${{ vars.GCS_BUCKET_NAME || 'frichy-322534405950-resumes' }}
   NUXT_PUBLIC_API_BASE: ${{ vars.NUXT_PUBLIC_API_BASE || '/api' }}
   NUXT_PUBLIC_SHOW_DEMO_LOGIN: ${{ vars.NUXT_PUBLIC_SHOW_DEMO_LOGIN || 'false' }}
   SECRET_DATABASE_URL: ${{ vars.SECRET_DATABASE_URL || 'frichy-prod-database-url' }}
@@ -81,5 +82,5 @@ jobs:
             "${SERVICE_ACCOUNT_ARGS[@]}" \
             --allow-unauthenticated \
             --port 8080 \
-            --set-env-vars "NODE_ENV=production,NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE},NUXT_PUBLIC_SHOW_DEMO_LOGIN=${NUXT_PUBLIC_SHOW_DEMO_LOGIN}" \
+            --set-env-vars "NODE_ENV=production,NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE},NUXT_PUBLIC_SHOW_DEMO_LOGIN=${NUXT_PUBLIC_SHOW_DEMO_LOGIN},GCS_BUCKET_NAME=${GCS_BUCKET_NAME}" \
             --set-secrets "DATABASE_URL=${SECRET_DATABASE_URL}:latest,JWT_SECRET=${SECRET_JWT_SECRET}:latest,DATA_ENCRYPTION_KEY=${SECRET_DATA_ENCRYPTION_KEY}:latest,CORS_ORIGIN=${SECRET_CORS_ORIGIN}:latest"

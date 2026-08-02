@@ -21,7 +21,7 @@ permissions:
   id-token: write
 
 env:
-  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'frichy' }}
   GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast1' }}
   GAR_REPOSITORY: ${{ vars.GAR_REPOSITORY || 'frichy' }}
   IMAGE_NAME: ${{ vars.IMAGE_NAME || 'web' }}

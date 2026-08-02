@@ -5,6 +5,7 @@ import {
   presignUrl,
   type PutBlobResult,
 } from "@vercel/blob";
+import { Storage } from "@google-cloud/storage";
 import type { PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
@@ -13,13 +14,18 @@ import mammoth from "mammoth";
 import sanitizeHtml from "sanitize-html";
 import * as XLSX from "xlsx";
 import { AppError, type AuthContext } from "../../domain/types.js";
-import { config, hasValidBlobReadWriteToken } from "../../infrastructure/config.js";
+import {
+  config,
+  hasValidBlobReadWriteToken,
+  usesGcsResumeStorage,
+} from "../../infrastructure/config.js";
 import { decryptText, encryptText } from "../../infrastructure/crypto.js";
 import type {
   ResumeBlobPayload,
   ResumeMetadataInput,
   ResumeUploadCompleteInput,
   ResumeUploadIntentInput,
+  ResumeUploadIntentResult,
 } from "./shared.js";
 
 export const RESUME_ALLOWED_MIME_TYPES = [
@@ -46,6 +52,8 @@ const extensionMimeTypeMap: Record<string, string> = {
   ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
 
+const storage = new Storage();
+
 export class ResumeService {
   constructor(private readonly db: PrismaClient) {}
 
@@ -67,8 +75,11 @@ export class ResumeService {
     });
   }
 
-  async createUploadIntent(userId: string, input: ResumeUploadIntentInput) {
-    this.assertBlobConfigured();
+  async createUploadIntent(
+    userId: string,
+    input: ResumeUploadIntentInput,
+  ): Promise<ResumeUploadIntentResult> {
+    this.assertResumeStorageConfigured();
     await this.assertCanUploadResume(userId);
     await this.assertApplicationOwner(userId, input.applicationId);
     const normalizedInput = this.normalizeUploadMetadata(input);
@@ -81,6 +92,7 @@ export class ResumeService {
       clientPayload: JSON.stringify(payload),
       allowedContentTypes: RESUME_ALLOWED_MIME_TYPES,
       maximumSizeInBytes: config.resumeUploadMaxBytes,
+      uploadMode: usesGcsResumeStorage() ? "api" : "blob",
     };
   }
 
@@ -120,8 +132,41 @@ export class ResumeService {
     return this.createLatestRecord(payload, blob);
   }
 
+  async uploadToGcs(userId: string, clientPayload: string | undefined, file: Buffer) {
+    this.assertGcsConfigured();
+    const payload = this.parseBlobPayload(clientPayload);
+    if (payload.userId !== userId) {
+      throw new AppError(403, "この操作を行う権限がありません。", "FORBIDDEN");
+    }
+    if (!file.length) {
+      throw new AppError(400, "アップロードファイルが空です。", "INVALID_UPLOAD");
+    }
+    if (file.length !== payload.fileSizeBytes) {
+      throw new AppError(400, "アップロード情報が一致しません。", "INVALID_UPLOAD");
+    }
+    await this.assertCanUploadResume(userId);
+    await this.assertApplicationOwner(userId, payload.applicationId);
+
+    await this.gcsFile(payload.pathname).save(file, {
+      contentType: payload.mimeType,
+      resumable: false,
+      validation: "crc32c",
+      metadata: {
+        metadata: {
+          originalFilename: payload.originalFilename,
+          userId,
+        },
+      },
+    });
+
+    return this.createLatestRecord(payload, {
+      pathname: payload.pathname,
+      url: `gs://${config.gcsBucketName}/${payload.pathname}`,
+    });
+  }
+
   async completeClientUpload(userId: string, input: ResumeUploadCompleteInput) {
-    this.assertBlobConfigured();
+    this.assertResumeStorageConfigured();
     await this.assertCanUploadResume(userId);
     await this.assertApplicationOwner(userId, input.applicationId);
     const normalizedInput = this.normalizeUploadMetadata(input);
@@ -129,7 +174,11 @@ export class ResumeService {
     if (!normalizedInput.blobPath.startsWith(expectedPrefix)) {
       throw new AppError(400, "アップロード情報が一致しません。", "INVALID_UPLOAD");
     }
-    await this.assertBlobStored(normalizedInput);
+    if (usesGcsResumeStorage()) {
+      await this.assertGcsStored(normalizedInput);
+    } else {
+      await this.assertBlobStored(normalizedInput);
+    }
 
     return this.createLatestRecord(
       {
@@ -162,6 +211,12 @@ export class ResumeService {
     };
 
     if (mimeType === "application/pdf") {
+      if (usesGcsResumeStorage()) {
+        return {
+          ...basePreview,
+          previewKind: "download" as const,
+        };
+      }
       const validUntil = Date.now() + 10 * 60 * 1000;
       const signedToken = await issueSignedToken({
         token: config.blobReadWriteToken,
@@ -211,6 +266,22 @@ export class ResumeService {
       auth,
       freelancerProfileId,
     );
+    if (usesGcsResumeStorage()) {
+      const [metadata] = await this.gcsFile(uploadedFile.blobPath).getMetadata();
+      return {
+        stream: this.gcsFile(uploadedFile.blobPath).createReadStream(),
+        fileName: decryptText(latestResume.originalFilename),
+        mimeType:
+          String(metadata.contentType || "") ||
+          latestResume.mimeType ||
+          uploadedFile.mimeType ||
+          "application/octet-stream",
+        sizeBytes:
+          Number(metadata.size || 0) ||
+          latestResume.fileSizeBytes ||
+          Number(uploadedFile.sizeBytes),
+      };
+    }
     const blobResult = await get(uploadedFile.blobPath, {
       access: "private",
       token: config.blobReadWriteToken,
@@ -235,7 +306,7 @@ export class ResumeService {
   }
 
   private async findReadableResume(auth: AuthContext, freelancerProfileId: string) {
-    this.assertBlobConfigured();
+    this.assertResumeStorageConfigured();
     const profile = await this.db.freelancerProfile.findUnique({
       where: { id: freelancerProfileId },
       include: {
@@ -290,6 +361,10 @@ export class ResumeService {
   }
 
   private async readBlobBuffer(blobPath: string) {
+    if (usesGcsResumeStorage()) {
+      const [buffer] = await this.gcsFile(blobPath).download();
+      return buffer;
+    }
     const blobResult = await get(blobPath, {
       access: "private",
       token: config.blobReadWriteToken,
@@ -364,7 +439,7 @@ export class ResumeService {
 
   private async createLatestRecord(
     payload: ResumeBlobPayload,
-    blob: Pick<PutBlobResult, "pathname" | "url">,
+    blob: { pathname: string; url?: string },
   ) {
     return this.db.$transaction(async (tx) => {
       const profile = await tx.freelancerProfile.findUniqueOrThrow({
@@ -440,6 +515,29 @@ export class ResumeService {
     }
   }
 
+  private async assertGcsStored(input: ResumeUploadCompleteInput) {
+    try {
+      const [metadata] = await this.gcsFile(input.blobPath).getMetadata();
+      const storedSize = Number(metadata.size || 0);
+      if (storedSize !== input.fileSizeBytes) {
+        throw new Error("size mismatch");
+      }
+      if (
+        metadata.contentType &&
+        input.mimeType &&
+        metadata.contentType !== input.mimeType
+      ) {
+        throw new Error("mime mismatch");
+      }
+    } catch {
+      throw new AppError(
+        400,
+        "アップロード済みファイルを確認できません。",
+        "BLOB_NOT_FOUND",
+      );
+    }
+  }
+
   private normalizeUploadMetadata<T extends ResumeUploadIntentInput>(input: T) {
     const extension = this.extractAllowedExtension(input.originalFilename);
     const mimeType = input.mimeType || extensionMimeTypeMap[extension] || "";
@@ -470,6 +568,29 @@ export class ResumeService {
         "BLOB_NOT_CONFIGURED",
       );
     }
+  }
+
+  private assertGcsConfigured() {
+    if (!config.gcsBucketName.trim()) {
+      throw new AppError(
+        503,
+        "レジュメ保存用のGCSバケットが未設定です。",
+        "GCS_NOT_CONFIGURED",
+      );
+    }
+  }
+
+  private assertResumeStorageConfigured() {
+    if (usesGcsResumeStorage()) {
+      this.assertGcsConfigured();
+      return;
+    }
+    this.assertBlobConfigured();
+  }
+
+  private gcsFile(pathname: string) {
+    this.assertGcsConfigured();
+    return storage.bucket(config.gcsBucketName).file(pathname);
   }
 
   private async assertApplicationOwner(userId: string, applicationId?: string) {

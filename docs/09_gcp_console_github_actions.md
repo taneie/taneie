@@ -24,15 +24,16 @@ Google Cloud Run + 新規Neon projectを本番環境として構築し、GitHub 
 
 | 変数 | 例 | 用途 |
 | ---- | -- | ---- |
-| `PROJECT_ID` | `frichy-prod` | Google Cloud project ID |
-| `PROJECT_NUMBER` | `123456789012` | Workload Identity Provider名に必要 |
+| `PROJECT_ID` | `frichy` | Google Cloud project ID |
+| `PROJECT_NUMBER` | `322534405950` | Workload Identity Provider名に必要 |
 | `REGION` | `asia-northeast1` | Cloud Run / Artifact Registry region |
 | `SERVICE` | `frichy` | Cloud Run service名 |
 | `REPOSITORY` | `frichy` | Artifact Registry repository名 |
 | `IMAGE_NAME` | `web` | Artifact Registry内のimage名 |
 | `GITHUB_REPO` | `owner/repo` | GitHub repository |
-| `PRODUCTION_URL` | `https://app.example.com` | CORSとカスタムドメインに使う |
+| `PRODUCTION_URL` | `https://frichy-322534405950.asia-northeast1.run.app` | CORSとカスタムドメインに使う |
 | `NEON_DATABASE_URL` | `postgresql://...?...sslmode=require` | 新Neon projectの接続文字列 |
+| `GCS_BUCKET_NAME` | `frichy-322534405950-resumes` | レジュメ保存用GCSバケット |
 
 ## GCPコンソール手順
 
@@ -184,14 +185,15 @@ GitHub repositoryの `Settings` -> `Secrets and variables` -> `Actions` -> `Vari
 
 | Variable | 例 |
 | -------- | -- |
-| `GCP_PROJECT_ID` | `frichy-prod` |
+| `GCP_PROJECT_ID` | `frichy` |
 | `GCP_REGION` | `asia-northeast1` |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github/providers/github` |
-| `GCP_DEPLOY_SERVICE_ACCOUNT` | `frichy-github-deployer@<PROJECT_ID>.iam.gserviceaccount.com` |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/322534405950/locations/global/workloadIdentityPools/github/providers/github` |
+| `GCP_DEPLOY_SERVICE_ACCOUNT` | `frichy-github-deployer@frichy.iam.gserviceaccount.com` |
 | `GAR_REPOSITORY` | `frichy` |
 | `IMAGE_NAME` | `web` |
 | `CLOUD_RUN_SERVICE` | `frichy` |
-| `CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT` | `frichy-cloud-run-runtime@<PROJECT_ID>.iam.gserviceaccount.com` |
+| `CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT` | `frichy-cloud-run-runtime@frichy.iam.gserviceaccount.com` |
+| `GCS_BUCKET_NAME` | `frichy-322534405950-resumes` |
 | `NUXT_PUBLIC_API_BASE` | `/api` |
 | `NUXT_PUBLIC_SHOW_DEMO_LOGIN` | `false` |
 | `SECRET_DATABASE_URL` | `frichy-prod-database-url` |
@@ -232,7 +234,7 @@ GitHub SecretsにはGCPの秘密値を置かない。秘密値はGCP Secret Mana
 push後のimage URI:
 
 ```text
-asia-northeast1-docker.pkg.dev/<PROJECT_ID>/frichy/web:<TAG>
+asia-northeast1-docker.pkg.dev/frichy/frichy/web:<TAG>
 ```
 
 ## Neon初期化

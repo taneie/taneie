@@ -27,10 +27,15 @@ export const config = {
   dataEncryptionKey: readEnv("DATA_ENCRYPTION_KEY", ""),
   blobReadWriteToken: readEnv("BLOB_READ_WRITE_TOKEN", ""),
   blobUploadCallbackUrl: readEnv("BLOB_UPLOAD_CALLBACK_URL", ""),
+  gcsBucketName: readEnv("GCS_BUCKET_NAME", ""),
   resumeUploadMaxBytes: Number(
     readEnv("RESUME_UPLOAD_MAX_BYTES", String(10 * 1024 * 1024)),
   ),
 };
+
+export function usesGcsResumeStorage() {
+  return Boolean(config.gcsBucketName.trim());
+}
 
 export function hasValidBlobReadWriteToken() {
   const token = config.blobReadWriteToken.trim();
