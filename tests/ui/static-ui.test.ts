@@ -171,4 +171,18 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(appShell, /<ProfilePage v-else-if="state\.activeView === 'profile'"/);
     assert.match(appShell, /<MeetingPage v-else-if="state\.activeView === 'meeting'"/);
   });
+
+  /**
+   * @testData ProfileWizardのレジュメ選択UI、hidden file input、明示ボタン、クリックハンドラ。
+   * @expected native file inputを直接押させず、`ファイルを選択`ボタンからfile inputを開ける構造になっている。
+   */
+  it("resume file selection is triggered by an explicit button", () => {
+    const profileWizard = read("Frontend/components/organisms/ProfileWizard.vue");
+
+    assert.match(profileWizard, /ファイルを選択/);
+    assert.match(profileWizard, /ref="resumeInput"/);
+    assert.match(profileWizard, /@click="openResumeFilePicker"/);
+    assert.match(profileWizard, /resumeInput\.value\.click\(\)/);
+    assert.match(profileWizard, /\.fileInput\s*\{[\s\S]*position:\s*absolute/);
+  });
 });

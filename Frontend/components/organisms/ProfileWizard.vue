@@ -221,15 +221,27 @@
             :options="['', ...availabilityOptions]"
             @update:model-value="markDirty"
           />
-          <label :class="$style.field"
-            >レジュメ（PDF / Word / Excel）
+          <div :class="$style.field">
+            <span>レジュメ（PDF / Word / Excel）</span>
+            <div :class="$style.filePicker">
+              <BaseButton
+                type="button"
+                variant="secondary"
+                icon="plus"
+                @click="openResumeFilePicker"
+              >
+                ファイルを選択
+              </BaseButton>
+              <span :class="$style.fileName">{{ selectedResumeFileLabel }}</span>
+            </div>
             <input
-              :class="$style.control"
+              ref="resumeInput"
+              :class="$style.fileInput"
               type="file"
               accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               @change="onResumeChange"
             />
-          </label>
+          </div>
           <div :class="[$style.card, $style.full]">
             <strong>登録済みレジュメ</strong>
             <p>
@@ -369,6 +381,7 @@ const terms = reactive<ProfileTermsInput>({
 });
 const meetingCandidates = ref<string[]>([""]);
 const pledgeAccepted = ref(false);
+const resumeInput = ref<HTMLInputElement | null>(null);
 const languageOptions = languageSkillOptions;
 const dbOptions = dbSkillOptions;
 const frameworkOptions = frameworkSkillOptions;
@@ -393,6 +406,12 @@ const selectedSkillNames = computed(() => {
     ...skills.cloud,
     ...splitCsv(skills.other),
   ])];
+});
+
+const selectedResumeFileLabel = computed(() => {
+  if (!terms.resume) return "未選択";
+
+  return `${terms.resume.name} / ${formatFileSize(terms.resume.size)}`;
 });
 
 watch(() => [state.value.profile.id, state.value.wizardStep], hydrateForms, {
@@ -460,6 +479,12 @@ function onResumeChange(event: Event) {
   markDirty();
 }
 
+function openResumeFilePicker() {
+  if (!resumeInput.value) return;
+  resumeInput.value.value = "";
+  resumeInput.value.click();
+}
+
 function addMeetingCandidate() {
   meetingCandidates.value.push("");
   markDirty();
@@ -510,6 +535,12 @@ function saveMeeting() {
 function toDateTimeLocal(value = "") {
   if (!value) return "";
   return value.trim().replace(" ", "T").slice(0, 16);
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${Math.ceil(bytes / 1024 / 1024)}MB`;
+
+  return `${Math.ceil(bytes / 1024)}KB`;
 }
 
 </script>
@@ -600,6 +631,32 @@ textarea.control {
 .control:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
+}
+
+.filePicker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fileName {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .dateRows {
