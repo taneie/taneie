@@ -60,6 +60,10 @@ import {
 } from "./utils";
 import { freelancerToProfile, profileToApi } from "./profileMapping";
 import {
+  RESUME_ALLOWED_MIME_TYPES,
+  resolveResumeMimeType,
+} from "./resumeUpload";
+import {
   isIncomingMessageForRole,
   isUnreadIncomingMessageForScope,
 } from "./chat";
@@ -76,22 +80,6 @@ function getApiBase() {
 }
 
 const state = ref<FrichyState>(createSeedState());
-
-const RESUME_ALLOWED_MIME_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-];
-
-const RESUME_EXTENSION_MIME_TYPES: Record<string, string> = {
-  ".pdf": "application/pdf",
-  ".doc": "application/msword",
-  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ".xls": "application/vnd.ms-excel",
-  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-};
 
 const filters = ref<JobFilters>({
   keyword: "",
@@ -368,12 +356,6 @@ function formatFileSize(bytes: number) {
   if (bytes >= 1024 * 1024) return `${Math.ceil(bytes / 1024 / 1024)}MB`;
 
   return `${Math.ceil(bytes / 1024)}KB`;
-}
-
-function resolveResumeMimeType(file: File) {
-  const extension = file.name.trim().toLowerCase().match(/\.[^.]+$/)?.[0] || "";
-
-  return file.type || RESUME_EXTENSION_MIME_TYPES[extension] || "";
 }
 
 function encodeHeaderPayload(value: string) {

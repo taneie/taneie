@@ -52,6 +52,12 @@ const extensionMimeTypeMap: Record<string, string> = {
   ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
 
+const genericMimeTypes = new Set([
+  "",
+  "application/octet-stream",
+  "binary/octet-stream",
+]);
+
 const storage = new Storage();
 
 export class ResumeService {
@@ -542,7 +548,13 @@ export class ResumeService {
 
   private normalizeUploadMetadata<T extends ResumeUploadIntentInput>(input: T) {
     const extension = this.extractAllowedExtension(input.originalFilename);
-    const mimeType = input.mimeType || extensionMimeTypeMap[extension] || "";
+    const inputMimeType = input.mimeType.trim().toLowerCase();
+    const extensionMimeType = extensionMimeTypeMap[extension] || "";
+    const mimeType =
+      genericMimeTypes.has(inputMimeType) ||
+      !RESUME_ALLOWED_MIME_TYPES.includes(inputMimeType as (typeof RESUME_ALLOWED_MIME_TYPES)[number])
+        ? extensionMimeType
+        : inputMimeType;
     if (!RESUME_ALLOWED_MIME_TYPES.includes(mimeType as (typeof RESUME_ALLOWED_MIME_TYPES)[number])) {
       throw new AppError(400, "PDF、Word、Excelファイルのみアップロードできます。", "INVALID_FILE_TYPE");
     }
