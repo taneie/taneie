@@ -28,13 +28,21 @@ export class ProfileService {
   }
 
   async updateCurrent(userId: string, input: ProfileInput) {
+    const hasStartDate = Object.prototype.hasOwnProperty.call(
+      input,
+      "startDate",
+    );
     const profile = await this.db.freelancerProfile.upsert({
       where: { userId },
       update: {
         roleTitle: input.roleTitle,
         yearsExperience: input.yearsExperience,
         desiredRate: input.desiredRate,
-        startDate: input.startDate ? new Date(input.startDate) : null,
+        startDate: hasStartDate
+          ? input.startDate
+            ? new Date(input.startDate)
+            : null
+          : undefined,
         workRate: input.workRate,
         remoteType: input.remoteType,
         availabilityStatus: input.availabilityStatus,
