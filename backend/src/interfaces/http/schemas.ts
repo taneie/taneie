@@ -26,6 +26,14 @@ const roleTitleOptions = [
 
 const roleTitle = z.union([z.enum(roleTitleOptions), z.literal("")]);
 
+function emptyStringAsUndefined<T extends z.ZodType>(schema: T) {
+  return z.preprocess(
+    (value) =>
+      typeof value === "string" && value.trim() === "" ? undefined : value,
+    schema.optional(),
+  );
+}
+
 const remoteType = z
   .union([
     z.enum(["full_remote", "hybrid", "onsite"]),
@@ -167,17 +175,17 @@ export const updateJobFlagsSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-  name: z.string().trim().min(1).max(255).optional(),
-  nameKana: z.string().trim().max(255).optional(),
-  phone: z.string().trim().max(50).optional(),
-  roleTitle: roleTitle.optional(),
-  yearsExperience: z.coerce.number().min(0).max(99).optional(),
-  desiredRate: z.coerce.number().int().min(0).optional(),
-  startDate: z.string().trim().optional(),
-  workRate: z.string().trim().max(50).optional(),
-  remoteType: remoteType.optional(),
-  availabilityStatus: availabilityStatus.optional(),
-  availabilityNote: z.string().trim().max(255).optional(),
+  name: emptyStringAsUndefined(z.string().trim().min(1).max(255)),
+  nameKana: emptyStringAsUndefined(z.string().trim().max(255)),
+  phone: emptyStringAsUndefined(z.string().trim().max(50)),
+  roleTitle: emptyStringAsUndefined(roleTitle),
+  yearsExperience: emptyStringAsUndefined(z.coerce.number().min(0).max(99)),
+  desiredRate: emptyStringAsUndefined(z.coerce.number().int().min(0)),
+  startDate: emptyStringAsUndefined(z.string().trim()),
+  workRate: emptyStringAsUndefined(z.string().trim().max(50)),
+  remoteType: emptyStringAsUndefined(remoteType),
+  availabilityStatus: emptyStringAsUndefined(availabilityStatus),
+  availabilityNote: emptyStringAsUndefined(z.string().trim().max(255)),
   pledgeAccepted: z.boolean().optional(),
   skills: z.array(z.string().trim().min(1)).optional(),
   skillExperiences: z

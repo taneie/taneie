@@ -37,6 +37,34 @@ describe("プロフィールAPI入力スキーマ", () => {
   });
 
   /**
+   * @testData 基本情報保存時のように、条件/ステータス系のoptional項目が空文字のプロフィールpayload。
+   * @expected 空文字は未指定として扱われ、remoteTypeやavailabilityStatusのenum validation errorにならない。
+   */
+  it("updateProfileSchema treats blank optional fields as omitted", () => {
+    const parsed = expectValid(updateProfileSchema, {
+      name: "山田 太郎",
+      nameKana: "",
+      phone: "090-1111-2222",
+      roleTitle: "フルスタックエンジニア",
+      yearsExperience: "",
+      desiredRate: "",
+      startDate: "",
+      workRate: "",
+      remoteType: "",
+      availabilityStatus: "",
+      availabilityNote: "",
+      skills: [],
+      skillExperiences: [],
+    });
+
+    assert.equal(parsed.name, "山田 太郎");
+    assert.equal(parsed.remoteType, undefined);
+    assert.equal(parsed.availabilityStatus, undefined);
+    assert.equal(parsed.yearsExperience, undefined);
+    assert.equal(parsed.desiredRate, undefined);
+  });
+
+  /**
    * @testData 範囲外の経験年数、空スキル名を含むskillExperiences、未定義の職種。
    * @expected 経験年数範囲、スキル名必須、職種enumの制約に反する入力は拒否される。
    */

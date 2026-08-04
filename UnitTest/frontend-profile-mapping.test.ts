@@ -72,4 +72,29 @@ describe("フロントエンドのプロフィール変換", () => {
       yearsExperience: 5,
     });
   });
+
+  /**
+   * @testData 基本情報だけ入力済みで、経験年数/希望単価/リモート/提案可能ステータスが空欄のprofile fixture。
+   * @expected 空欄のoptional項目はAPI payloadから未指定として送られ、enum validationの対象にならない。
+   */
+  it("profileToApi omits blank optional fields during partial profile save", () => {
+    const payload = profileToApi(
+      profileFixture({
+        years: "",
+        desiredRate: "",
+        startDate: "",
+        workRate: "",
+        remote: "",
+        availability: "",
+      }),
+    );
+
+    assert.equal(payload.name, "山田 太郎");
+    assert.equal(payload.yearsExperience, undefined);
+    assert.equal(payload.desiredRate, undefined);
+    assert.equal(payload.startDate, undefined);
+    assert.equal(payload.workRate, undefined);
+    assert.equal(payload.remoteType, undefined);
+    assert.equal(payload.availabilityStatus, undefined);
+  });
 });

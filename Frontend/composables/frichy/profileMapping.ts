@@ -3,17 +3,17 @@ import type { Freelancer, Profile } from "./types";
 import { categorizeSkills, profileSkillList } from "./utils";
 
 export type ProfileApiPayload = {
-  name: string;
-  nameKana: string;
-  phone: string;
-  roleTitle: string;
-  yearsExperience: number;
-  desiredRate: number;
+  name?: string;
+  nameKana?: string;
+  phone?: string;
+  roleTitle?: string;
+  yearsExperience?: number;
+  desiredRate?: number;
   startDate?: string;
-  workRate: string;
-  remoteType: string;
-  availabilityStatus: string;
-  availabilityNote: string;
+  workRate?: string;
+  remoteType?: string;
+  availabilityStatus?: string;
+  availabilityNote?: string;
   pledgeAccepted?: boolean;
   skills: string[];
   skillExperiences: Array<{
@@ -70,17 +70,17 @@ export function freelancerToProfile(
 export function profileToApi(profile: Profile): ProfileApiPayload {
   const skills = profileSkillList(profile);
   return {
-    name: profile.name,
-    nameKana: profile.nameKana,
-    phone: profile.phone,
-    roleTitle: profile.role,
-    yearsExperience: Number(profile.years || 0),
-    desiredRate: Number(profile.desiredRate || 0),
-    startDate: profile.startDate || undefined,
-    workRate: profile.workRate,
-    remoteType: profile.remote,
-    availabilityStatus: profile.availability,
-    availabilityNote: profile.availability,
+    name: nonEmpty(profile.name),
+    nameKana: nonEmpty(profile.nameKana),
+    phone: nonEmpty(profile.phone),
+    roleTitle: nonEmpty(profile.role),
+    yearsExperience: optionalNumber(profile.years),
+    desiredRate: optionalNumber(profile.desiredRate),
+    startDate: nonEmpty(profile.startDate),
+    workRate: nonEmpty(profile.workRate),
+    remoteType: nonEmpty(profile.remote),
+    availabilityStatus: nonEmpty(profile.availability),
+    availabilityNote: nonEmpty(profile.availability),
     pledgeAccepted:
       profile.pledgeAccepted || Boolean(profile.pledgedAt) || undefined,
     skills,
@@ -94,4 +94,14 @@ export function profileToApi(profile: Profile): ProfileApiPayload {
       };
     }),
   };
+}
+
+function nonEmpty(value: string) {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function optionalNumber(value: string) {
+  const trimmed = value.trim();
+  return trimmed ? Number(trimmed) : undefined;
 }
