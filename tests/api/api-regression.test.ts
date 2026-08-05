@@ -445,6 +445,79 @@ describe("APIレジュメ確認フロー", () => {
       expectErrorCode(download, 404, "RESUME_NOT_FOUND");
     }
   });
+
+  /**
+   * @testData 新規求職者に紐づくWordレジュメmetadata、デモ営業token、tokenなしview request。
+   * @expected previewはOffice ViewerのURLを返し、viewはtokenなしでは401 `RESUME_PREVIEW_TOKEN_INVALID` になる。
+   */
+  it("resume preview issues a temporary viewer URL for Office files", async () => {
+    const sales = await login(server, "sales@frichy.jp", "sales123");
+    const email = `api-resume-preview-${Date.now()}@example.com`;
+    const createdUser = await server.request<{
+      user: { id: string; freelancerId?: string };
+    }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        password: "password123",
+        privacyPolicyAccepted: true,
+      }),
+    });
+    created.userIds.add(createdUser.data.user.id);
+    assert.ok(createdUser.data.user.freelancerId);
+
+    const uploadedFile = await prisma.uploadedFile.create({
+      data: {
+        userId: createdUser.data.user.id,
+        originalFileName: "office-preview.docx",
+        blobPath: `uploads/users/${createdUser.data.user.id}/documents/office-preview.docx`,
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        sizeBytes: BigInt(128),
+        visibility: "private",
+      },
+    });
+    await prisma.resume.create({
+      data: {
+        freelancerProfileId: createdUser.data.user.freelancerId,
+        uploadedFileId: uploadedFile.id,
+        originalFilename: "office-preview.docx",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        fileSizeBytes: 128,
+        storageKey: uploadedFile.blobPath,
+        isLatest: true,
+      },
+    });
+
+    const preview = await server.request<{
+      previewKind: string;
+      previewUrl: string;
+    }>(
+      `/resumes/freelancers/${createdUser.data.user.freelancerId}/preview`,
+      {},
+      sales.token,
+    );
+    assert.equal(preview.status, 200);
+    assert.equal(preview.data.previewKind, "office");
+    assert.match(
+      preview.data.previewUrl,
+      /^https:\/\/view\.officeapps\.live\.com\/op\/embed\.aspx\?src=/,
+    );
+    assert.match(
+      decodeURIComponent(preview.data.previewUrl),
+      /\/api\/resumes\/freelancers\/.+\/view\?token=/,
+    );
+
+    const viewWithoutToken = await server.request(
+      `/resumes/freelancers/${createdUser.data.user.freelancerId}/view`,
+    );
+    expectErrorCode(
+      viewWithoutToken,
+      401,
+      "RESUME_PREVIEW_TOKEN_INVALID",
+    );
+  });
 });
 
 describe("API面談・メッセージ・問い合わせフロー", () => {

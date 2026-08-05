@@ -32,6 +32,42 @@ function readSingleHeader(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function readPublicBaseUrl(req: express.Request) {
+  const forwardedProto = readSingleHeader(req.headers["x-forwarded-proto"]);
+  const forwardedHost = readSingleHeader(req.headers["x-forwarded-host"]);
+  const proto = (forwardedProto || req.protocol || "http").split(",")[0].trim();
+  const host = (forwardedHost || req.get("host") || "").split(",")[0].trim();
+
+  return `${proto}://${host}`;
+}
+
+function readQueryString(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function sendResumeFile(
+  res: express.Response,
+  file: Awaited<ReturnType<ResumeService["download"]>>,
+  disposition: "attachment" | "inline",
+) {
+  res.setHeader("Content-Type", file.mimeType);
+  res.setHeader("Content-Length", String(file.sizeBytes));
+  res.setHeader(
+    "Content-Disposition",
+    `${disposition}; filename*=UTF-8''${encodeURIComponent(file.fileName)}`,
+  );
+  if (disposition === "inline") {
+    res.setHeader("Cache-Control", "private, max-age=0, no-store");
+  }
+  const stream =
+    file.stream instanceof Readable
+      ? file.stream
+      : Readable.fromWeb(
+          file.stream as unknown as NodeReadableStream<Uint8Array>,
+        );
+  stream.pipe(res);
+}
+
 function decodeClientPayload(
   payload: string | undefined,
   encoding: string | undefined,
@@ -142,8 +178,20 @@ export function registerResumeRoutes(
         await resumeService.createPreview(
           req.auth!,
           routeParam(req.params.freelancerId),
+          readPublicBaseUrl(req),
         ),
       );
+    }),
+  );
+
+  app.get(
+    "/api/resumes/freelancers/:freelancerId/view",
+    asyncHandler(async (req, res) => {
+      const file = await resumeService.downloadWithPreviewToken(
+        routeParam(req.params.freelancerId),
+        readQueryString(req.query.token),
+      );
+      sendResumeFile(res, file, "inline");
     }),
   );
 
@@ -155,19 +203,7 @@ export function registerResumeRoutes(
         req.auth!,
         routeParam(req.params.freelancerId),
       );
-      res.setHeader("Content-Type", file.mimeType);
-      res.setHeader("Content-Length", String(file.sizeBytes));
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename*=UTF-8''${encodeURIComponent(file.fileName)}`,
-      );
-      const stream =
-        file.stream instanceof Readable
-          ? file.stream
-          : Readable.fromWeb(
-              file.stream as unknown as NodeReadableStream<Uint8Array>,
-            );
-      stream.pipe(res);
+      sendResumeFile(res, file, "attachment");
     }),
   );
 

@@ -1,8 +1,6 @@
 import {
   get,
   head,
-  issueSignedToken,
-  presignUrl,
   type PutBlobResult,
 } from "@vercel/blob";
 import { Storage } from "@google-cloud/storage";
@@ -15,6 +13,10 @@ import {
   usesGcsResumeStorage,
 } from "../../infrastructure/config.js";
 import { decryptText, encryptText } from "../../infrastructure/crypto.js";
+import {
+  signResumePreviewToken,
+  verifyResumePreviewToken,
+} from "../../infrastructure/security.js";
 import type {
   ResumeBlobPayload,
   ResumeMetadataInput,
@@ -60,7 +62,6 @@ const officePreviewMimeTypes = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
 
-const previewUrlTtlMs = 10 * 60 * 1000;
 const storage = new Storage();
 
 export function isOfficePreviewMimeType(mimeType: string) {
@@ -210,7 +211,11 @@ export class ResumeService {
     );
   }
 
-  async createPreview(auth: AuthContext, freelancerProfileId: string) {
+  async createPreview(
+    auth: AuthContext,
+    freelancerProfileId: string,
+    publicBaseUrl: string,
+  ) {
     const { profile, latestResume, uploadedFile } = await this.findReadableResume(
       auth,
       freelancerProfileId,
@@ -222,7 +227,6 @@ export class ResumeService {
       mimeType,
       sizeBytes: latestResume.fileSizeBytes || Number(uploadedFile.sizeBytes),
       previewUrl: "",
-      html: "",
       previewKind: "download" as const,
       expiresAt: "",
     };
@@ -231,8 +235,15 @@ export class ResumeService {
       mimeType === "application/pdf" ||
       isOfficePreviewMimeType(mimeType)
     ) {
-      const { url, expiresAt } = await this.createSignedReadUrl(
-        uploadedFile.blobPath,
+      const token = signResumePreviewToken({
+        ...auth,
+        freelancerProfileId,
+        resumeId: latestResume.id,
+      });
+      const fileUrl = this.createPreviewFileUrl(
+        publicBaseUrl,
+        freelancerProfileId,
+        token,
       );
       return {
         ...basePreview,
@@ -241,18 +252,45 @@ export class ResumeService {
             ? ("pdf" as const)
             : ("office" as const),
         previewUrl:
-          mimeType === "application/pdf" ? url : toOfficeViewerUrl(url),
-        expiresAt,
+          mimeType === "application/pdf" ? fileUrl : toOfficeViewerUrl(fileUrl),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       };
     }
 
     return basePreview;
   }
 
+  async downloadWithPreviewToken(freelancerProfileId: string, token: string) {
+    let payload: ReturnType<typeof verifyResumePreviewToken>;
+    try {
+      payload = verifyResumePreviewToken(token);
+    } catch {
+      throw new AppError(
+        401,
+        "プレビューの有効期限が切れました。もう一度開き直してください。",
+        "RESUME_PREVIEW_TOKEN_INVALID",
+      );
+    }
+    if (payload.freelancerProfileId !== freelancerProfileId) {
+      throw new AppError(403, "このレジュメを確認できません。", "FORBIDDEN");
+    }
+
+    return this.downloadReadableResume(payload, freelancerProfileId, payload.resumeId);
+  }
+
   async download(auth: AuthContext, freelancerProfileId: string) {
+    return this.downloadReadableResume(auth, freelancerProfileId);
+  }
+
+  private async downloadReadableResume(
+    auth: AuthContext,
+    freelancerProfileId: string,
+    resumeId?: string,
+  ) {
     const { latestResume, uploadedFile } = await this.findReadableResume(
       auth,
       freelancerProfileId,
+      resumeId,
     );
     if (usesGcsResumeStorage()) {
       const [metadata] = await this.gcsFile(uploadedFile.blobPath).getMetadata();
@@ -293,7 +331,11 @@ export class ResumeService {
     };
   }
 
-  private async findReadableResume(auth: AuthContext, freelancerProfileId: string) {
+  private async findReadableResume(
+    auth: AuthContext,
+    freelancerProfileId: string,
+    resumeId?: string,
+  ) {
     this.assertResumeStorageConfigured();
     const profile = await this.db.freelancerProfile.findUnique({
       where: { id: freelancerProfileId },
@@ -312,8 +354,9 @@ export class ResumeService {
       throw new AppError(403, "このレジュメを確認できません。", "FORBIDDEN");
     }
 
-    const latestResume =
-      profile.resumes.find((resume) => resume.isLatest) || profile.resumes[0];
+    const latestResume = resumeId
+      ? profile.resumes.find((resume) => resume.id === resumeId)
+      : profile.resumes.find((resume) => resume.isLatest) || profile.resumes[0];
     const uploadedFile = latestResume?.uploadedFile;
     if (!latestResume || !uploadedFile?.blobPath) {
       throw new AppError(404, "レジュメが登録されていません。", "RESUME_NOT_FOUND");
@@ -484,32 +527,15 @@ export class ResumeService {
     return storage.bucket(config.gcsBucketName).file(pathname);
   }
 
-  private async createSignedReadUrl(blobPath: string) {
-    const validUntil = Date.now() + previewUrlTtlMs;
-    if (usesGcsResumeStorage()) {
-      const [url] = await this.gcsFile(blobPath).getSignedUrl({
-        action: "read",
-        expires: validUntil,
-        version: "v4",
-      });
+  private createPreviewFileUrl(
+    publicBaseUrl: string,
+    freelancerProfileId: string,
+    token: string,
+  ) {
+    const baseUrl = publicBaseUrl.replace(/\/$/, "");
+    const profileId = encodeURIComponent(freelancerProfileId);
 
-      return { url, expiresAt: new Date(validUntil).toISOString() };
-    }
-
-    const signedToken = await issueSignedToken({
-      token: config.blobReadWriteToken,
-      pathname: blobPath,
-      operations: ["get"],
-      validUntil,
-    });
-    const { presignedUrl } = await presignUrl(signedToken, {
-      access: "private",
-      operation: "get",
-      pathname: blobPath,
-      validUntil,
-    });
-
-    return { url: presignedUrl, expiresAt: new Date(validUntil).toISOString() };
+    return `${baseUrl}/api/resumes/freelancers/${profileId}/view?token=${encodeURIComponent(token)}`;
   }
 
   private async assertApplicationOwner(userId: string, applicationId?: string) {

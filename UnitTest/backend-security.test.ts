@@ -7,7 +7,9 @@ import {
 } from "../backend/src/infrastructure/crypto";
 import {
   hashPassword,
+  signResumePreviewToken,
   signToken,
+  verifyResumePreviewToken,
   verifyPassword,
   verifyToken,
 } from "../backend/src/infrastructure/security";
@@ -66,5 +68,27 @@ describe("認証セキュリティ", () => {
     assert.equal(payload.role, "freelancer");
     assert.equal(payload.email, "freelancer@example.com");
     assert.throws(() => verifyToken("not-a-token"));
+  });
+
+  /**
+   * @testData 営業の認証context、対象freelancerProfileId、resumeId、不正なtoken文字列。
+   * @expected プレビューtokenから対象レジュメ情報を復元でき、不正tokenは検証例外になる。
+   */
+  it("signResumePreviewToken/verifyResumePreviewToken round-trip preview scope", () => {
+    const token = signResumePreviewToken({
+      userId: "sales-user-id",
+      role: "sales",
+      email: "sales@frichy.jp",
+      freelancerProfileId: "freelancer-profile-id",
+      resumeId: "resume-id",
+    });
+    const payload = verifyResumePreviewToken(token);
+
+    assert.equal(payload.purpose, "resume-preview");
+    assert.equal(payload.userId, "sales-user-id");
+    assert.equal(payload.role, "sales");
+    assert.equal(payload.freelancerProfileId, "freelancer-profile-id");
+    assert.equal(payload.resumeId, "resume-id");
+    assert.throws(() => verifyResumePreviewToken("not-a-token"));
   });
 });
