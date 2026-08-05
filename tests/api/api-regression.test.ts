@@ -9,6 +9,7 @@ import {
 } from "../helpers/http";
 
 useLocalTestDatabase();
+process.env.BLOB_READ_WRITE_TOKEN ||= "vercel_blob_rw_test";
 
 let server: TestServer;
 let prisma: typeof import("../../backend/src/infrastructure/prisma").prisma;
@@ -403,6 +404,46 @@ describe("APIプロフィール・案件フロー", () => {
     );
     assert.equal(changed.status, 200);
     assert.equal(changed.data.status, "面談待ち");
+  });
+});
+
+describe("APIレジュメ確認フロー", () => {
+  /**
+   * @testData 実ファイル未紐付けのseedレジュメを持つ求職者ID、デモ営業token、tokenなしrequest。
+   * @expected tokenなしは401 `AUTH_REQUIRED`、営業token付きpreview/downloadは認証を通過し401以外になる。
+   */
+  it("sales token is accepted by resume preview and download routes", async () => {
+    const sales = await login(server, "sales@frichy.jp", "sales123");
+    const profile = await prisma.freelancerProfile.findFirst({
+      where: { resumes: { some: { uploadedFileId: null } } },
+      select: { id: true },
+    });
+    assert.ok(profile);
+
+    const unauthorized = await server.request(
+      `/resumes/freelancers/${profile.id}/preview`,
+    );
+    expectErrorCode(unauthorized, 401, "AUTH_REQUIRED");
+
+    const preview = await server.request(
+      `/resumes/freelancers/${profile.id}/preview`,
+      {},
+      sales.token,
+    );
+    assert.notEqual(preview.status, 401);
+    if (preview.status !== 200) {
+      expectErrorCode(preview, 404, "RESUME_NOT_FOUND");
+    }
+
+    const download = await server.request(
+      `/resumes/freelancers/${profile.id}/download`,
+      {},
+      sales.token,
+    );
+    assert.notEqual(download.status, 401);
+    if (download.status !== 200) {
+      expectErrorCode(download, 404, "RESUME_NOT_FOUND");
+    }
   });
 });
 

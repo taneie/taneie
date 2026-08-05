@@ -72,6 +72,7 @@ import {
   filterAndSortFreelancers,
   scoutSortOptions,
 } from "./scoutFilters";
+import { resolveLoginSource, type ApiLoginResponse } from "./auth";
 
 function getApiBase() {
   const runtimeConfig = useRuntimeConfig();
@@ -1011,37 +1012,36 @@ function selectMeetingApplication(applicationId: string) {
 
 async function login(email: string, password: string) {
   const normalizedEmail = email.trim();
-  const demoAccount = demoAccounts.find(
-    (account) =>
-      account.email === normalizedEmail && account.password === password,
+  const loginSource = await resolveLoginSource(
+    { email: normalizedEmail, password },
+    demoAccounts,
+    () =>
+      apiRequest<ApiLoginResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email: normalizedEmail, password }),
+      }),
   );
-  if (demoAccount) {
-    loginWithAccount(demoAccount);
-    showToast(`${roleLabel(demoAccount.role)}ログインしました。`);
+
+  if (loginSource.kind === "local-demo") {
+    loginWithAccount(loginSource.account);
     return;
   }
 
-  try {
-    const result = await apiRequest<{
-      token: string;
-      user: { email: string; role: Role; name: string; freelancerId?: string };
-    }>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email: normalizedEmail, password }),
-    });
+  if (loginSource.kind === "api") {
     clearUnsavedChanges();
-    setAuth(result.token, result.user);
+    setAuth(loginSource.result.token, loginSource.result.user);
     await loadWorkspace();
     startChatPolling();
     void requestBrowserNotificationPermission();
-    showToast(`${roleLabel(result.user.role)}ログインしました。`);
-  } catch (error) {
-    showToast(
-      error instanceof Error
-        ? error.message
-        : "メールアドレスまたはパスワードが違います。",
-    );
+    showToast(`${roleLabel(loginSource.result.user.role)}ログインしました。`);
+    return;
   }
+
+  showToast(
+    loginSource.error instanceof Error
+      ? loginSource.error.message
+      : "メールアドレスまたはパスワードが違います。",
+  );
 }
 
 async function requestPasswordReset(email: string) {
@@ -1090,7 +1090,7 @@ async function confirmPasswordReset(token: string, password: string) {
 async function loginWithDemo(role: Role) {
   if (!(await confirmDiscardChanges())) return;
   const account = demoAccounts.find((item) => item.role === role);
-  if (account) loginWithAccount(account);
+  if (account) await login(account.email, account.password);
 }
 
 function loginWithAccount(account: Account) {
