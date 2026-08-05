@@ -1,5 +1,11 @@
 <template>
-  <div v-if="freelancer" :class="$style.sheet">
+  <div
+    v-if="freelancer"
+    :class="[
+      $style.sheet,
+      { [$style.fullscreen]: props.variant === 'fullscreen' },
+    ]"
+  >
     <div :class="$style.header">
       <div>
         <h2>{{ freelancer.resumeName || "レジュメ未登録" }}</h2>
@@ -8,11 +14,26 @@
           {{ freelancer.availability }}
         </p>
       </div>
-      <div v-if="preview" :class="$style.headerActions">
-        <button type="button" :class="$style.linkAction" @click="openPreview">
+      <div v-if="freelancer.resumeName" :class="$style.headerActions">
+        <button
+          v-if="!preview?.previewUrl || resumePreviewError"
+          type="button"
+          :class="$style.primaryAction"
+          :disabled="resumePreviewLoading"
+          @click="loadPreview"
+        >
+          {{ resumePreviewError ? "再読み込み" : "プレビュー" }}
+        </button>
+        <button
+          v-if="preview?.previewUrl"
+          type="button"
+          :class="$style.linkAction"
+          @click="openPreview"
+        >
           別タブで開く
         </button>
         <button
+          v-if="preview"
           type="button"
           :class="$style.linkAction"
           @click="downloadResumePreview"
@@ -47,6 +68,9 @@
         ダウンロードして開く
       </button>
     </div>
+    <div v-else-if="!freelancer.resumeName" :class="$style.empty">
+      レジュメが登録されていません。
+    </div>
     <div v-else :class="$style.sheetGrid">
       <div>スキル</div>
       <div>{{ freelancer.skills.join(" / ") }}</div>
@@ -68,12 +92,23 @@
 <script setup lang="ts">
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 import { computed } from "vue";
+
+const props = withDefaults(
+  defineProps<{
+    variant?: "panel" | "fullscreen";
+  }>(),
+  {
+    variant: "panel",
+  },
+);
+
 const {
   state,
   currentPreviewFreelancer,
   resumePreview,
   resumePreviewLoading,
   resumePreviewError,
+  selectPreview,
   downloadResumePreview,
 } = useFrichyRuntime();
 
@@ -89,17 +124,36 @@ function openPreview() {
   if (!preview.value?.previewUrl) return;
   window.open(preview.value.previewUrl, "_blank", "noopener");
 }
+
+function loadPreview() {
+  if (!freelancer.value?.id) return;
+  void selectPreview(freelancer.value.id);
+}
 </script>
 
 <style module>
 .sheet {
+  display: grid;
+  grid-template-rows: auto minmax(0, auto);
+  gap: 14px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 22px;
   line-height: 1.65;
+  min-height: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
+}
+
+.fullscreen {
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .sheet h2 {
@@ -116,7 +170,6 @@ function openPreview() {
   gap: 16px;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 14px;
 }
 
 .headerActions {
@@ -128,6 +181,7 @@ function openPreview() {
 
 .viewer {
   width: 100%;
+  height: 100%;
   min-height: 640px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -159,6 +213,29 @@ function openPreview() {
   font-family: inherit;
   text-decoration: none;
   cursor: pointer;
+}
+
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(29, 95, 211, 0.18);
+}
+
+.primaryAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .sheetGrid {
@@ -193,6 +270,10 @@ function openPreview() {
 @media (max-width: 620px) {
   .sheet {
     padding: 14px;
+  }
+
+  .fullscreen {
+    padding: 0;
   }
 
   .header {

@@ -187,8 +187,8 @@ describe("UIアクセシビリティ・ローディング体験", () => {
   });
 
   /**
-   * @testData ScoutPageのレジュメpreview event、dialog状態、ResumePreview配置、旧scroll誘導。
-   * @expected スカウト画面のレジュメボタン押下後、下部へスクロールせずdialog上でレジュメを確認できる。
+   * @testData ScoutPageのレジュメpreview event、dialog状態、ResumePreview fullscreen配置、旧scroll誘導。
+   * @expected スカウト画面のレジュメボタン押下後はdialogで候補者だけ選択し、下部へスクロールしない。
    */
   it("scout page renders resume preview in a dialog", () => {
     const scoutPage = read("Frontend/components/pages/ScoutPage.vue");
@@ -198,22 +198,28 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(scoutPage, /ref="resumePreviewModalRef"/);
     assert.match(scoutPage, /aria-labelledby="resume-preview-title"/);
     assert.match(scoutPage, /aria-label="レジュメ確認を閉じる"/);
-    assert.match(scoutPage, /<ResumePreview \/>/);
+    assert.match(scoutPage, /<ResumePreview variant="fullscreen" \/>/);
     assert.match(scoutPage, /useBodyScrollLock\(anyModalOpen\)/);
+    assert.match(scoutPage, /selectPreviewTarget\(freelancerId\)/);
+    assert.doesNotMatch(scoutPage, /await selectPreview\(freelancerId\)/);
     assert.doesNotMatch(scoutPage, /previewPanelRef/);
     assert.doesNotMatch(scoutPage, /scrollIntoView/);
   });
 
   /**
-   * @testData ResumePreviewのiframe preview、download action、旧HTML文字列preview。
-   * @expected PDF/OfficeともにpreviewUrlをiframeに渡し、`v-html`による文字列プレビューに戻らない。
+   * @testData ResumePreviewの明示preview action、iframe preview、download action、旧HTML文字列preview。
+   * @expected プレビューbutton押下後だけPDF/OfficeのpreviewUrlをiframeへ渡し、`v-html`による文字列プレビューに戻らない。
    */
   it("resume preview uses viewer iframe instead of HTML string conversion", () => {
     const resumePreview = read("Frontend/components/organisms/ResumePreview.vue");
 
+    assert.match(resumePreview, /"プレビュー"/);
+    assert.match(resumePreview, /@click="loadPreview"/);
+    assert.match(resumePreview, /selectPreview\(freelancer\.value\.id\)/);
     assert.match(resumePreview, /<iframe[\s\S]*:src="preview\.previewUrl"/);
     assert.match(resumePreview, /別タブで開く/);
     assert.match(resumePreview, /downloadResumePreview/);
+    assert.match(resumePreview, /variant\?: "panel" \| "fullscreen"/);
     assert.doesNotMatch(resumePreview, /v-html/);
     assert.doesNotMatch(resumePreview, /documentPreview/);
   });

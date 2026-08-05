@@ -1662,11 +1662,7 @@ async function sendScout(freelancerId: string, jobId: string) {
 }
 
 async function selectPreview(freelancerId: string) {
-  const freelancer = getFreelancer(freelancerId);
-  state.value.previewFreelancerId = freelancer?.id || "";
-  resumePreview.value = null;
-  resumePreviewError.value = "";
-  persist();
+  const freelancer = selectPreviewTarget(freelancerId);
   if (!freelancer?.id) return;
   if (!freelancer.resumeName) {
     resumePreviewError.value = "レジュメが登録されていません。";
@@ -1688,6 +1684,15 @@ async function selectPreview(freelancerId: string) {
   } finally {
     resumePreviewLoading.value = false;
   }
+}
+
+function selectPreviewTarget(freelancerId: string) {
+  const freelancer = getFreelancer(freelancerId);
+  state.value.previewFreelancerId = freelancer?.id || "";
+  resumePreview.value = null;
+  resumePreviewError.value = "";
+  persist();
+  return freelancer;
 }
 
 async function downloadResumePreview() {
@@ -2784,6 +2789,7 @@ export function useFrichyRuntime() {
     sendScout,
     openScoutJob,
     selectPreview,
+    selectPreviewTarget,
     downloadResumePreview,
     toggleJobSort,
     toggleJobActive,

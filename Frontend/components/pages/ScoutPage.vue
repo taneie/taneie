@@ -187,7 +187,7 @@
       </div>
 
       <div :class="$style.previewModalBody">
-        <ResumePreview />
+        <ResumePreview variant="fullscreen" />
       </div>
     </section>
   </div>
@@ -211,7 +211,7 @@ const {
   searchScoutableJobs,
   selectScoutJob,
   sendSelectedScout,
-  selectPreview,
+  selectPreviewTarget,
   streamTone,
 } = useFrichyRuntime();
 
@@ -234,9 +234,9 @@ function clearScoutJobKeyword() {
   void searchScoutableJobs();
 }
 
-async function openResumePreview(freelancerId: string) {
+function openResumePreview(freelancerId: string) {
   resumePreviewDialogOpen.value = true;
-  await selectPreview(freelancerId);
+  selectPreviewTarget(freelancerId);
 }
 
 function closeResumePreviewDialog() {
@@ -356,7 +356,9 @@ function closeResumePreviewDialog() {
 }
 
 .previewModalPanel {
-  width: min(1080px, 100%);
+  width: min(1180px, calc(100dvw - 24px));
+  height: min(860px, calc(100dvh - 24px));
+  max-height: calc(100dvh - 24px);
   grid-template-rows: auto minmax(0, 1fr);
 }
 
