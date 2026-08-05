@@ -48,19 +48,6 @@
     />
   </div>
 
-  <section
-    v-if="state.previewFreelancerId"
-    ref="previewPanelRef"
-    :class="$style.panel"
-  >
-    <div :class="$style.panelHeader">
-      <h2 :class="$style.panelTitle">レジュメ確認</h2>
-    </div>
-    <div :class="$style.panelBody">
-      <ResumePreview />
-    </div>
-  </section>
-
   <div
     v-if="scoutJobPicker.open"
     :class="$style.modalBackdrop"
@@ -169,15 +156,49 @@
       </div>
     </section>
   </div>
+
+  <div
+    v-if="resumePreviewDialogOpen"
+    :class="$style.modalBackdrop"
+    role="presentation"
+    @click.self="closeResumePreviewDialog"
+  >
+    <section
+      ref="resumePreviewModalRef"
+      :class="[$style.modalPanel, $style.previewModalPanel]"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="resume-preview-title"
+      tabindex="-1"
+    >
+      <div :class="$style.modalHeader">
+        <div>
+          <span :class="$style.modalKicker">RESUME</span>
+          <h2 id="resume-preview-title">レジュメ確認</h2>
+        </div>
+        <button
+          type="button"
+          :class="$style.modalClose"
+          aria-label="レジュメ確認を閉じる"
+          @click="closeResumePreviewDialog"
+        >
+          ×
+        </button>
+      </div>
+
+      <div :class="$style.previewModalBody">
+        <ResumePreview />
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, ref } from "vue";
 import { useBodyScrollLock } from "~/composables/frichy/useBodyScrollLock";
 import { useModalA11y } from "~/composables/frichy/useModalA11y";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 const {
-  state,
   scoutFilters,
   scoutJobPicker,
   filteredFreelancers,
@@ -194,11 +215,18 @@ const {
   streamTone,
 } = useFrichyRuntime();
 
-const previewPanelRef = ref<HTMLElement | null>(null);
-useBodyScrollLock(computed(() => scoutJobPicker.value.open));
+const resumePreviewDialogOpen = ref(false);
+const anyModalOpen = computed(
+  () => scoutJobPicker.value.open || resumePreviewDialogOpen.value,
+);
+useBodyScrollLock(anyModalOpen);
 const scoutModalRef = useModalA11y(
   computed(() => scoutJobPicker.value.open),
   closeScoutJobPicker,
+);
+const resumePreviewModalRef = useModalA11y(
+  resumePreviewDialogOpen,
+  closeResumePreviewDialog,
 );
 
 function clearScoutJobKeyword() {
@@ -207,9 +235,12 @@ function clearScoutJobKeyword() {
 }
 
 async function openResumePreview(freelancerId: string) {
+  resumePreviewDialogOpen.value = true;
   await selectPreview(freelancerId);
-  await nextTick();
-  previewPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeResumePreviewDialog() {
+  resumePreviewDialogOpen.value = false;
 }
 </script>
 
@@ -324,6 +355,11 @@ async function openResumePreview(freelancerId: string) {
   box-shadow: 0 24px 60px rgba(10, 37, 68, 0.22);
 }
 
+.previewModalPanel {
+  width: min(1080px, 100%);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
 .modalHeader {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -365,6 +401,13 @@ async function openResumePreview(freelancerId: string) {
   font-size: 22px;
   font-weight: 900;
   line-height: 1;
+}
+
+.previewModalBody {
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 20px;
+  background: #f8fbff;
 }
 
 .jobSearch {
@@ -484,6 +527,7 @@ async function openResumePreview(freelancerId: string) {
   .modalHeader,
   .jobSearch,
   .jobList,
+  .previewModalBody,
   .modalActions {
     padding: 14px;
   }

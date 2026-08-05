@@ -187,16 +187,21 @@ describe("UIアクセシビリティ・ローディング体験", () => {
   });
 
   /**
-   * @testData ScoutPageのレジュメpreview event、preview panel、ResumePreview配置。
-   * @expected スカウト画面のレジュメボタン押下後、画面内のプレビューパネルでレジュメを確認できる。
+   * @testData ScoutPageのレジュメpreview event、dialog状態、ResumePreview配置、旧scroll誘導。
+   * @expected スカウト画面のレジュメボタン押下後、下部へスクロールせずdialog上でレジュメを確認できる。
    */
-  it("scout page renders resume preview in place", () => {
+  it("scout page renders resume preview in a dialog", () => {
     const scoutPage = read("Frontend/components/pages/ScoutPage.vue");
 
     assert.match(scoutPage, /@preview="openResumePreview"/);
-    assert.match(scoutPage, /ref="previewPanelRef"/);
+    assert.match(scoutPage, /resumePreviewDialogOpen/);
+    assert.match(scoutPage, /ref="resumePreviewModalRef"/);
+    assert.match(scoutPage, /aria-labelledby="resume-preview-title"/);
+    assert.match(scoutPage, /aria-label="レジュメ確認を閉じる"/);
     assert.match(scoutPage, /<ResumePreview \/>/);
-    assert.match(scoutPage, /previewPanelRef\.value\?\.scrollIntoView/);
+    assert.match(scoutPage, /useBodyScrollLock\(anyModalOpen\)/);
+    assert.doesNotMatch(scoutPage, /previewPanelRef/);
+    assert.doesNotMatch(scoutPage, /scrollIntoView/);
   });
 
   /**
