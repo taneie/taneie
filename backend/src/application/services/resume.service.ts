@@ -8,11 +8,6 @@ import {
 import { Storage } from "@google-cloud/storage";
 import type { PrismaClient } from "@prisma/client";
 import { randomUUID } from "node:crypto";
-import { Readable } from "node:stream";
-import type { ReadableStream as NodeReadableStream } from "node:stream/web";
-import mammoth from "mammoth";
-import sanitizeHtml from "sanitize-html";
-import * as XLSX from "xlsx";
 import { AppError, type AuthContext } from "../../domain/types.js";
 import {
   config,
@@ -58,7 +53,23 @@ const genericMimeTypes = new Set([
   "binary/octet-stream",
 ]);
 
+const officePreviewMimeTypes = new Set([
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
+const previewUrlTtlMs = 10 * 60 * 1000;
 const storage = new Storage();
+
+export function isOfficePreviewMimeType(mimeType: string) {
+  return officePreviewMimeTypes.has(mimeType);
+}
+
+export function toOfficeViewerUrl(fileUrl: string) {
+  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+}
 
 export class ResumeService {
   constructor(private readonly db: PrismaClient) {}
@@ -216,53 +227,22 @@ export class ResumeService {
       expiresAt: "",
     };
 
-    if (mimeType === "application/pdf") {
-      if (usesGcsResumeStorage()) {
-        const [buffer] = await this.gcsFile(uploadedFile.blobPath).download();
-        return {
-          ...basePreview,
-          previewKind: "pdf" as const,
-          previewUrl: `data:application/pdf;base64,${buffer.toString("base64")}`,
-        };
-      }
-      const validUntil = Date.now() + 10 * 60 * 1000;
-      const signedToken = await issueSignedToken({
-        token: config.blobReadWriteToken,
-        pathname: uploadedFile.blobPath,
-        operations: ["get"],
-        validUntil,
-      });
-      const { presignedUrl } = await presignUrl(signedToken, {
-        access: "private",
-        operation: "get",
-        pathname: uploadedFile.blobPath,
-        validUntil,
-      });
-
-      return {
-        ...basePreview,
-        previewKind: "pdf" as const,
-        previewUrl: presignedUrl,
-        expiresAt: new Date(validUntil).toISOString(),
-      };
-    }
-
-    if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-      return {
-        ...basePreview,
-        previewKind: "html" as const,
-        html: await this.createDocxPreviewHtml(uploadedFile.blobPath),
-      };
-    }
-
     if (
-      mimeType === "application/vnd.ms-excel" ||
-      mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      mimeType === "application/pdf" ||
+      isOfficePreviewMimeType(mimeType)
     ) {
+      const { url, expiresAt } = await this.createSignedReadUrl(
+        uploadedFile.blobPath,
+      );
       return {
         ...basePreview,
-        previewKind: "html" as const,
-        html: await this.createExcelPreviewHtml(uploadedFile.blobPath),
+        previewKind:
+          mimeType === "application/pdf"
+            ? ("pdf" as const)
+            : ("office" as const),
+        previewUrl:
+          mimeType === "application/pdf" ? url : toOfficeViewerUrl(url),
+        expiresAt,
       };
     }
 
@@ -340,109 +320,6 @@ export class ResumeService {
     }
 
     return { profile, latestResume, uploadedFile };
-  }
-
-  private async createDocxPreviewHtml(blobPath: string) {
-    const buffer = await this.readBlobBuffer(blobPath);
-    const result = await mammoth.convertToHtml({ buffer });
-
-    return this.sanitizePreviewHtml(result.value);
-  }
-
-  private async createExcelPreviewHtml(blobPath: string) {
-    const buffer = await this.readBlobBuffer(blobPath);
-    const workbook = XLSX.read(buffer, { type: "buffer" });
-    const sheets = workbook.SheetNames.slice(0, 5)
-      .map((sheetName) => {
-        const sheet = workbook.Sheets[sheetName];
-        if (!sheet) return "";
-        const html = XLSX.utils.sheet_to_html(sheet, {
-          id: `resume-sheet-${sheetName.replace(/[^a-zA-Z0-9_-]/g, "-")}`,
-        });
-
-        return `<section><h3>${this.escapeHtml(sheetName)}</h3>${html}</section>`;
-      })
-      .filter(Boolean)
-      .join("");
-
-    return this.sanitizePreviewHtml(sheets || "<p>表示できるシートがありません。</p>");
-  }
-
-  private async readBlobBuffer(blobPath: string) {
-    if (usesGcsResumeStorage()) {
-      const [buffer] = await this.gcsFile(blobPath).download();
-      return buffer;
-    }
-    const blobResult = await get(blobPath, {
-      access: "private",
-      token: config.blobReadWriteToken,
-      useCache: false,
-    });
-    if (!blobResult || blobResult.statusCode !== 200 || !blobResult.stream) {
-      throw new AppError(404, "レジュメが見つかりません。", "RESUME_NOT_FOUND");
-    }
-    const nodeStream = Readable.fromWeb(
-      blobResult.stream as unknown as NodeReadableStream<Uint8Array>,
-    );
-    const chunks: Buffer[] = [];
-    for await (const chunk of nodeStream) {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    }
-
-    return Buffer.concat(chunks);
-  }
-
-  private sanitizePreviewHtml(html: string) {
-    return sanitizeHtml(html, {
-      allowedTags: [
-        "a",
-        "b",
-        "blockquote",
-        "br",
-        "caption",
-        "code",
-        "div",
-        "em",
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "li",
-        "ol",
-        "p",
-        "pre",
-        "section",
-        "span",
-        "strong",
-        "sub",
-        "sup",
-        "table",
-        "tbody",
-        "td",
-        "tfoot",
-        "th",
-        "thead",
-        "tr",
-        "u",
-        "ul",
-      ],
-      allowedAttributes: {
-        a: ["href", "name", "target"],
-        table: ["id"],
-        td: ["colspan", "rowspan"],
-        th: ["colspan", "rowspan"],
-      },
-      allowedSchemes: ["http", "https", "mailto"],
-    });
-  }
-
-  private escapeHtml(value: string) {
-    return value
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
   }
 
   private async createLatestRecord(
@@ -605,6 +482,34 @@ export class ResumeService {
   private gcsFile(pathname: string) {
     this.assertGcsConfigured();
     return storage.bucket(config.gcsBucketName).file(pathname);
+  }
+
+  private async createSignedReadUrl(blobPath: string) {
+    const validUntil = Date.now() + previewUrlTtlMs;
+    if (usesGcsResumeStorage()) {
+      const [url] = await this.gcsFile(blobPath).getSignedUrl({
+        action: "read",
+        expires: validUntil,
+        version: "v4",
+      });
+
+      return { url, expiresAt: new Date(validUntil).toISOString() };
+    }
+
+    const signedToken = await issueSignedToken({
+      token: config.blobReadWriteToken,
+      pathname: blobPath,
+      operations: ["get"],
+      validUntil,
+    });
+    const { presignedUrl } = await presignUrl(signedToken, {
+      access: "private",
+      operation: "get",
+      pathname: blobPath,
+      validUntil,
+    });
+
+    return { url: presignedUrl, expiresAt: new Date(validUntil).toISOString() };
   }
 
   private async assertApplicationOwner(userId: string, applicationId?: string) {

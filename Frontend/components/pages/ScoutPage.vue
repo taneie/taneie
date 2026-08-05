@@ -43,10 +43,23 @@
     <ScoutFreelancerList
       :freelancers="filteredFreelancers"
       @scout="openScoutJobPicker"
-      @preview="selectPreview"
+      @preview="openResumePreview"
       @clear="clearScoutFilter"
     />
   </div>
+
+  <section
+    v-if="state.previewFreelancerId"
+    ref="previewPanelRef"
+    :class="$style.panel"
+  >
+    <div :class="$style.panelHeader">
+      <h2 :class="$style.panelTitle">レジュメ確認</h2>
+    </div>
+    <div :class="$style.panelBody">
+      <ResumePreview />
+    </div>
+  </section>
 
   <div
     v-if="scoutJobPicker.open"
@@ -159,11 +172,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { useBodyScrollLock } from "~/composables/frichy/useBodyScrollLock";
 import { useModalA11y } from "~/composables/frichy/useModalA11y";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 const {
+  state,
   scoutFilters,
   scoutJobPicker,
   filteredFreelancers,
@@ -180,6 +194,7 @@ const {
   streamTone,
 } = useFrichyRuntime();
 
+const previewPanelRef = ref<HTMLElement | null>(null);
 useBodyScrollLock(computed(() => scoutJobPicker.value.open));
 const scoutModalRef = useModalA11y(
   computed(() => scoutJobPicker.value.open),
@@ -190,6 +205,12 @@ function clearScoutJobKeyword() {
   scoutJobPicker.value.keyword = "";
   void searchScoutableJobs();
 }
+
+async function openResumePreview(freelancerId: string) {
+  await selectPreview(freelancerId);
+  await nextTick();
+  previewPanelRef.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 </script>
 
 <style module>
@@ -197,6 +218,7 @@ function clearScoutJobKeyword() {
   display: grid;
   gap: 16px;
   min-width: 0;
+  margin-bottom: 16px;
 }
 
 .grid > *,

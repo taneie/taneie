@@ -185,4 +185,31 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(profileWizard, /resumeInput\.value\.click\(\)/);
     assert.match(profileWizard, /\.fileInput\s*\{[\s\S]*position:\s*absolute/);
   });
+
+  /**
+   * @testData ScoutPageのレジュメpreview event、preview panel、ResumePreview配置。
+   * @expected スカウト画面のレジュメボタン押下後、画面内のプレビューパネルでレジュメを確認できる。
+   */
+  it("scout page renders resume preview in place", () => {
+    const scoutPage = read("Frontend/components/pages/ScoutPage.vue");
+
+    assert.match(scoutPage, /@preview="openResumePreview"/);
+    assert.match(scoutPage, /ref="previewPanelRef"/);
+    assert.match(scoutPage, /<ResumePreview \/>/);
+    assert.match(scoutPage, /previewPanelRef\.value\?\.scrollIntoView/);
+  });
+
+  /**
+   * @testData ResumePreviewのiframe preview、download action、旧HTML文字列preview。
+   * @expected PDF/OfficeともにpreviewUrlをiframeに渡し、`v-html`による文字列プレビューに戻らない。
+   */
+  it("resume preview uses viewer iframe instead of HTML string conversion", () => {
+    const resumePreview = read("Frontend/components/organisms/ResumePreview.vue");
+
+    assert.match(resumePreview, /<iframe[\s\S]*:src="preview\.previewUrl"/);
+    assert.match(resumePreview, /別タブで開く/);
+    assert.match(resumePreview, /downloadResumePreview/);
+    assert.doesNotMatch(resumePreview, /v-html/);
+    assert.doesNotMatch(resumePreview, /documentPreview/);
+  });
 });

@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { ResumeService } from "../backend/src/application/services/resume.service";
+import {
+  isOfficePreviewMimeType,
+  ResumeService,
+  toOfficeViewerUrl,
+} from "../backend/src/application/services/resume.service";
 
 describe("レジュメサービス", () => {
   /**
@@ -43,5 +47,42 @@ describe("レジュメサービス", () => {
         ),
       /アップロード情報が不正です。/,
     );
+  });
+
+  /**
+   * @testData アップロード許可済みのWord/Excel MIMEとPDF MIME。
+   * @expected PDF以外の許可Office形式はすべてOfficeプレビュー対象になり、PDFはOffice対象外になる。
+   */
+  it("isOfficePreviewMimeType accepts all allowed Word and Excel MIME types", () => {
+    assert.equal(isOfficePreviewMimeType("application/msword"), true);
+    assert.equal(
+      isOfficePreviewMimeType(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ),
+      true,
+    );
+    assert.equal(isOfficePreviewMimeType("application/vnd.ms-excel"), true);
+    assert.equal(
+      isOfficePreviewMimeType(
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ),
+      true,
+    );
+    assert.equal(isOfficePreviewMimeType("application/pdf"), false);
+  });
+
+  /**
+   * @testData query string付き一時署名URL。
+   * @expected Office Web Viewerのembed URLとして、元URL全体が`src`にURLエンコードされる。
+   */
+  it("toOfficeViewerUrl builds an embeddable Office viewer URL", () => {
+    const signedUrl = "https://storage.example.test/resume.docx?X-Goog-Signature=abc";
+    const viewerUrl = toOfficeViewerUrl(signedUrl);
+
+    assert.match(
+      viewerUrl,
+      /^https:\/\/view\.officeapps\.live\.com\/op\/embed\.aspx\?src=/,
+    );
+    assert.match(viewerUrl, /resume\.docx%3FX-Goog-Signature%3Dabc/);
   });
 });

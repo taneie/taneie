@@ -8,14 +8,18 @@
           {{ freelancer.availability }}
         </p>
       </div>
-      <button
-        v-if="preview"
-        type="button"
-        :class="$style.linkAction"
-        @click="isPdf ? openPdfPreview() : downloadResumePreview()"
-      >
-        {{ isPdf ? "開く" : "ダウンロード" }}
-      </button>
+      <div v-if="preview" :class="$style.headerActions">
+        <button type="button" :class="$style.linkAction" @click="openPreview">
+          別タブで開く
+        </button>
+        <button
+          type="button"
+          :class="$style.linkAction"
+          @click="downloadResumePreview"
+        >
+          ダウンロード
+        </button>
+      </div>
     </div>
 
     <div v-if="resumePreviewLoading" :class="$style.empty">
@@ -25,20 +29,15 @@
       {{ resumePreviewError }}
     </div>
     <iframe
-      v-else-if="isPdf && preview?.previewUrl"
+      v-else-if="preview?.previewUrl"
       :class="$style.viewer"
       :src="preview.previewUrl"
       title="レジュメプレビュー"
     />
-    <div
-      v-else-if="isHtmlPreview"
-      :class="$style.documentPreview"
-      v-html="preview?.html"
-    />
     <div v-else-if="preview" :class="$style.officePreview">
       <strong>{{ preview.fileName }}</strong>
       <p>
-        この形式はブラウザ内プレビューに対応していないため、ダウンロードして確認してください。
+        プレビューURLを取得できませんでした。ダウンロードして確認してください。
       </p>
       <button
         type="button"
@@ -86,13 +85,7 @@ const freelancer = computed(() => {
 
 const preview = computed(() => resumePreview.value);
 
-const isPdf = computed(() => preview.value?.mimeType === "application/pdf");
-
-const isHtmlPreview = computed(
-  () => preview.value?.previewKind === "html" && Boolean(preview.value.html),
-);
-
-function openPdfPreview() {
+function openPreview() {
   if (!preview.value?.previewUrl) return;
   window.open(preview.value.previewUrl, "_blank", "noopener");
 }
@@ -126,6 +119,13 @@ function openPdfPreview() {
   margin-bottom: 14px;
 }
 
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .viewer {
   width: 100%;
   min-height: 640px;
@@ -141,47 +141,6 @@ function openPdfPreview() {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #f8fbff;
-}
-
-.documentPreview {
-  max-height: 680px;
-  overflow: auto;
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-  color: #10294f;
-}
-
-.documentPreview :global(table) {
-  width: max-content;
-  min-width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.documentPreview :global(th),
-.documentPreview :global(td) {
-  padding: 8px 10px;
-  border: 1px solid #d7e2f0;
-  vertical-align: top;
-}
-
-.documentPreview :global(th) {
-  background: #eef5ff;
-  font-weight: 800;
-}
-
-.documentPreview :global(p) {
-  margin: 0 0 10px;
-  color: #10294f;
-}
-
-.documentPreview :global(h1),
-.documentPreview :global(h2),
-.documentPreview :global(h3) {
-  margin: 16px 0 8px;
-  color: #10294f;
 }
 
 .linkAction {
@@ -238,6 +197,11 @@ function openPdfPreview() {
 
   .header {
     display: grid;
+  }
+
+  .headerActions,
+  .headerActions button {
+    width: 100%;
   }
 
   .viewer {
