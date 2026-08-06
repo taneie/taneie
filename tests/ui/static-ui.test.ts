@@ -121,6 +121,19 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(source, /\.skillExperienceGroup\s*\{[\s\S]*max-height:\s*360px/);
     assert.match(source, /\.skillExperienceGroup\s*\{[\s\S]*overflow-y:\s*auto/);
   });
+
+  /**
+   * @testData TagBadgeの商流/スキル表示、狭いカード幅、長いタグ文字列。
+   * @expected バッジは1行で省略され、折り返しで楕円形に崩れない。
+   */
+  it("tag badges stay single-line to prevent distorted pills", () => {
+    const source = read("Frontend/components/atoms/TagBadge.vue");
+
+    assert.match(source, /\.tag\s*\{[\s\S]*white-space:\s*nowrap/);
+    assert.match(source, /\.tag\s*\{[\s\S]*overflow:\s*hidden/);
+    assert.match(source, /\.tag\s*\{[\s\S]*text-overflow:\s*ellipsis/);
+    assert.doesNotMatch(source, /white-space:\s*normal/);
+  });
 });
 
 describe("UIアクセシビリティ・ローディング体験", () => {

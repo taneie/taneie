@@ -22,6 +22,7 @@ const toneClass = computed(() => (props.tone ? css[props.tone] : ""));
 .tag {
   display: inline-flex;
   align-items: center;
+  flex: 0 1 auto;
   max-width: 100%;
   min-width: 0;
   min-height: 25px;
@@ -32,8 +33,10 @@ const toneClass = computed(() => (props.tone ? css[props.tone] : ""));
   font-size: 12px;
   font-weight: 700;
   line-height: 1.35;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
 }
 
 .teal {
