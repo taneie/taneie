@@ -692,8 +692,16 @@ textarea.control {
 }
 
 .skillExperienceGroup {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: start;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.skillExperienceGroup legend {
+  grid-column: 1 / -1;
 }
 
 .checkboxPill {

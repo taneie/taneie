@@ -108,6 +108,19 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(source, /\.featureBody strong\s*\{[\s\S]*font-size:\s*17px/);
     assert.match(source, /@media \(max-width:\s*980px\)[\s\S]*grid-template-columns:\s*1fr/);
   });
+
+  /**
+   * @testData ProfileWizardのスキルごとの経験年数fieldsetと、選択スキル増加時のgrid/scroll制御。
+   * @expected 経験年数欄はフォーム全幅で可変列表示になり、高さ上限を持ってフォーム全体を伸ばしすぎない。
+   */
+  it("profile skill experience inputs keep a bounded responsive grid", () => {
+    const source = read("Frontend/components/organisms/ProfileWizard.vue");
+
+    assert.match(source, /\.skillExperienceGroup\s*\{[\s\S]*grid-column:\s*1 \/ -1/);
+    assert.match(source, /\.skillExperienceGroup\s*\{[\s\S]*repeat\(auto-fit,\s*minmax\(180px,\s*1fr\)\)/);
+    assert.match(source, /\.skillExperienceGroup\s*\{[\s\S]*max-height:\s*360px/);
+    assert.match(source, /\.skillExperienceGroup\s*\{[\s\S]*overflow-y:\s*auto/);
+  });
 });
 
 describe("UIアクセシビリティ・ローディング体験", () => {
