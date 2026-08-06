@@ -271,4 +271,20 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.doesNotMatch(pdfBlock, /補足|備考/);
     assert.doesNotMatch(pdfBlock, /anonymous-skill-sheet/);
   });
+
+  /**
+   * @testData AppHeaderのmeeting/contact nav、未読チャット数、status=newの問い合わせ。
+   * @expected 面談・問い合わせナビには件数バッジが表示され、問い合わせは未回答分を数える。
+   */
+  it("app header shows numeric badges for unread chats and unanswered inquiries", () => {
+    const appHeader = read("Frontend/components/organisms/AppHeader.vue");
+
+    assert.match(appHeader, /const navBadgeCounts = computed/);
+    assert.match(appHeader, /meeting:\s*currentUnreadChatCount\.value/);
+    assert.match(appHeader, /contact:\s*state\.value\.contactInquiries\.filter/);
+    assert.match(appHeader, /inquiry\.status === "new"/);
+    assert.match(appHeader, /formatBadgeCount/);
+    assert.match(appHeader, /\$style\.navBadge/);
+    assert.doesNotMatch(appHeader, /currentRole === 'freelancer'/);
+  });
 });

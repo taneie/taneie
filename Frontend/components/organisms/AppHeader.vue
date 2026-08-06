@@ -24,14 +24,12 @@
           <AppIcon :name="item.icon" />
           <span>{{ item.label }}</span>
           <span
-            v-if="
-              item.view === 'meeting' &&
-              currentRole === 'freelancer' &&
-              currentUnreadChatCount
-            "
-            :class="$style.unreadBadge"
-            aria-label="未読あり"
-          />
+            v-if="navBadgeCounts[item.view]"
+            :class="$style.navBadge"
+            :aria-label="`${item.label}に${navBadgeCounts[item.view]}件の未対応があります`"
+          >
+            {{ formatBadgeCount(navBadgeCounts[item.view]) }}
+          </span>
         </button>
       </nav>
 
@@ -53,8 +51,9 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import type { ViewKey } from "~/composables/frichy/types";
 
 const {
   state,
@@ -68,6 +67,17 @@ const {
 
 const topbarRef = ref<HTMLElement | null>(null);
 let headerObserver: ResizeObserver | undefined;
+
+const navBadgeCounts = computed<Partial<Record<ViewKey, number>>>(() => ({
+  meeting: currentUnreadChatCount.value,
+  contact: state.value.contactInquiries.filter(
+    (inquiry) => inquiry.status === "new",
+  ).length,
+}));
+
+function formatBadgeCount(count = 0) {
+  return count > 99 ? "99+" : String(count);
+}
 
 function goRoleHome() {
   void setView(currentRole.value === "sales" ? "dashboard" : "jobs");
@@ -189,14 +199,19 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.unreadBadge {
-  display: inline-block;
-  width: 9px;
-  min-width: 9px;
-  height: 9px;
-  padding: 0;
+.navBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
   border-radius: 999px;
   background: #d92d20;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .accountBar {
