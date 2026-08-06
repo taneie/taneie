@@ -9,6 +9,7 @@ import {
 } from "../middleware.js";
 import {
   answerContactInquirySchema,
+  contactInquiryMessageSchema,
   createContactInquirySchema,
 } from "../schemas.js";
 
@@ -43,6 +44,27 @@ export function registerContactRoutes(
       res.json(
         await contactService.answerInquiry(req.auth!, id, req.body),
       );
+    }),
+  );
+
+  app.patch(
+    "/api/contact-inquiries/:id/messages",
+    requireAuth,
+    validateBody(contactInquiryMessageSchema),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      res.json(
+        await contactService.addInquiryMessage(req.auth!, id, req.body),
+      );
+    }),
+  );
+
+  app.patch(
+    "/api/contact-inquiries/:id/close",
+    requireAuth,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      res.json(await contactService.closeInquiry(req.auth!, id));
     }),
   );
 }

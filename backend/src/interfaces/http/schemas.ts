@@ -258,6 +258,10 @@ export const answerContactInquirySchema = z.object({
   answerBody: z.string().trim().min(1).max(5000),
 });
 
+export const contactInquiryMessageSchema = z.object({
+  body: z.string().trim().min(1).max(5000),
+});
+
 export const resumeMetadataSchema = z.object({
   originalFilename: z.string().trim().min(1).max(255),
   mimeType: z.string().trim().max(100).optional(),

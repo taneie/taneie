@@ -667,8 +667,8 @@ describe("API面談・メッセージ・問い合わせフロー", () => {
   });
 
   /**
-   * @testData 求職者の問い合わせ作成payload、営業の問い合わせ一覧request、求職者/営業の回答request。
-   * @expected 問い合わせ作成と営業一覧は成功し、求職者回答は403、営業回答後はstatus `answered` と回答本文が返る。
+   * @testData 求職者の問い合わせ作成payload、営業の問い合わせ一覧request、求職者/営業の回答/追加メッセージ/クローズrequest。
+   * @expected 作成と営業一覧は成功し、求職者回答は403、営業回答後はanswered、求職者追記でnew、営業追記でanswered、クローズ後の追記は409になる。
    */
   it("contact inquiries can be created, listed, and answered by sales only", async () => {
     const freelancer = await login(
@@ -729,6 +729,57 @@ describe("API面談・メッセージ・問い合わせフロー", () => {
     assert.equal(answered.status, 200);
     assert.equal(answered.data.status, "answered");
     assert.equal(answered.data.answerBody, "回答本文");
+
+    const freelancerMessage = await server.request<{
+      status: string;
+      answerBody: string;
+    }>(
+      `/contact-inquiries/${inquiry.data.id}/messages`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ body: "追加質問です" }),
+      },
+      freelancer.token,
+    );
+    assert.equal(freelancerMessage.status, 200);
+    assert.equal(freelancerMessage.data.status, "new");
+    assert.match(freelancerMessage.data.answerBody, /回答本文/);
+    assert.match(freelancerMessage.data.answerBody, /求職者/);
+    assert.match(freelancerMessage.data.answerBody, /追加質問です/);
+
+    const salesMessage = await server.request<{
+      status: string;
+      answerBody: string;
+    }>(
+      `/contact-inquiries/${inquiry.data.id}/messages`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ body: "追加回答です" }),
+      },
+      sales.token,
+    );
+    assert.equal(salesMessage.status, 200);
+    assert.equal(salesMessage.data.status, "answered");
+    assert.match(salesMessage.data.answerBody, /営業/);
+    assert.match(salesMessage.data.answerBody, /追加回答です/);
+
+    const closed = await server.request<{ status: string }>(
+      `/contact-inquiries/${inquiry.data.id}/close`,
+      { method: "PATCH" },
+      freelancer.token,
+    );
+    assert.equal(closed.status, 200);
+    assert.equal(closed.data.status, "closed");
+
+    const closedMessage = await server.request(
+      `/contact-inquiries/${inquiry.data.id}/messages`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ body: "クローズ後の追記" }),
+      },
+      sales.token,
+    );
+    expectErrorCode(closedMessage, 409, "CONTACT_CLOSED");
 
     const list = await server.request<Array<{ id: string }>>(
       "/contact-inquiries",

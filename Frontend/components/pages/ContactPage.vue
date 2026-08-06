@@ -76,24 +76,47 @@
               <p>{{ inquiry.answerBody }}</p>
             </div>
 
-            <form :class="$style.answerForm" @submit.prevent="answer(inquiry.id)">
-              <FieldLabel label="回答内容" full>
+            <form
+              v-if="canReplyToInquiry(inquiry)"
+              :class="$style.answerForm"
+              @submit.prevent="
+                inquiry.answerBody
+                  ? sendAdditionalMessage(inquiry.id)
+                  : answer(inquiry.id)
+              "
+            >
+              <FieldLabel :label="inquiry.answerBody ? '追加メッセージ' : '回答内容'" full>
                 <AppTextarea
+                  v-if="inquiry.answerBody"
+                  v-model="messageForms[inquiry.id]"
+                  name="contactMessageBody"
+                  placeholder="追加メッセージを入力してください"
+                  @update:model-value="markDirty"
+                />
+                <AppTextarea
+                  v-else
                   v-model="answerForms[inquiry.id]"
                   name="answerBody"
-                  :placeholder="
-                    inquiry.answerBody
-                      ? '回答を更新する場合は入力してください'
-                      : '回答を入力してください'
-                  "
+                  placeholder="回答を入力してください"
+                  @update:model-value="markDirty"
                 />
               </FieldLabel>
               <div :class="$style.actions">
                 <BaseButton type="submit" icon="send">
-                  {{ inquiry.answerBody ? "回答を更新" : "回答する" }}
+                  {{ inquiry.answerBody ? "追加メッセージを送信" : "回答する" }}
+                </BaseButton>
+                <BaseButton
+                  type="button"
+                  variant="secondary"
+                  @click="closeInquiry(inquiry.id)"
+                >
+                  クローズ
                 </BaseButton>
               </div>
             </form>
+            <p v-else :class="$style.pendingText">
+              この問い合わせはクローズされています。
+            </p>
           </div>
         </article>
       </div>
@@ -193,6 +216,35 @@
               </div>
               <p>{{ inquiry.answerBody }}</p>
             </div>
+            <form
+              v-if="inquiry.answerBody && canReplyToInquiry(inquiry)"
+              :class="$style.answerForm"
+              @submit.prevent="sendAdditionalMessage(inquiry.id)"
+            >
+              <FieldLabel label="追加メッセージ" full>
+                <AppTextarea
+                  v-model="messageForms[inquiry.id]"
+                  name="contactMessageBody"
+                  placeholder="回答への確認事項を入力してください"
+                  @update:model-value="markDirty"
+                />
+              </FieldLabel>
+              <div :class="$style.actions">
+                <BaseButton type="submit" icon="send">
+                  追加メッセージを送信
+                </BaseButton>
+                <BaseButton
+                  type="button"
+                  variant="secondary"
+                  @click="closeInquiry(inquiry.id)"
+                >
+                  クローズ
+                </BaseButton>
+              </div>
+            </form>
+            <p v-else-if="inquiry.status === 'closed'" :class="$style.pendingText">
+              この問い合わせはクローズされています。
+            </p>
             <p v-else :class="$style.pendingText">
               営業からの回答をお待ちください。
             </p>
@@ -206,7 +258,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, useCssModule } from "vue";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
-import type { ContactInquiryInput } from "~/composables/frichy/types";
+import type { ContactInquiry, ContactInquiryInput } from "~/composables/frichy/types";
 
 const {
   state,
@@ -215,6 +267,8 @@ const {
   submitContactInquiry,
   loadContactInquiries,
   answerContactInquiry,
+  sendContactInquiryMessage,
+  closeContactInquiry,
   markDirty,
   clearUnsavedChanges,
 } = useFrichyRuntime();
@@ -239,6 +293,7 @@ const form = reactive<ContactInquiryInput>({
   body: "",
 });
 const answerForms = reactive<Record<string, string>>({});
+const messageForms = reactive<Record<string, string>>({});
 const openInquiries = reactive<Record<string, boolean>>({});
 
 onMounted(() => {
@@ -279,11 +334,27 @@ async function answer(id: string) {
   }
 }
 
+async function sendAdditionalMessage(id: string) {
+  if (await sendContactInquiryMessage(id, messageForms[id] || "")) {
+    messageForms[id] = "";
+  }
+}
+
+async function closeInquiry(id: string) {
+  await closeContactInquiry(id);
+}
+
+function canReplyToInquiry(inquiry: ContactInquiry) {
+  return inquiry.status !== "closed";
+}
+
 function statusLabel(status: string) {
+  if (status === "closed") return "クローズ";
   return status === "answered" ? "回答済み" : "未回答";
 }
 
 function statusClass(status: string) {
+  if (status === "closed") return styles.statusClosed;
   return status === "answered" ? styles.statusAnswered : styles.statusNew;
 }
 
@@ -451,6 +522,11 @@ function formatDateTime(value: string) {
 .statusAnswered {
   background: #e6f5ef;
   color: #13704f;
+}
+
+.statusClosed {
+  background: #eef2f7;
+  color: #53657d;
 }
 
 .metaGrid {

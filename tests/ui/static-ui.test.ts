@@ -316,4 +316,26 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(adminPage, /<h2 :class="\$style\.panelTitle">成約・見送り<\/h2>/);
     assert.match(adminPage, /<ApplicationsTable :applications="completedFilteredApplications" with-resume \/>/);
   });
+
+  /**
+   * @testData ContactPageの回答済み問い合わせ、追加メッセージ入力、クローズ操作、runtime/API route。
+   * @expected 回答後の問い合わせに追加メッセージ送信とクローズ操作が表示され、API連携関数も存在する。
+   */
+  it("contact inquiries can be followed up and closed from the UI", () => {
+    const contactPage = read("Frontend/components/pages/ContactPage.vue");
+    const runtime = read("Frontend/composables/frichy/useFrichyRuntime.ts");
+    const routes = read("backend/src/interfaces/http/routes/contact.routes.ts");
+
+    assert.match(contactPage, /sendAdditionalMessage\(inquiry\.id\)/);
+    assert.match(contactPage, /closeInquiry\(inquiry\.id\)/);
+    assert.match(contactPage, /function canReplyToInquiry/);
+    assert.match(contactPage, /status === "closed"/);
+    assert.match(contactPage, /追加メッセージを送信/);
+    assert.match(runtime, /async function sendContactInquiryMessage/);
+    assert.match(runtime, /async function closeContactInquiry/);
+    assert.match(runtime, /\/contact-inquiries\/\$\{id\}\/messages/);
+    assert.match(runtime, /\/contact-inquiries\/\$\{id\}\/close/);
+    assert.match(routes, /"\/api\/contact-inquiries\/:id\/messages"/);
+    assert.match(routes, /"\/api\/contact-inquiries\/:id\/close"/);
+  });
 });

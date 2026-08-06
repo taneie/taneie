@@ -2059,9 +2059,7 @@ async function answerContactInquiry(id: string, answerBody: string) {
         body: JSON.stringify({ answerBody }),
       },
     );
-    state.value.contactInquiries = state.value.contactInquiries.map((item) =>
-      item.id === inquiry.id ? inquiry : item,
-    );
+    updateContactInquiryInState(inquiry);
     showToast("問い合わせに回答しました。");
     persist();
     return true;
@@ -2069,6 +2067,57 @@ async function answerContactInquiry(id: string, answerBody: string) {
     showToast(error instanceof Error ? error.message : "回答に失敗しました。");
     return false;
   }
+}
+
+async function sendContactInquiryMessage(id: string, body: string) {
+  const trimmedBody = body.trim();
+  if (!trimmedBody) {
+    showToast("追加メッセージを入力してください。");
+    return false;
+  }
+
+  try {
+    const inquiry = await apiRequest<ContactInquiry>(
+      `/contact-inquiries/${id}/messages`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ body: trimmedBody }),
+      },
+    );
+    updateContactInquiryInState(inquiry);
+    showToast("追加メッセージを送信しました。");
+    persist();
+    return true;
+  } catch (error) {
+    showToast(
+      error instanceof Error ? error.message : "追加メッセージの送信に失敗しました。",
+    );
+    return false;
+  }
+}
+
+async function closeContactInquiry(id: string) {
+  try {
+    const inquiry = await apiRequest<ContactInquiry>(
+      `/contact-inquiries/${id}/close`,
+      { method: "PATCH" },
+    );
+    updateContactInquiryInState(inquiry);
+    showToast("問い合わせをクローズしました。");
+    persist();
+    return true;
+  } catch (error) {
+    showToast(
+      error instanceof Error ? error.message : "問い合わせのクローズに失敗しました。",
+    );
+    return false;
+  }
+}
+
+function updateContactInquiryInState(inquiry: ContactInquiry) {
+  state.value.contactInquiries = state.value.contactInquiries.map((item) =>
+    item.id === inquiry.id ? inquiry : item,
+  );
 }
 
 function mergeMessages(messages: Message[]) {
@@ -2849,6 +2898,8 @@ export function useFrichyRuntime() {
     submitContactInquiry,
     loadContactInquiries,
     answerContactInquiry,
+    sendContactInquiryMessage,
+    closeContactInquiry,
     markActiveChatAsRead,
     aliveCheck,
     downloadSheetPdf,
