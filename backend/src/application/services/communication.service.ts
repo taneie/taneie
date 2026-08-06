@@ -1,6 +1,12 @@
 import type { PrismaClient } from "@prisma/client";
 import { notifyUser } from "../../infrastructure/push.js";
 import { decryptText, encryptText } from "../../infrastructure/crypto.js";
+import { config } from "../../infrastructure/config.js";
+import {
+  buildAliveCheckEmail,
+  createEmailSender,
+  type EmailSender,
+} from "../../infrastructure/email.js";
 import {
   AppError,
   labelToMeetingStatus,
@@ -9,7 +15,10 @@ import {
 import { mapMessage } from "../mappers.js";
 
 export class CommunicationService {
-  constructor(private readonly db: PrismaClient) {}
+  constructor(
+    private readonly db: PrismaClient,
+    private readonly emailSender: EmailSender = createEmailSender(),
+  ) {}
 
   async listMeetings(context: AuthContext, freelancerProfileId?: string) {
     const where =
@@ -229,17 +238,78 @@ export class CommunicationService {
           { lastUpdatedOn: { lt: new Date(Date.now() - 14 * 86400000) } },
         ],
       },
-      select: { id: true },
+      select: {
+        id: true,
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+      },
     });
-    return this.db.aliveCheckBatch.create({
+
+    if (targets.length > 0) {
+      this.emailSender.assertReady();
+    }
+
+    const batch = await this.db.aliveCheckBatch.create({
       data: {
         executedBy,
         targetCount: targets.length,
         targets: {
-          create: targets.map((target) => ({ freelancerProfileId: target.id })),
+          create: targets.map((target) => ({
+            freelancerProfileId: target.id,
+            status: "pending",
+          })),
         },
       },
       include: { targets: true },
     });
+
+    let mailSentCount = 0;
+    let mailFailedCount = 0;
+
+    await Promise.all(
+      batch.targets.map(async (target) => {
+        const profile = targets.find(
+          (item) => item.id === target.freelancerProfileId,
+        );
+        if (!profile) return;
+
+        try {
+          const email = buildAliveCheckEmail({
+            recipientName: decryptText(profile.user.name),
+            appUrl: config.appPublicUrl,
+          });
+          await this.emailSender.send({
+            to: decryptText(profile.user.email),
+            ...email,
+          });
+          mailSentCount += 1;
+          await this.db.aliveCheckTarget.update({
+            where: { id: target.id },
+            data: { status: "sent", sentAt: new Date() },
+          });
+        } catch (error) {
+          mailFailedCount += 1;
+          await this.db.aliveCheckTarget.update({
+            where: { id: target.id },
+            data: { status: "failed" },
+          });
+          console.error("Alive check email failed", {
+            targetId: target.id,
+            freelancerProfileId: target.freelancerProfileId,
+            error,
+          });
+        }
+      }),
+    );
+
+    return {
+      ...batch,
+      mailSentCount,
+      mailFailedCount,
+    };
   }
 }

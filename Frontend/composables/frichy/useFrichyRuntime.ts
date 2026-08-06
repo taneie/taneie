@@ -2128,6 +2128,8 @@ async function aliveCheck() {
     const batch = await apiRequest<{
       id: string;
       targetCount: number;
+      mailSentCount?: number;
+      mailFailedCount?: number;
       executedAt: string;
     }>("/alive-checks", { method: "POST" });
     state.value.aliveChecks.push({
@@ -2136,7 +2138,19 @@ async function aliveCheck() {
       at: batch.executedAt,
     });
     persist();
-    showToast(`${batch.targetCount}名に生存確認メールを送信しました。`);
+    const sentCount = batch.mailSentCount ?? batch.targetCount;
+    const failedCount = batch.mailFailedCount ?? 0;
+    if (batch.targetCount === 0) {
+      showToast("生存確認の対象者はいません。");
+      return;
+    }
+    if (failedCount > 0) {
+      showToast(
+        `${sentCount}名に送信しました。${failedCount}名は送信に失敗しました。`,
+      );
+      return;
+    }
+    showToast(`${sentCount}名に生存確認メールを送信しました。`);
   } catch (error) {
     showToast(
       error instanceof Error ? error.message : "生存確認に失敗しました。",

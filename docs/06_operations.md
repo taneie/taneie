@@ -388,10 +388,14 @@ docker compose down -v
 | `JWT_SECRET`             |           ○ | `replace-with-a-long-random-secret`                                              | JWT署名鍵。本番では長いランダム値必須 |
 | `JWT_EXPIRES_IN`         |           - | `7d`                                                                             | JWT有効期限                           |
 | `CORS_ORIGIN`            |           - | `http://127.0.0.1:5173,http://localhost:5173`                                    | CORS許可オリジン                      |
+| `APP_PUBLIC_URL`         |           - | `https://<production-domain-or-cloud-run-url>`                                   | メール本文に記載するFrichy公開URL     |
 | `PRIVACY_POLICY_VERSION` |           - | `2026-06-10`                                                                     | 同意記録に保存するポリシー版          |
 | `WEB_PUSH_PUBLIC_KEY`    | 通知利用時○ | 空                                                                               | VAPID公開鍵                           |
 | `WEB_PUSH_PRIVATE_KEY`   | 通知利用時○ | 空                                                                               | VAPID秘密鍵                           |
 | `WEB_PUSH_SUBJECT`       | 通知利用時○ | `mailto:admin@example.com`                                                       | VAPID subject                         |
+| `RESEND_API_KEY`         | メール利用時○ | 空                                                                             | 生存確認メール送信用のResend API key  |
+| `EMAIL_FROM`             | メール利用時○ | `Frichy <noreply@example.com>`                                                  | 生存確認メールの送信元。Resendで検証済みのドメインを使う |
+| `EMAIL_REPLY_TO`         |           - | `sales@example.com`                                                              | 生存確認メールの返信先                |
 | `DATA_ENCRYPTION_KEY`    |       本番○ | 空                                                                               | 個人情報暗号化鍵                      |
 | `GCS_BUCKET_NAME`          |       本番○ | 空                                                                               | 本番レジュメ保存用のGoogle Cloud Storage bucket名 |
 | `BLOB_READ_WRITE_TOKEN`   |  Blob利用時○ | 空                                                                               | Vercel Blob private store の読み書きトークン。開発環境でBlobを使う場合のみ |
@@ -559,6 +563,7 @@ curl -i https://frichy-322534405950.asia-northeast1.run.app/api/health
 | 認証 | 営業ユーザーまたは検証用ユーザーでログインできる |
 | 主要API | プロフィール、案件情報、チャットの取得でエラーが出ない |
 | レジュメ | 本番ではGCS保存が有効で、アップロード/閲覧導線が想定通り動く |
+| 生存確認メール | `RESEND_API_KEY` / `EMAIL_FROM` 設定済み環境では営業画面から送信できる |
 
 ### 12.5 Artifact Registryへimageだけpushする手順
 
@@ -576,11 +581,12 @@ Cloud Runへ反映せず、imageだけをArtifact Registryへ置く場合はGitH
 
 | 変更対象 | 反映方法 |
 | -------- | -------- |
-| `DATABASE_URL` / `JWT_SECRET` / `DATA_ENCRYPTION_KEY` / `CORS_ORIGIN` | GCP Secret Managerの新versionを追加し、`Deploy Cloud Run` を再実行する |
-| `NUXT_PUBLIC_API_BASE` / `NUXT_PUBLIC_SHOW_DEMO_LOGIN` / `GCS_BUCKET_NAME` | GitHub Actions Variablesを更新し、`Deploy Cloud Run` を再実行する |
+| `DATABASE_URL` / `JWT_SECRET` / `DATA_ENCRYPTION_KEY` / `CORS_ORIGIN` / `RESEND_API_KEY` | GCP Secret Managerの新versionを追加し、`Deploy Cloud Run` を再実行する |
+| `NUXT_PUBLIC_API_BASE` / `NUXT_PUBLIC_SHOW_DEMO_LOGIN` / `GCS_BUCKET_NAME` / `APP_PUBLIC_URL` / `EMAIL_FROM` / `EMAIL_REPLY_TO` | GitHub Actions Variablesを更新し、`Deploy Cloud Run` を再実行する |
 | Vercel開発環境の値 | Vercel Project SettingsのEnvironment Variablesを更新し、Vercelで再デプロイする |
 
 秘密値はGitHub repositoryへcommitしない。
+`RESEND_API_KEY` をCloud Runへ渡す場合は、GitHub Actions Variable `SECRET_RESEND_API_KEY` にGCP Secret Manager上のsecret名を設定する。
 
 ### 12.7 rollback手順
 

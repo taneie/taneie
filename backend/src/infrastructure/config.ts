@@ -9,21 +9,27 @@ function readEnv(name: string, fallback: string) {
   return value.trim().replace(/^["']|["']$/g, "");
 }
 
+const corsOrigins = readEnv(
+  "CORS_ORIGIN",
+  "http://127.0.0.1:5173,http://localhost:5173",
+)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 export const config = {
   apiPort: Number(process.env.PORT || readEnv("API_PORT", "8787")),
   jwtSecret: readEnv("JWT_SECRET", "local-development-secret-change-me"),
   jwtExpiresIn: readEnv("JWT_EXPIRES_IN", "7d"),
-  corsOrigins: readEnv(
-    "CORS_ORIGIN",
-    "http://127.0.0.1:5173,http://localhost:5173",
-  )
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean),
+  corsOrigins,
+  appPublicUrl: readEnv("APP_PUBLIC_URL", corsOrigins[0] || "http://127.0.0.1:5173"),
   privacyPolicyVersion: readEnv("PRIVACY_POLICY_VERSION", "2026-06-10"),
   webPushPublicKey: readEnv("WEB_PUSH_PUBLIC_KEY", ""),
   webPushPrivateKey: readEnv("WEB_PUSH_PRIVATE_KEY", ""),
   webPushSubject: readEnv("WEB_PUSH_SUBJECT", "mailto:admin@example.com"),
+  resendApiKey: readEnv("RESEND_API_KEY", ""),
+  emailFrom: readEnv("EMAIL_FROM", ""),
+  emailReplyTo: readEnv("EMAIL_REPLY_TO", ""),
   dataEncryptionKey: readEnv("DATA_ENCRYPTION_KEY", ""),
   blobReadWriteToken: readEnv("BLOB_READ_WRITE_TOKEN", ""),
   blobUploadCallbackUrl: readEnv("BLOB_UPLOAD_CALLBACK_URL", ""),

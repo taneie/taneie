@@ -339,10 +339,14 @@ salesは `freelancerProfileId` クエリで対象者を指定できる。
 
 `POST /api/alive-checks`
 
-営業専用。以下のいずれかに該当する求職者を対象に `AliveCheckBatch` と `AliveCheckTarget` を作成する。
+営業専用。以下のいずれかに該当する求職者を対象に `AliveCheckBatch` と `AliveCheckTarget` を作成し、生存確認メールを送信する。
 
 - `availabilityStatus` が `ready` ではない
 - `lastUpdatedOn` が14日以上前
+
+メール送信には `RESEND_API_KEY` と `EMAIL_FROM` が必要。未設定の場合は `EMAIL_NOT_CONFIGURED` を返し、送信済み扱いにはしない。
+
+レスポンスには `targetCount` に加えて `mailSentCount` と `mailFailedCount` を含める。
 
 ## 12. 主なエラーコード
 
@@ -359,4 +363,6 @@ salesは `freelancerProfileId` クエリで対象者を指定できる。
 |  409 | `EMAIL_ALREADY_EXISTS`            | メールアドレス登録済み                   |
 |  409 | `APPLICATION_ALREADY_EXISTS`      | 応募済み                                 |
 |  409 | `UNIQUE_CONSTRAINT`               | 一意制約違反                             |
+|  502 | `EMAIL_DELIVERY_FAILED`           | メール送信サービスで送信失敗             |
+|  503 | `EMAIL_NOT_CONFIGURED`            | メール送信設定が未設定                   |
 |  500 | `INTERNAL_SERVER_ERROR`           | サーバー内部エラー                       |
