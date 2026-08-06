@@ -7,9 +7,9 @@
         </div>
 
         <nav :class="$style.headerNav" aria-label="トップページ">
-          <a href="#features">特徴</a>
-          <a href="#projects">案件例</a>
-          <a href="#flow">ご利用の流れ</a>
+          <a href="#features" @click="handleLandingAnchorClick($event, 'features')">特徴</a>
+          <a href="#projects" @click="handleLandingAnchorClick($event, 'projects')">案件例</a>
+          <a href="#flow" @click="handleLandingAnchorClick($event, 'flow')">ご利用の流れ</a>
         </nav>
 
         <div :class="$style.headerActions">
@@ -141,7 +141,13 @@
                 <button type="button" :class="$style.primaryCta" @click="scrollToRegister">
                   無料で登録する
                 </button>
-                <a href="#projects" :class="$style.secondaryCta">案件例を見る</a>
+                <a
+                  href="#projects"
+                  :class="$style.secondaryCta"
+                  @click="handleLandingAnchorClick($event, 'projects')"
+                >
+                  案件例を見る
+                </a>
               </div>
 
               <dl :class="$style.stats">
@@ -525,8 +531,33 @@ function validateRegisterForm() {
   return !Object.keys(registerErrors).length;
 }
 
+function getLandingScrollTop(target: HTMLElement) {
+  const headerHeight = landingHeaderRef.value?.getBoundingClientRect().height ?? 72;
+  return Math.max(0, target.getBoundingClientRect().top + window.scrollY - headerHeight - 16);
+}
+
+function smoothScrollToSection(id: string) {
+  if (!import.meta.client) return;
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  requestAnimationFrame(() => {
+    window.scrollTo({
+      top: getLandingScrollTop(target),
+      behavior: "smooth",
+    });
+  });
+}
+
+function handleLandingAnchorClick(event: MouseEvent, id: string) {
+  event.preventDefault();
+  closeLoginPopover();
+  smoothScrollToSection(id);
+}
+
 function scrollToRegister() {
-  document.getElementById("register-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  closeLoginPopover();
+  smoothScrollToSection("register-panel");
 }
 
 function syncLandingHeaderHeight() {

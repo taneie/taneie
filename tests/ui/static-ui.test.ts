@@ -163,9 +163,11 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     const loginPanel = read("Frontend/components/organisms/LoginPanel.vue");
     const appShell = read("Frontend/components/templates/AppShell.vue");
 
-    assert.match(loginPanel, /<a href="#features">特徴<\/a>/);
-    assert.match(loginPanel, /<a href="#projects">案件例<\/a>/);
-    assert.match(loginPanel, /<a href="#flow">ご利用の流れ<\/a>/);
+    assert.match(loginPanel, /href="#features"[\s\S]*@click="handleLandingAnchorClick\(\$event, 'features'\)"/);
+    assert.match(loginPanel, /href="#projects"[\s\S]*@click="handleLandingAnchorClick\(\$event, 'projects'\)"/);
+    assert.match(loginPanel, /href="#flow"[\s\S]*@click="handleLandingAnchorClick\(\$event, 'flow'\)"/);
+    assert.match(loginPanel, /function smoothScrollToSection/);
+    assert.match(loginPanel, /function scrollToRegister\(\)[\s\S]*closeLoginPopover\(\)/);
     assert.match(loginPanel, />\s*無料登録\s*</);
     assert.match(appShell, /<DashboardPage v-if="state\.activeView === 'dashboard'"/);
     assert.match(appShell, /<ProfilePage v-else-if="state\.activeView === 'profile'"/);
