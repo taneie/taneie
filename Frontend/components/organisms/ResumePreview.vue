@@ -53,6 +53,7 @@
       v-else-if="preview?.previewUrl"
       :class="$style.viewer"
       :src="preview.previewUrl"
+      allow="unload"
       title="レジュメプレビュー"
     />
     <div v-else-if="preview" :class="$style.officePreview">

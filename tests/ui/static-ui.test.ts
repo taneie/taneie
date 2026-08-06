@@ -245,6 +245,7 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(resumePreview, /@click="loadPreview"/);
     assert.match(resumePreview, /selectPreview\(freelancer\.value\.id\)/);
     assert.match(resumePreview, /<iframe[\s\S]*:src="preview\.previewUrl"/);
+    assert.match(resumePreview, /allow="unload"/);
     assert.match(resumePreview, /別タブで開く/);
     assert.match(resumePreview, /downloadResumePreview/);
     assert.match(resumePreview, /variant\?: "panel" \| "fullscreen"/);
