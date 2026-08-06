@@ -774,6 +774,7 @@ textarea.control {
 .messageBody {
   color: var(--ink);
   line-height: 1.65;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 

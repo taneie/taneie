@@ -238,4 +238,16 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.doesNotMatch(resumePreview, /v-html/);
     assert.doesNotMatch(resumePreview, /documentPreview/);
   });
+
+  /**
+   * @testData MeetingChatのmessage本文描画、改行を含む通常メッセージ、scriptタグを含む悪意ある入力。
+   * @expected 本文はVueの通常テキストバインディングでエスケープされ、改行はCSSで保持される。
+   */
+  it("meeting chat keeps line breaks without enabling HTML execution", () => {
+    const meetingChat = read("Frontend/components/organisms/MeetingChat.vue");
+
+    assert.match(meetingChat, /<div :class="\$style\.messageBody">\{\{ message\.body \}\}<\/div>/);
+    assert.match(meetingChat, /\.messageBody\s*\{[\s\S]*white-space:\s*pre-wrap/);
+    assert.doesNotMatch(meetingChat, /v-html/);
+  });
 });
