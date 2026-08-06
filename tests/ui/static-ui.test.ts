@@ -300,4 +300,19 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(appHeader, /\$style\.navBadge/);
     assert.doesNotMatch(appHeader, /currentRole === 'freelancer'/);
   });
+
+  /**
+   * @testData AdminPageの応募者一覧、成約/見送りステータス、ApplicationsTableへの入力。
+   * @expected 進行中応募と成約・見送り応募が別カードに分かれて表示される。
+   */
+  it("admin applications are split into active and completed cards", () => {
+    const adminPage = read("Frontend/components/pages/AdminPage.vue");
+
+    assert.match(adminPage, /const completedApplicationStatuses: ApplicationStatus\[\] = \["成約", "見送り"\]/);
+    assert.match(adminPage, /const activeFilteredApplications = computed/);
+    assert.match(adminPage, /const completedFilteredApplications = computed/);
+    assert.match(adminPage, /<ApplicationsTable :applications="activeFilteredApplications" with-resume \/>/);
+    assert.match(adminPage, /<h2 :class="\$style\.panelTitle">成約・見送り<\/h2>/);
+    assert.match(adminPage, /<ApplicationsTable :applications="completedFilteredApplications" with-resume \/>/);
+  });
 });

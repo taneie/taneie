@@ -125,10 +125,25 @@
 
   <section :class="[$style.panel, $style.stackMd]">
     <div :class="$style.panelHeader">
-      <h2 :class="$style.panelTitle">応募者一覧・レジュメ</h2>
+      <div :class="$style.panelHeaderText">
+        <h2 :class="$style.panelTitle">応募者一覧・レジュメ</h2>
+        <p :class="$style.panelNote">進行中 {{ activeFilteredApplications.length }}件</p>
+      </div>
     </div>
     <div :class="[$style.panelBody, $style.tableWrap]">
-      <ApplicationsTable :applications="filteredApplications" with-resume />
+      <ApplicationsTable :applications="activeFilteredApplications" with-resume />
+    </div>
+  </section>
+
+  <section :class="[$style.panel, $style.stackMd]">
+    <div :class="$style.panelHeader">
+      <div :class="$style.panelHeaderText">
+        <h2 :class="$style.panelTitle">成約・見送り</h2>
+        <p :class="$style.panelNote">終了 {{ completedFilteredApplications.length }}件</p>
+      </div>
+    </div>
+    <div :class="[$style.panelBody, $style.tableWrap]">
+      <ApplicationsTable :applications="completedFilteredApplications" with-resume />
     </div>
   </section>
 
@@ -194,6 +209,7 @@ const initialJobForm = (): JobInput => ({
 
 const jobForm = reactive<JobInput>(initialJobForm());
 const applicationStatusFilter = ref<ApplicationStatus | "">("");
+const completedApplicationStatuses: ApplicationStatus[] = ["成約", "見送り"];
 
 const closedApplications = computed(
   () =>
@@ -213,6 +229,16 @@ const filteredApplications = computed(() => {
     (application) => application.status === applicationStatusFilter.value,
   );
 });
+const activeFilteredApplications = computed(() =>
+  filteredApplications.value.filter(
+    (application) => !completedApplicationStatuses.includes(application.status),
+  ),
+);
+const completedFilteredApplications = computed(() =>
+  filteredApplications.value.filter((application) =>
+    completedApplicationStatuses.includes(application.status),
+  ),
+);
 const adminMatchTarget = computed(() => {
   const preview = getFreelancer(state.value.previewFreelancerId);
   if (preview) return preview;
