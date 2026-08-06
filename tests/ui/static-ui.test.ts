@@ -250,4 +250,25 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(meetingChat, /\.messageBody\s*\{[\s\S]*white-space:\s*pre-wrap/);
     assert.doesNotMatch(meetingChat, /v-html/);
   });
+
+  /**
+   * @testData PDF出力ブロックのタイトル、ファイル名、作成日、旧匿名提案資料文言。
+   * @expected 提出用の職務経歴書として出力され、Frichy表記・補足/備考・旧ファイル名はPDF出力ブロックに含まれない。
+   */
+  it("anonymous sheet PDF output is formatted as a resume document", () => {
+    const runtime = read("Frontend/composables/frichy/useFrichyRuntime.ts");
+    const start = runtime.indexOf("function downloadSheetPdf");
+    const end = runtime.indexOf("function drawPdfRow");
+    const pdfBlock = runtime.slice(start, end);
+
+    assert.match(pdfBlock, /link\.download = buildResumeSheetFilename/);
+    assert.match(pdfBlock, /職務経歴書/);
+    assert.match(pdfBlock, /作成日/);
+    assert.match(pdfBlock, /function buildCandidateInitials/);
+    assert.doesNotMatch(pdfBlock, /Frichy/);
+    assert.doesNotMatch(pdfBlock, /匿名スキルシート/);
+    assert.doesNotMatch(pdfBlock, /Public ID/);
+    assert.doesNotMatch(pdfBlock, /補足|備考/);
+    assert.doesNotMatch(pdfBlock, /anonymous-skill-sheet/);
+  });
 });

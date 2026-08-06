@@ -2171,12 +2171,12 @@ function downloadSheetPdf(publicId: string, mainSkills: string) {
   const url = URL.createObjectURL(pdf);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `anonymous-skill-sheet-${publicId}.pdf`;
+  link.download = buildResumeSheetFilename(state.value.profile, publicId);
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  showToast("匿名スキルシートPDFを出力しました。");
+  showToast("職務経歴書PDFを出力しました。");
 }
 
 function renderAnonymousSheetCanvas(
@@ -2195,26 +2195,23 @@ function renderAnonymousSheetCanvas(
   const labelWidth = 230;
   const bodyWidth = page.width - margin * 2;
   const valueWidth = bodyWidth - labelWidth;
+  const candidateInitial = buildCandidateInitials(profile.name) || publicId;
 
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, page.width, page.height);
-  ctx.fillStyle = "#f1f6fd";
-  ctx.fillRect(0, 0, page.width, 250);
-
-  ctx.fillStyle = "#1d5fd3";
-  ctx.font = '700 30px "Hiragino Sans", "Yu Gothic", sans-serif';
-  ctx.fillText("Frichy", margin, 92);
+  ctx.fillStyle = "#f7f9fc";
+  ctx.fillRect(0, 0, page.width, 230);
   ctx.fillStyle = "#10294f";
-  ctx.font = '700 54px "Hiragino Sans", "Yu Gothic", sans-serif';
-  ctx.fillText("匿名スキルシート", margin, 164);
+  ctx.font = '700 58px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText("職務経歴書", margin, 120);
   ctx.fillStyle = "#49617d";
   ctx.font = '400 25px "Hiragino Sans", "Yu Gothic", sans-serif';
-  ctx.fillText(`Public ID: ${publicId}`, margin, 214);
+  ctx.fillText(`作成日: ${today()}`, margin, 174);
 
-  let y = 322;
+  let y = 300;
   ctx.fillStyle = "#10294f";
   ctx.font = '700 32px "Hiragino Sans", "Yu Gothic", sans-serif';
-  ctx.fillText("候補者サマリー", margin, y);
+  ctx.fillText("基本情報", margin, y);
   y += 36;
   ctx.strokeStyle = "#d6e2f0";
   ctx.lineWidth = 2;
@@ -2225,29 +2222,9 @@ function renderAnonymousSheetCanvas(
   y += 28;
 
   const rows: Array<{ label: string; value: string }> = [
+    { label: "氏名", value: `${candidateInitial}（イニシャル表記）` },
     { label: "職種", value: profile.role || "未登録" },
     { label: "経験年数", value: `${profile.years || "未登録"}年` },
-    { label: "主要スキル", value: mainSkills || "未登録" },
-    {
-      label: "希望単価",
-      value: profile.desiredRate ? `${profile.desiredRate}万円` : "未登録",
-    },
-    {
-      label: "稼働条件",
-      value: `${profile.startDate || "未登録"}開始 / ${profile.workRate || "未登録"} / ${profile.remote || "未登録"}`,
-    },
-    { label: "ステータス", value: profile.availability || "未登録" },
-    { label: "人物確認", value: "Frichy営業による初回面談調整中" },
-    {
-      label: "匿名化",
-      value: "氏名・メール・電話・固有社名は非表示。提案先へ共有しやすい内容に整形しています。",
-    },
-    {
-      label: "レジュメ",
-      value: profile.resumeName
-        ? `${profile.resumeName} は営業管理画面で確認できます。`
-        : "未登録",
-    },
   ];
 
   rows.forEach((row, index) => {
@@ -2265,30 +2242,99 @@ function renderAnonymousSheetCanvas(
 
   y += 54;
   ctx.fillStyle = "#10294f";
-  ctx.font = '700 30px "Hiragino Sans", "Yu Gothic", sans-serif';
-  ctx.fillText("補足", margin, y);
-  y += 42;
-  ctx.fillStyle = "#49617d";
-  ctx.font = '400 24px "Hiragino Sans", "Yu Gothic", sans-serif';
-  drawWrappedText(
-    ctx,
-    "本資料はクライアント提案用の匿名プロフィールです。詳細な職務経歴書、連絡先、本人確認情報はFrichy営業管理画面で確認してください。",
-    margin,
-    y,
-    bodyWidth,
-    38,
-  );
+  ctx.font = '700 32px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText("スキル", margin, y);
+  y += 36;
+  ctx.strokeStyle = "#d6e2f0";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(margin, y);
+  ctx.lineTo(page.width - margin, y);
+  ctx.stroke();
+  y += 28;
+
+  const skillRows: Array<{ label: string; value: string }> = [
+    { label: "主要スキル", value: mainSkills || "未登録" },
+    { label: "その他", value: profile.otherSkills || "未登録" },
+  ];
+
+  skillRows.forEach((row, index) => {
+    y = drawPdfRow(ctx, {
+      x: margin,
+      y,
+      width: bodyWidth,
+      labelWidth,
+      valueWidth,
+      label: row.label,
+      value: row.value,
+      alternate: index % 2 === 1,
+    });
+  });
+
+  y += 54;
+  ctx.fillStyle = "#10294f";
+  ctx.font = '700 32px "Hiragino Sans", "Yu Gothic", sans-serif';
+  ctx.fillText("希望条件", margin, y);
+  y += 36;
+  ctx.strokeStyle = "#d6e2f0";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(margin, y);
+  ctx.lineTo(page.width - margin, y);
+  ctx.stroke();
+  y += 28;
+
+  const conditionRows: Array<{ label: string; value: string }> = [
+    {
+      label: "希望単価",
+      value: profile.desiredRate ? `${profile.desiredRate}万円` : "未登録",
+    },
+    {
+      label: "稼働条件",
+      value: `${profile.startDate || "未登録"}開始 / ${profile.workRate || "未登録"} / ${profile.remote || "未登録"}`,
+    },
+    { label: "ステータス", value: profile.availability || "未登録" },
+  ];
+
+  conditionRows.forEach((row, index) => {
+    y = drawPdfRow(ctx, {
+      x: margin,
+      y,
+      width: bodyWidth,
+      labelWidth,
+      valueWidth,
+      label: row.label,
+      value: row.value,
+      alternate: index % 2 === 1,
+    });
+  });
 
   ctx.fillStyle = "#7a8ca3";
   ctx.font = '400 20px "Hiragino Sans", "Yu Gothic", sans-serif';
-  ctx.fillText(`Generated: ${today()}`, margin, page.height - 72);
-  ctx.fillText(
-    "Frichy Confidential",
-    page.width - 420,
-    page.height - 72,
-  );
+  ctx.fillText(`作成日: ${today()}`, margin, page.height - 72);
 
   return canvas;
+}
+
+function buildResumeSheetFilename(profile: Profile, publicId: string) {
+  const initial = buildCandidateInitials(profile.name) || publicId || "候補者";
+  return `職務経歴書_${sanitizeFilenamePart(initial)}.pdf`;
+}
+
+function buildCandidateInitials(name: string) {
+  const normalized = name.trim().replace(/\s+/g, " ");
+  if (!normalized) return "";
+  const parts = normalized.split(" ").filter(Boolean);
+  const initial =
+    parts.length >= 2
+      ? parts.map((part) => Array.from(part)[0]).join("")
+      : Array.from(parts[0] || "").slice(0, 2).join("");
+  return /^[a-z]+$/i.test(initial) ? initial.toUpperCase() : initial;
+}
+
+function sanitizeFilenamePart(value: string) {
+  const sanitized = value.replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "");
+  return sanitized.slice(0, 16) || "候補者";
 }
 
 function drawPdfRow(
@@ -2336,19 +2382,6 @@ function drawPdfRow(
   });
 
   return input.y + rowHeight;
-}
-
-function drawWrappedText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-) {
-  wrapCanvasText(ctx, text, maxWidth).forEach((line, index) => {
-    ctx.fillText(line, x, y + index * lineHeight);
-  });
 }
 
 function wrapCanvasText(
