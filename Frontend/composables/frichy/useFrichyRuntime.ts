@@ -1033,7 +1033,7 @@ async function login(email: string, password: string) {
     await loadWorkspace();
     startChatPolling();
     void requestBrowserNotificationPermission();
-    showToast(`${roleLabel(loginSource.result.user.role)}ログインしました。`);
+    showToast(`ログインしました。`);
     return;
   }
 
@@ -1106,7 +1106,7 @@ function loginWithAccount(account: Account) {
   syncDemoProfileFromAuth();
   persist();
   scrollToPageTop();
-  showToast(`${roleLabel(account.role)}としてログインしました。`);
+  showToast(`ログインしました。`);
 }
 
 function syncDemoProfileFromAuth() {
@@ -1367,7 +1367,7 @@ async function resetProfile() {
   );
   persist();
   scrollToPageTop();
-  showToast("プロフィールを初期状態に戻しました。");
+  showToast("初期状態に戻しました。");
 }
 
 async function createJob(values: JobInput) {
@@ -1510,7 +1510,7 @@ async function applyJob(jobId: string) {
     });
     state.value.applications.unshift(application);
     persist();
-    showToast("応募しました。営業管理に反映されています。");
+    showToast("応募しました。");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "応募に失敗しました。");
   }
@@ -1653,7 +1653,7 @@ async function sendScout(freelancerId: string, jobId: string) {
     }
     closeScoutJobPicker();
     persist();
-    showToast(`${freelancer.name}さんへスカウトを送信しました。`);
+    showToast(`スカウトを送信しました。`);
   } catch (error) {
     showToast(
       error instanceof Error ? error.message : "スカウト送信に失敗しました。",
@@ -1674,7 +1674,7 @@ async function selectPreview(freelancerId: string) {
     resumePreview.value = await apiRequest<ResumePreviewFile>(
       `/resumes/freelancers/${freelancer.id}/preview`,
     );
-    showToast(`${freelancer.resumeName} を管理プレビューで確認中です。`);
+    showToast(`プレビューで確認中です。`);
   } catch (error) {
     resumePreviewError.value =
       error instanceof Error
@@ -1745,7 +1745,7 @@ async function toggleJobActive(jobId: string) {
     });
     Object.assign(job, updated);
     persist();
-    showToast("公開ステータスを更新しました。");
+    showToast("ステータスを更新しました。");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "更新に失敗しました。");
   }
@@ -1771,7 +1771,7 @@ async function changeApplicationStatus(applicationId: string, status: string) {
     );
     Object.assign(item, updated);
     persist();
-    showToast("選考ステータスを更新しました。");
+    showToast("ステータスを更新しました。");
   } catch (error) {
     showToast(error instanceof Error ? error.message : "更新に失敗しました。");
   }
@@ -1822,7 +1822,7 @@ async function sendApplicationFollowup(
     state.value.messages.push(message);
     knownMessageIds.add(message.id);
     persist();
-    showToast("応募者へチャット連絡を送信しました。");
+    showToast("送信しました。");
     return true;
   } catch (error) {
     showToast(error instanceof Error ? error.message : "送信に失敗しました。");
@@ -1908,7 +1908,7 @@ async function updateMeetingStatus(
     });
     item.status = status;
     persist();
-    showToast("面談ステータスを更新しました。");
+    showToast("ステータスを更新しました。");
     return true;
   } catch (error) {
     showToast(error instanceof Error ? error.message : "更新に失敗しました。");
@@ -2028,7 +2028,7 @@ async function submitContactInquiry(values: ContactInquiryInput) {
     });
     clearUnsavedChanges();
     await loadContactInquiries();
-    showToast("問い合わせを送信しました。");
+    showToast("送信しました。");
     return true;
   } catch (error) {
     showToast(
@@ -2060,7 +2060,7 @@ async function answerContactInquiry(id: string, answerBody: string) {
       },
     );
     updateContactInquiryInState(inquiry);
-    showToast("問い合わせに回答しました。");
+    showToast("回答しました。");
     persist();
     return true;
   } catch (error) {
@@ -2085,7 +2085,7 @@ async function sendContactInquiryMessage(id: string, body: string) {
       },
     );
     updateContactInquiryInState(inquiry);
-    showToast("追加メッセージを送信しました。");
+    showToast("メッセージを送信しました。");
     persist();
     return true;
   } catch (error) {
@@ -2103,7 +2103,7 @@ async function closeContactInquiry(id: string) {
       { method: "PATCH" },
     );
     updateContactInquiryInState(inquiry);
-    showToast("問い合わせをクローズしました。");
+    showToast("クローズしました。");
     persist();
     return true;
   } catch (error) {
@@ -2169,7 +2169,7 @@ async function markActiveChatAsRead() {
 
 async function aliveCheck() {
   if (currentRole.value !== "sales") {
-    showToast("生存確認は営業アカウントで利用できます。");
+    showToast("稼働確認は営業アカウントで利用できます。");
     return;
   }
 
@@ -2190,7 +2190,7 @@ async function aliveCheck() {
     const sentCount = batch.mailSentCount ?? batch.targetCount;
     const failedCount = batch.mailFailedCount ?? 0;
     if (batch.targetCount === 0) {
-      showToast("生存確認の対象者はいません。");
+      showToast("稼働確認の対象者はいません。");
       return;
     }
     if (failedCount > 0) {
@@ -2199,10 +2199,10 @@ async function aliveCheck() {
       );
       return;
     }
-    showToast(`${sentCount}名に生存確認メールを送信しました。`);
+    showToast(`${sentCount}名に稼働確認メールを送信しました。`);
   } catch (error) {
     showToast(
-      error instanceof Error ? error.message : "生存確認に失敗しました。",
+      error instanceof Error ? error.message : "稼働確認に失敗しました。",
     );
   }
 }
@@ -2225,7 +2225,7 @@ function downloadSheetPdf(publicId: string, mainSkills: string) {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  showToast("職務経歴書PDFを出力しました。");
+  showToast("PDFを出力しました。");
 }
 
 function renderAnonymousSheetCanvas(
