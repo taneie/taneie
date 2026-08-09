@@ -92,7 +92,7 @@ after(async () => {
 describe("API疎通・認証フロー", () => {
   /**
    * @testData 認証なしの`GET /api/health` request。
-   * @expected HTTP 200、status `ok`、service `Frichy API` が返る。
+   * @expected HTTP 200、status `ok`、service `Frichy API` が返り、iframe viewer向けにunloadが許可される。
    */
   it("GET /api/health returns API status", async () => {
     const response = await server.request<{ status: string; service: string }>(
@@ -102,6 +102,7 @@ describe("API疎通・認証フロー", () => {
     assert.equal(response.status, 200);
     assert.equal(response.data.status, "ok");
     assert.equal(response.data.service, "Frichy API");
+    assert.equal(response.headers.get("permissions-policy"), "unload=*");
   });
 
   /**

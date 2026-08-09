@@ -43,6 +43,11 @@ const pushSubscriptionService = new PushSubscriptionService(prisma);
 export function createApp() {
   const app = express();
 
+  app.use((_req, res, next) => {
+    res.setHeader("Permissions-Policy", "unload=*");
+    next();
+  });
+
   app.use(
     cors({
       credentials: true,
