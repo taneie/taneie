@@ -80,7 +80,7 @@ export const flowOptions = ["エンド直", "1次請け", "2次請け", "その�
 export const remoteOptions = ["フルリモート", "一部リモート", "常駐"];
 export const availabilityOptions = [
   "即稼働可",
-  "2026年7月から空き予定",
+  "稼働可能開始日",
   "現在は案件停止中",
 ];
 export const roleTitleOptions = [

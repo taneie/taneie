@@ -18,6 +18,10 @@ describe("ドメインの表示ラベル変換", () => {
     assert.equal(getKeyByValue(labelToRemoteType, "full_remote"), "フルリモート");
     assert.equal(getKeyByValue(labelToStreamType, "prime"), "1次請け");
     assert.equal(getKeyByValue(labelToAvailabilityStatus, "ready"), "即稼働可");
+    assert.equal(
+      getKeyByValue(labelToAvailabilityStatus, "scheduled"),
+      "稼働可能開始日",
+    );
     assert.equal(getKeyByValue(labelToApplicationStatus, "contracted"), "成約");
     assert.equal(getKeyByValue(labelToMeetingStatus, "confirmed"), "確定");
     assert.equal(getKeyByValue(labelToRemoteType, "unknown"), "unknown");

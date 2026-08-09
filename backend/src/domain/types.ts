@@ -37,6 +37,7 @@ export const labelToStreamType = {
 
 export const labelToAvailabilityStatus = {
   即稼働可: "ready",
+  稼働可能開始日: "scheduled",
   "2026年7月から空き予定": "scheduled",
   現在は案件停止中: "paused",
 } as const;

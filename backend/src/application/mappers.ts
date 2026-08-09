@@ -43,6 +43,9 @@ export function toAvailabilityLabel(
   value: string | null | undefined,
   note?: string | null,
 ) {
+  if (value === "scheduled") {
+    return "稼働可能開始日";
+  }
   if (note) return note;
   return value ? getKeyByValue(labelToAvailabilityStatus, value) : "";
 }

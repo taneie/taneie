@@ -65,7 +65,7 @@ describe("スカウト対象の絞り込み・並び替え", () => {
         id: "c",
         desiredRate: 80,
         yearsExperience: 5,
-        availability: "2026年7月から空き予定",
+        availability: "稼働可能開始日",
         lastUpdated: "2026-07-20",
       }),
     ];

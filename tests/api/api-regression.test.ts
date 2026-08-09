@@ -231,7 +231,7 @@ describe("API疎通・認証フロー", () => {
 describe("APIプロフィール・案件フロー", () => {
   /**
    * @testData デモ求職者token、デモ営業token、プロフィール更新payload、範囲外yearsExperience。
-   * @expected 営業のprofile/me参照は403、求職者は取得/更新でき、範囲外経験年数は400 validation errorになる。
+   * @expected 営業のprofile/me参照は403、求職者は取得/更新でき、提案可能ステータスは固定文言「稼働可能開始日」で返り、範囲外経験年数は400 validation errorになる。
    */
   it("profile can be fetched and updated by freelancer, while sales is forbidden", async () => {
     const freelancer = await login(
@@ -280,7 +280,7 @@ describe("APIプロフィール・案件フロー", () => {
       freelancer.token,
     );
     assert.equal(saved.status, 200);
-    assert.equal(saved.data.availability, "API regression test");
+    assert.equal(saved.data.availability, "稼働可能開始日");
 
     const invalid = await server.request(
       "/profile/me",

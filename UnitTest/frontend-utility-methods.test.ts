@@ -38,7 +38,7 @@ describe("フロントエンド共通ユーティリティ", () => {
    */
   it("availabilityClass maps known and unknown values", () => {
     assert.equal(availabilityClass("即稼働可"), "ready");
-    assert.equal(availabilityClass("2026年7月から空き予定"), "soon");
+    assert.equal(availabilityClass("稼働可能開始日"), "soon");
     assert.equal(availabilityClass("現在は案件停止中"), "pause");
     assert.equal(availabilityClass(""), "pause");
   });
@@ -60,9 +60,7 @@ describe("フロントエンド共通ユーティリティ", () => {
   it("availabilityRank sorts ready users above scheduled and paused users", () => {
     assert.equal(availabilityRank(freelancerFixture({ availability: "即稼働可" })), 3);
     assert.equal(
-      availabilityRank(
-        freelancerFixture({ availability: "2026年7月から空き予定" }),
-      ),
+      availabilityRank(freelancerFixture({ availability: "稼働可能開始日" })),
       2,
     );
     assert.equal(

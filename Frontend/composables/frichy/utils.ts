@@ -10,7 +10,7 @@ export function clone<T>(value: T): T {
 
 export function availabilityClass(value = "") {
   if (value === "即稼働可") return "ready";
-  if (value.includes("空き予定")) return "soon";
+  if (value === "稼働可能開始日" || value.includes("空き予定")) return "soon";
   return "pause";
 }
 
@@ -22,7 +22,11 @@ export function streamTone(value = "") {
 
 export function availabilityRank(freelancer: Freelancer) {
   if (freelancer.availability === "即稼働可") return 3;
-  if (freelancer.availability.includes("空き予定")) return 2;
+  if (
+    freelancer.availability === "稼働可能開始日" ||
+    freelancer.availability.includes("空き予定")
+  )
+    return 2;
   return 1;
 }
 

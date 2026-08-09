@@ -14,14 +14,18 @@ import { encryptText } from "../backend/src/infrastructure/crypto";
 
 describe("Mapperの表示ラベル変換", () => {
   /**
-   * @testData remote、stream、availability、application statusの保存値と、availability note。
-   * @expected 保存値は画面表示ラベルへ変換され、availability noteがある場合はnote表示を優先する。
+   * @testData remote、stream、availability、application statusの保存値、availability note、scheduled status。
+   * @expected 保存値は画面表示ラベルへ変換され、readyのnoteは優先され、scheduledは固定文言「稼働可能開始日」になる。
    */
   it("label helper methods map stored enum values and notes", () => {
     assert.equal(toRemoteLabel("full_remote"), "フルリモート");
     assert.equal(toStreamLabel("end_direct"), "エンド直");
     assert.equal(toAvailabilityLabel("ready"), "即稼働可");
     assert.equal(toAvailabilityLabel("ready", "個別メモ"), "個別メモ");
+    assert.equal(
+      toAvailabilityLabel("scheduled", "2026年7月から空き予定"),
+      "稼働可能開始日",
+    );
     assert.equal(toApplicationStatusLabel("meeting_pending"), "面談待ち");
   });
 });

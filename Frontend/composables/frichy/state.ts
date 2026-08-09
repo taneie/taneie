@@ -20,7 +20,7 @@ export function createSeedState(): FrichyState {
         desiredRate: 85,
         workRate: "週5",
         remote: "フルリモート",
-        availability: "2026年7月から空き予定",
+        availability: "稼働可能開始日",
         lastUpdated: "2026-06-04",
         resumeName: "職務経歴書_山田太郎.pdf",
       },
