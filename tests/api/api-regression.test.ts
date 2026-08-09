@@ -94,7 +94,7 @@ after(async () => {
 describe("API疎通・認証フロー", () => {
   /**
    * @testData 認証なしの`GET /api/health` request。
-   * @expected HTTP 200、status `ok`、service `Frichy API` が返り、Office iframe viewer向けにunloadが明示許可される。
+   * @expected HTTP 200、status `ok`、service `Frichy API` が返り、同一origin向けにunloadが明示許可される。
    */
   it("GET /api/health returns API status", async () => {
     const response = await server.request<{ status: string; service: string }>(
@@ -106,7 +106,7 @@ describe("API疎通・認証フロー", () => {
     assert.equal(response.data.service, "Frichy API");
     assert.equal(
       response.headers.get("permissions-policy"),
-      'unload=(self "https://view.officeapps.live.com")',
+      "unload=(self)",
     );
   });
 
@@ -541,9 +541,9 @@ describe("APIレジュメ確認フロー", () => {
 
   /**
    * @testData 新規求職者に紐づくWordレジュメmetadata、デモ営業token、tokenなしview request。
-   * @expected previewはOffice ViewerのURLを返し、viewはtokenなしでは401 `RESUME_PREVIEW_TOKEN_INVALID` になる。
+   * @expected docx previewはFrichyの署名付き実ファイルURLを返し、viewはtokenなしでは401 `RESUME_PREVIEW_TOKEN_INVALID` になる。
    */
-  it("resume preview issues a temporary viewer URL for Office files", async () => {
+  it("resume preview issues a temporary Frichy viewer URL for docx files", async () => {
     const sales = await login(server, "sales@frichy.jp", "sales123");
     const email = `api-resume-preview-${Date.now()}@example.com`;
     const createdUser = await server.request<{
@@ -562,8 +562,8 @@ describe("APIレジュメ確認フロー", () => {
     const uploadedFile = await prisma.uploadedFile.create({
       data: {
         userId: createdUser.data.user.id,
-        originalFileName: "office-preview.docx",
-        blobPath: `uploads/users/${createdUser.data.user.id}/documents/office-preview.docx`,
+        originalFileName: "docx-preview.docx",
+        blobPath: `uploads/users/${createdUser.data.user.id}/documents/docx-preview.docx`,
         mimeType:
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         sizeBytes: BigInt(128),
@@ -574,7 +574,7 @@ describe("APIレジュメ確認フロー", () => {
       data: {
         freelancerProfileId: createdUser.data.user.freelancerId,
         uploadedFileId: uploadedFile.id,
-        originalFilename: "office-preview.docx",
+        originalFilename: "docx-preview.docx",
         mimeType:
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         fileSizeBytes: 128,
@@ -592,15 +592,9 @@ describe("APIレジュメ確認フロー", () => {
       sales.token,
     );
     assert.equal(preview.status, 200);
-    assert.equal(preview.data.previewKind, "office");
-    assert.match(
-      preview.data.previewUrl,
-      /^https:\/\/view\.officeapps\.live\.com\/op\/embed\.aspx\?src=/,
-    );
-    assert.match(
-      decodeURIComponent(preview.data.previewUrl),
-      /\/api\/resumes\/freelancers\/.+\/view\?token=/,
-    );
+    assert.equal(preview.data.previewKind, "docx");
+    assert.match(preview.data.previewUrl, /\/api\/resumes\/freelancers\/.+\/view\?token=/);
+    assert.doesNotMatch(preview.data.previewUrl, /view\.officeapps\.live\.com/);
 
     const viewWithoutToken = await server.request(
       `/resumes/freelancers/${createdUser.data.user.freelancerId}/view`,

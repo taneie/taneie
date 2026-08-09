@@ -253,7 +253,7 @@ export interface ResumePreviewFile {
   mimeType: string;
   sizeBytes: number;
   previewUrl: string;
-  previewKind: "pdf" | "office" | "download";
+  previewKind: "pdf" | "docx" | "download";
   expiresAt: string;
 }
 

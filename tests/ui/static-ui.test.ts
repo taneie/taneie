@@ -204,13 +204,16 @@ describe("UIアクセシビリティ・ローディング体験", () => {
   });
 
   /**
-   * @testData ResumePreviewのiframeとChromiumのunload Permissions Policy向けallow属性。
-   * @expected レジュメビューアはChromium互換の`allow="unload"`を使い、無効になり得る`allow="unload *"`へ戻らない。
+   * @testData ResumePreviewのdocx preview分岐、docx-previewのdynamic import、Microsoft Office Viewer URL。
+   * @expected docxは外部Office iframeに渡さず、Frichy内で`docx-preview`により描画する。
    */
-  it("resume preview iframe grants unload with Chromium-compatible allow syntax", () => {
+  it("resume preview renders docx inside Frichy without Office Viewer iframe", () => {
     const source = read("Frontend/components/organisms/ResumePreview.vue");
 
-    assert.match(source, /<iframe[\s\S]*allow="unload"[\s\S]*title="レジュメプレビュー"/);
+    assert.match(source, /preview\.previewKind === 'docx'/);
+    assert.match(source, /import\("docx-preview"\)/);
+    assert.match(source, /renderAsync\(blob,\s*container/);
+    assert.doesNotMatch(source, /view\.officeapps\.live\.com/);
     assert.doesNotMatch(source, /allow="unload \*"/);
   });
 
@@ -268,8 +271,8 @@ describe("UIアクセシビリティ・ローディング体験", () => {
   });
 
   /**
-   * @testData ResumePreviewの明示preview action、iframe preview、download action、旧HTML文字列preview。
-   * @expected プレビューbutton押下後だけPDF/OfficeのpreviewUrlをiframeへ渡し、`v-html`による文字列プレビューに戻らない。
+   * @testData ResumePreviewの明示preview action、PDF iframe、docx-preview、download action、旧HTML文字列preview。
+   * @expected PDFだけiframeへ渡し、docxは内部viewerで描画し、`v-html`による文字列プレビューに戻らない。
    */
   it("resume preview uses viewer iframe instead of HTML string conversion", () => {
     const resumePreview = read("Frontend/components/organisms/ResumePreview.vue");
@@ -277,8 +280,9 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(resumePreview, /"プレビュー"/);
     assert.match(resumePreview, /@click="loadPreview"/);
     assert.match(resumePreview, /selectPreview\(freelancer\.value\.id\)/);
-    assert.match(resumePreview, /<iframe[\s\S]*:src="preview\.previewUrl"/);
-    assert.match(resumePreview, /allow="unload"/);
+    assert.match(resumePreview, /preview\.previewKind === 'pdf'/);
+    assert.match(resumePreview, /:src="preview\.previewUrl"/);
+    assert.match(resumePreview, /preview\.previewKind === 'docx'/);
     assert.match(resumePreview, /別タブで開く/);
     assert.match(resumePreview, /downloadResumePreview/);
     assert.match(resumePreview, /variant\?: "panel" \| "fullscreen"/);

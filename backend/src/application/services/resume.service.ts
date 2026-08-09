@@ -55,21 +55,14 @@ const genericMimeTypes = new Set([
   "binary/octet-stream",
 ]);
 
-const officePreviewMimeTypes = new Set([
-  "application/msword",
+const docxPreviewMimeTypes = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
 
 const storage = new Storage();
 
-export function isOfficePreviewMimeType(mimeType: string) {
-  return officePreviewMimeTypes.has(mimeType);
-}
-
-export function toOfficeViewerUrl(fileUrl: string) {
-  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+export function isDocxPreviewMimeType(mimeType: string) {
+  return docxPreviewMimeTypes.has(mimeType);
 }
 
 export class ResumeService {
@@ -231,10 +224,7 @@ export class ResumeService {
       expiresAt: "",
     };
 
-    if (
-      mimeType === "application/pdf" ||
-      isOfficePreviewMimeType(mimeType)
-    ) {
+    if (mimeType === "application/pdf" || isDocxPreviewMimeType(mimeType)) {
       const token = signResumePreviewToken({
         ...auth,
         freelancerProfileId,
@@ -250,9 +240,8 @@ export class ResumeService {
         previewKind:
           mimeType === "application/pdf"
             ? ("pdf" as const)
-            : ("office" as const),
-        previewUrl:
-          mimeType === "application/pdf" ? fileUrl : toOfficeViewerUrl(fileUrl),
+            : ("docx" as const),
+        previewUrl: fileUrl,
         expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       };
     }

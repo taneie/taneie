@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  isOfficePreviewMimeType,
+  isDocxPreviewMimeType,
   ResumeService,
-  toOfficeViewerUrl,
 } from "../backend/src/application/services/resume.service";
 
 describe("レジュメサービス", () => {
@@ -50,39 +49,24 @@ describe("レジュメサービス", () => {
   });
 
   /**
-   * @testData アップロード許可済みのWord/Excel MIMEとPDF MIME。
-   * @expected PDF以外の許可Office形式はすべてOfficeプレビュー対象になり、PDFはOffice対象外になる。
+   * @testData アップロード許可済みのdocx/旧doc/Excel/PDF MIME。
+   * @expected docxだけFrichy内プレビュー対象になり、Microsoft Office Viewerへ渡す形式は対象外になる。
    */
-  it("isOfficePreviewMimeType accepts all allowed Word and Excel MIME types", () => {
-    assert.equal(isOfficePreviewMimeType("application/msword"), true);
+  it("isDocxPreviewMimeType accepts only docx preview MIME type", () => {
+    assert.equal(isDocxPreviewMimeType("application/msword"), false);
     assert.equal(
-      isOfficePreviewMimeType(
+      isDocxPreviewMimeType(
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ),
       true,
     );
-    assert.equal(isOfficePreviewMimeType("application/vnd.ms-excel"), true);
+    assert.equal(isDocxPreviewMimeType("application/vnd.ms-excel"), false);
     assert.equal(
-      isOfficePreviewMimeType(
+      isDocxPreviewMimeType(
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       ),
-      true,
+      false,
     );
-    assert.equal(isOfficePreviewMimeType("application/pdf"), false);
-  });
-
-  /**
-   * @testData query string付き一時署名URL。
-   * @expected Office Web Viewerのembed URLとして、元URL全体が`src`にURLエンコードされる。
-   */
-  it("toOfficeViewerUrl builds an embeddable Office viewer URL", () => {
-    const signedUrl = "https://storage.example.test/resume.docx?X-Goog-Signature=abc";
-    const viewerUrl = toOfficeViewerUrl(signedUrl);
-
-    assert.match(
-      viewerUrl,
-      /^https:\/\/view\.officeapps\.live\.com\/op\/embed\.aspx\?src=/,
-    );
-    assert.match(viewerUrl, /resume\.docx%3FX-Goog-Signature%3Dabc/);
+    assert.equal(isDocxPreviewMimeType("application/pdf"), false);
   });
 });

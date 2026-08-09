@@ -49,14 +49,25 @@
     <div v-else-if="resumePreviewError" :class="$style.empty">
       {{ resumePreviewError }}
     </div>
+    <div
+      v-else-if="preview?.previewUrl && preview.previewKind === 'docx'"
+      :class="$style.viewer"
+    >
+      <div v-if="docxPreviewLoading" :class="$style.empty">
+        Wordファイルを読み込んでいます。
+      </div>
+      <div v-else-if="docxPreviewError" :class="$style.empty">
+        {{ docxPreviewError }}
+      </div>
+      <div ref="docxContainer" :class="$style.docxContainer" />
+    </div>
     <iframe
-      v-else-if="preview?.previewUrl"
+      v-else-if="preview?.previewUrl && preview.previewKind === 'pdf'"
       :class="$style.viewer"
       :src="preview.previewUrl"
-      allow="unload"
       title="レジュメプレビュー"
     />
-    <div v-else-if="preview" :class="$style.officePreview">
+    <div v-else-if="preview" :class="$style.downloadPreview">
       <strong>{{ preview.fileName }}</strong>
       <p>
         プレビューURLを取得できませんでした。ダウンロードして確認してください。
@@ -92,7 +103,7 @@
 
 <script setup lang="ts">
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
-import { computed } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -120,6 +131,10 @@ const freelancer = computed(() => {
 });
 
 const preview = computed(() => resumePreview.value);
+const docxContainer = ref<HTMLElement | null>(null);
+const docxPreviewLoading = ref(false);
+const docxPreviewError = ref("");
+let docxRenderId = 0;
 
 function openPreview() {
   if (!preview.value?.previewUrl) return;
@@ -129,6 +144,68 @@ function openPreview() {
 function loadPreview() {
   if (!freelancer.value?.id) return;
   void selectPreview(freelancer.value.id);
+}
+
+watch(
+  () => preview.value,
+  (current) => {
+    docxRenderId += 1;
+    clearDocxPreview();
+    if (current?.previewKind === "docx" && current.previewUrl) {
+      void renderDocxPreview(current.previewUrl, docxRenderId);
+    }
+  },
+  { flush: "post" },
+);
+
+onBeforeUnmount(() => {
+  docxRenderId += 1;
+  clearDocxPreview();
+});
+
+function clearDocxPreview() {
+  docxPreviewLoading.value = false;
+  docxPreviewError.value = "";
+  if (docxContainer.value) {
+    docxContainer.value.replaceChildren();
+  }
+}
+
+async function renderDocxPreview(url: string, renderId: number) {
+  docxPreviewLoading.value = true;
+  try {
+    await nextTick();
+    const container = docxContainer.value;
+    if (!container) return;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Wordファイルを読み込めませんでした。");
+    }
+    const blob = await response.blob();
+    if (renderId !== docxRenderId) return;
+    const { renderAsync } = await import("docx-preview");
+    container.replaceChildren();
+    await renderAsync(blob, container, undefined, {
+      className: "frichy-docx",
+      inWrapper: true,
+      breakPages: true,
+      ignoreWidth: false,
+      ignoreHeight: false,
+      renderHeaders: true,
+      renderFooters: true,
+      useBase64URL: true,
+    });
+  } catch (error) {
+    if (renderId !== docxRenderId) return;
+    docxPreviewError.value =
+      error instanceof Error
+        ? error.message
+        : "Wordファイルをプレビューできませんでした。";
+  } finally {
+    if (renderId === docxRenderId) {
+      docxPreviewLoading.value = false;
+    }
+  }
 }
 </script>
 
@@ -187,9 +264,21 @@ function loadPreview() {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #f8fbff;
+  overflow: auto;
 }
 
-.officePreview {
+.docxContainer {
+  min-height: 100%;
+  padding: 18px;
+  background: #eef3f8;
+}
+
+.docxContainer :global(.frichy-docx-wrapper) {
+  margin: 0 auto 18px;
+  box-shadow: 0 10px 26px rgba(16, 41, 79, 0.12);
+}
+
+.downloadPreview {
   display: grid;
   gap: 12px;
   padding: 18px;
