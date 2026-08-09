@@ -106,7 +106,7 @@
 
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">応募ステータス</h2>
+        <h2 :class="$style.panelTitle">進行中応募ステータス</h2>
         <label :class="$style.filterField">
           ステータス
           <select v-model="applicationStatusFilter" :class="$style.filterControl">
@@ -118,7 +118,7 @@
         </label>
       </div>
       <div :class="$style.panelBody">
-        <SelectionKanban :applications="filteredApplications" />
+        <SelectionKanban :applications="activeFilteredApplications" />
       </div>
     </section>
   </div>
@@ -138,7 +138,7 @@
   <section :class="[$style.panel, $style.stackMd]">
     <div :class="$style.panelHeader">
       <div :class="$style.panelHeaderText">
-        <h2 :class="$style.panelTitle">成約・見送り</h2>
+        <h2 :class="$style.panelTitle">成約・見送り求職者</h2>
         <p :class="$style.panelNote">終了 {{ completedFilteredApplications.length }}件</p>
       </div>
     </div>

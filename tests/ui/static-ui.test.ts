@@ -347,8 +347,9 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(adminPage, /const completedApplicationStatuses: ApplicationStatus\[\] = \["成約", "見送り"\]/);
     assert.match(adminPage, /const activeFilteredApplications = computed/);
     assert.match(adminPage, /const completedFilteredApplications = computed/);
+    assert.match(adminPage, /<SelectionKanban :applications="activeFilteredApplications" \/>/);
     assert.match(adminPage, /<ApplicationsTable :applications="activeFilteredApplications" with-resume \/>/);
-    assert.match(adminPage, /<h2 :class="\$style\.panelTitle">成約・見送り<\/h2>/);
+    assert.match(adminPage, /<h2 :class="\$style\.panelTitle">成約・見送り求職者<\/h2>/);
     assert.match(adminPage, /<ApplicationsTable :applications="completedFilteredApplications" with-resume \/>/);
   });
 
