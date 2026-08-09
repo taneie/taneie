@@ -127,6 +127,20 @@ export function nowLabel() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+export function formatJstDateTime(value = "") {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const fallback = trimmed.replace("T", " ").slice(0, 16);
+  if (!/(?:Z|[+-]\d\d:\d\d)$/.test(trimmed)) return fallback;
+
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${jst.getUTCFullYear()}-${pad(jst.getUTCMonth() + 1)}-${pad(jst.getUTCDate())} ${pad(jst.getUTCHours())}:${pad(jst.getUTCMinutes())}`;
+}
+
 export function toApiDateTime(value: string) {
   const normalized = value.trim().replace(" ", "T");
   if (!normalized) return "";

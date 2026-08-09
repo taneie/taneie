@@ -237,6 +237,7 @@
 
 <script setup lang="ts">
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import { formatJstDateTime } from "~/composables/frichy/utils";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import type { Message } from "~/composables/frichy/types";
 
@@ -316,9 +317,7 @@ function isOwnMessage(message: Message) {
 }
 
 function displayDateTime(value = "") {
-  if (!value) return "";
-  const normalized = value.replace("T", " ");
-  return normalized.slice(0, 16);
+  return formatJstDateTime(value);
 }
 
 function jobTitle(jobId: string) {

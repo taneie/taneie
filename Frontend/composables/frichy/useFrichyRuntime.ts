@@ -49,6 +49,7 @@ import type {
 import {
   availabilityClass,
   clone,
+  formatJstDateTime,
   maskName,
   nowLabel,
   profileSkillList,
@@ -1870,13 +1871,13 @@ async function addMeeting(candidateValue: string) {
         candidateAt: toApiDateTime(normalizedCandidate),
       }),
     });
-    const candidateLabel = meeting.candidateAt.replace("T", " ").slice(0, 16);
+    const candidateLabel = formatJstDateTime(meeting.candidateAt);
     state.value.meetingRequests.push({
       id: meeting.id,
       freelancerId: meeting.freelancerProfileId,
       applicationId: meeting.applicationId,
       jobId: meeting.jobId,
-      candidate: candidateLabel,
+      candidate: meeting.candidateAt,
       status: "候補",
     });
     if (
@@ -2698,7 +2699,7 @@ async function openScoutJob(jobId: string) {
 function meetingCandidatesForProfile(profileId: string) {
   return state.value.meetingRequests
     .filter((meeting) => meeting.freelancerId === profileId)
-    .map((meeting) => meeting.candidate)
+    .map((meeting) => formatJstDateTime(meeting.candidate))
     .filter(Boolean);
 }
 

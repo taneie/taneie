@@ -5,6 +5,7 @@ import {
   availabilityRank,
   categorizeSkills,
   clone,
+  formatJstDateTime,
   maskName,
   profileSkillList,
   splitCsv,
@@ -149,6 +150,21 @@ describe("フロントエンド共通ユーティリティ", () => {
     );
     assert.equal(toApiDateTime("2026-08-20T01:00:00.000Z"), "2026-08-20T01:00:00.000Z");
     assert.equal(toApiDateTime("   "), "");
+  });
+
+  /**
+   * @testData UTC日時、JST offset付き日時、timezoneなし日時、不正な日時文字列、空白文字列。
+   * @expected timezone付き日時はJSTのYYYY-MM-DD HH:mmへ変換され、timezoneなし値と不正値は安全に表示用文字列へ整形される。
+   */
+  it("formatJstDateTime converts timezone-aware values to JST display time", () => {
+    assert.equal(formatJstDateTime("2026-08-20T01:00:00.000Z"), "2026-08-20 10:00");
+    assert.equal(
+      formatJstDateTime("2026-08-20T10:00:00+09:00"),
+      "2026-08-20 10:00",
+    );
+    assert.equal(formatJstDateTime("2026-08-20T10:00"), "2026-08-20 10:00");
+    assert.equal(formatJstDateTime("invalid-value"), "invalid-value");
+    assert.equal(formatJstDateTime("   "), "");
   });
 
   /**
