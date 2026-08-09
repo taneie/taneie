@@ -204,6 +204,17 @@ describe("UIアクセシビリティ・ローディング体験", () => {
   });
 
   /**
+   * @testData ResumePreviewのiframeとChromiumのunload Permissions Policy向けallow属性。
+   * @expected レジュメビューアはChromium互換の`allow="unload"`を使い、無効になり得る`allow="unload *"`へ戻らない。
+   */
+  it("resume preview iframe grants unload with Chromium-compatible allow syntax", () => {
+    const source = read("Frontend/components/organisms/ResumePreview.vue");
+
+    assert.match(source, /<iframe[\s\S]*allow="unload"[\s\S]*title="レジュメプレビュー"/);
+    assert.doesNotMatch(source, /allow="unload \*"/);
+  });
+
+  /**
    * @testData LoginPanelの主要anchor/CTAと、AppShellの主要画面component切り替え。
    * @expected ナビゲーション文言とCTAが行動可能な表記で維持され、主要画面の表示条件が残っている。
    */
@@ -267,7 +278,7 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(resumePreview, /@click="loadPreview"/);
     assert.match(resumePreview, /selectPreview\(freelancer\.value\.id\)/);
     assert.match(resumePreview, /<iframe[\s\S]*:src="preview\.previewUrl"/);
-    assert.match(resumePreview, /allow="unload \*"/);
+    assert.match(resumePreview, /allow="unload"/);
     assert.match(resumePreview, /別タブで開く/);
     assert.match(resumePreview, /downloadResumePreview/);
     assert.match(resumePreview, /variant\?: "panel" \| "fullscreen"/);
