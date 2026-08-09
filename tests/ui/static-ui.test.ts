@@ -134,6 +134,28 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(source, /\.tag\s*\{[\s\S]*text-overflow:\s*ellipsis/);
     assert.doesNotMatch(source, /white-space:\s*normal/);
   });
+
+  /**
+   * @testData StreamBadgeの固定寸法、商流表示を持つ主要component。
+   * @expected 商流は画面やエリアに依存せず、固定正円の専用バッジで表示される。
+   */
+  it("stream values use a fixed circular badge in every stream display area", () => {
+    const streamBadge = read("Frontend/components/atoms/StreamBadge.vue");
+    const jobCard = read("Frontend/components/molecules/JobCard.vue");
+    const applicationsTable = read("Frontend/components/organisms/ApplicationsTable.vue");
+    const jobsAdminTable = read("Frontend/components/organisms/JobsAdminTable.vue");
+    const scoutPage = read("Frontend/components/pages/ScoutPage.vue");
+    const loginPanel = read("Frontend/components/organisms/LoginPanel.vue");
+
+    assert.match(streamBadge, /width:\s*52px/);
+    assert.match(streamBadge, /height:\s*52px/);
+    assert.match(streamBadge, /border-radius:\s*50%/);
+    assert.match(jobCard, /<StreamBadge :value="job\.stream" \/>/);
+    assert.match(applicationsTable, /<StreamBadge :value="getJob\(application\.jobId\)\?\.stream \|\| ''" \/>/);
+    assert.match(jobsAdminTable, /<StreamBadge :value="job\.stream" \/>/);
+    assert.match(scoutPage, /<StreamBadge :value="job\.stream" \/>/);
+    assert.match(loginPanel, /<StreamBadge :value="project\.stream" \/>/);
+  });
 });
 
 describe("UIアクセシビリティ・ローディング体験", () => {

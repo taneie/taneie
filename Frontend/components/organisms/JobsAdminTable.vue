@@ -24,7 +24,7 @@
           <td data-label="案件">{{ job.title }}<br />{{ job.client }}</td>
           <td data-label="単価">{{ job.rateMin }}-{{ job.rateMax }}万円</td>
           <td data-label="商流">
-            <TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge>
+            <StreamBadge :value="job.stream" />
           </td>
           <td data-label="マージン">{{ job.marginRate ?? 12 }}%</td>
           <td data-label="並び替え">
@@ -53,8 +53,7 @@ const props = defineProps<{
   loading?: boolean;
 }>();
 
-const { state, streamTone, toggleJobSort, toggleJobActive } =
-  useFrichyRuntime();
+const { state, toggleJobSort, toggleJobActive } = useFrichyRuntime();
 
 const displayJobs = computed(() => props.jobs ?? state.value.jobs);
 </script>

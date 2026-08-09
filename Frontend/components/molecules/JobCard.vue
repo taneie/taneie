@@ -39,7 +39,7 @@
       </div>
 
       <aside :class="$style.cardAside">
-        <TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge>
+        <StreamBadge :value="job.stream" />
         <div :class="$style.desktopActions">
           <BaseButton
             v-if="role === 'freelancer'"
@@ -75,7 +75,7 @@
           {{ job.remote }}
         </p>
         <span :class="$style.mobileBadges">
-          <TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge>
+          <StreamBadge :value="job.stream" />
         </span>
         
       </summary>
@@ -122,7 +122,6 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 import type { Job, Role } from "~/composables/frichy/types";
 
 const props = withDefaults(
@@ -144,8 +143,6 @@ defineEmits<{
   apply: [jobId: string];
   openAdmin: [];
 }>();
-
-const { streamTone } = useFrichyRuntime();
 
 const applyButtonLabel = computed(() => {
   if (props.applied) return "応募済み";

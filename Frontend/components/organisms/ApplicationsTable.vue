@@ -23,9 +23,7 @@
           <div :class="$style.itemMain">
             <strong>{{ getJob(application.jobId)?.title || "" }}</strong>
             <span>{{ application.appliedAt }} / {{ application.status }}</span>
-            <TagBadge :tone="streamTone(getJob(application.jobId)?.stream || '')">
-              {{ getJob(application.jobId)?.stream || "" }}
-            </TagBadge>
+            <StreamBadge :value="getJob(application.jobId)?.stream || ''" />
           </div>
           <StatusBadge :value="group.availability" />
           <select
@@ -71,7 +69,6 @@ const {
   statuses,
   getFreelancer,
   getJob,
-  streamTone,
   changeApplicationStatus,
   selectPreview,
 } = useFrichyRuntime();

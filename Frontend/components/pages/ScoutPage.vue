@@ -105,7 +105,7 @@
         >
           <span :class="$style.jobOptionHead">
             <strong>{{ job.title }}</strong>
-            <TagBadge :tone="streamTone(job.stream)">{{ job.stream }}</TagBadge>
+            <StreamBadge :value="job.stream" />
           </span>
           <span :class="$style.jobOptionSummary">{{ job.summary }}</span>
           <span :class="$style.jobOptionMeta">
@@ -212,7 +212,6 @@ const {
   selectScoutJob,
   sendSelectedScout,
   selectPreviewTarget,
-  streamTone,
 } = useFrichyRuntime();
 
 const resumePreviewDialogOpen = ref(false);

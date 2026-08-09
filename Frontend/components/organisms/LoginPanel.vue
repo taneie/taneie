@@ -204,8 +204,8 @@
             <div :class="$style.projectGrid">
               <article v-for="project in projects" :key="project.title">
                 <div :class="$style.projectMeta">
-                  <span>{{ project.remote }}</span>
-                  <span>{{ project.stream }}</span>
+                  <span :class="$style.projectRemote">{{ project.remote }}</span>
+                  <StreamBadge :value="project.stream" />
                 </div>
                 <h3>{{ project.title }}</h3>
                 <p>{{ project.summary }}</p>
@@ -1384,7 +1384,7 @@ onBeforeUnmount(() => {
   margin-bottom: 10px;
 }
 
-.projectMeta span {
+.projectRemote {
   min-height: 25px;
   display: inline-flex;
   align-items: center;
