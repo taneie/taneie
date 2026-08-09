@@ -44,7 +44,10 @@ export function createApp() {
   const app = express();
 
   app.use((_req, res, next) => {
-    res.setHeader("Permissions-Policy", "unload=*");
+    res.setHeader(
+      "Permissions-Policy",
+      'unload=(self "https://view.officeapps.live.com")',
+    );
     next();
   });
   app.use(requireBasicAuth);
