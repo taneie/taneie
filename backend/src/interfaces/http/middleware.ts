@@ -52,6 +52,11 @@ export function requireBasicAuth(
     return;
   }
 
+  if (isResumePreviewTokenRequest(req.method, req.path, req.query.token)) {
+    next();
+    return;
+  }
+
   if (isValidBasicAuthHeader(authorization, username, password)) {
     next();
     return;
@@ -59,6 +64,20 @@ export function requireBasicAuth(
 
   res.setHeader("WWW-Authenticate", 'Basic realm="Frichy", charset="UTF-8"');
   res.status(401).send("Authentication required");
+}
+
+export function isResumePreviewTokenRequest(
+  method: string,
+  path: string,
+  token: unknown,
+) {
+  const canReadPreview = method === "GET" || method === "HEAD";
+  const hasPreviewToken = typeof token === "string" && token.trim().length > 0;
+  return (
+    canReadPreview &&
+    hasPreviewToken &&
+    /^\/api\/resumes\/freelancers\/[^/]+\/view$/.test(path)
+  );
 }
 
 export function isValidBasicAuthHeader(
