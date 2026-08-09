@@ -251,6 +251,8 @@ model Job {
   remoteType RemoteType @map("remote_type")
   isPinned   Boolean    @default(false) @map("is_pinned")
   isActive   Boolean    @default(true) @map("is_active")
+  externalSource String? @map("external_source") @db.VarChar(100)
+  externalId     String? @map("external_id") @db.VarChar(255)
   createdBy  String?    @map("created_by") @db.Uuid
   createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt  DateTime   @default(now()) @map("updated_at") @db.Timestamptz(6)
@@ -264,6 +266,8 @@ model Job {
   @@index([isActive, isPinned])
   @@index([remoteType])
   @@index([streamType])
+  @@index([externalSource])
+  @@unique([externalSource, externalId])
   @@map("jobs")
 }
 

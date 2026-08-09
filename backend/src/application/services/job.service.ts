@@ -2,6 +2,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 import { AppError, type AuthContext } from "../../domain/types.js";
 import { labelToRemoteType, labelToStreamType } from "../../domain/types.js";
 import { mapJob } from "../mappers.js";
+import { ExternalProjectImportService } from "./external-project-import.service.js";
 import {
   assertFreelancerCanViewJobs,
   jobInclude,
@@ -20,7 +21,11 @@ type FreelancerMatchProfile = {
 type ListedJob = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
 
 export class JobService {
-  constructor(private readonly db: PrismaClient) {}
+  private readonly externalProjectImportService: ExternalProjectImportService;
+
+  constructor(private readonly db: PrismaClient) {
+    this.externalProjectImportService = new ExternalProjectImportService(db);
+  }
 
   async list(context?: AuthContext, input: JobListInput = {}) {
     let freelancerMatchProfile: FreelancerMatchProfile | undefined;
@@ -206,6 +211,10 @@ export class JobService {
       include: jobInclude,
     });
     return mapJob(job);
+  }
+
+  async importExternalProjects(createdBy?: string | null) {
+    return this.externalProjectImportService.importProjects(createdBy);
   }
 
   private buildScoutableJobWhere(

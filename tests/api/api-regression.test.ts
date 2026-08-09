@@ -10,6 +10,8 @@ import {
 
 useLocalTestDatabase();
 process.env.BLOB_READ_WRITE_TOKEN ||= "vercel_blob_rw_test";
+process.env.EXTERNAL_PROJECTS_API_KEY = "api-regression-external-key";
+process.env.EXTERNAL_PROJECTS_API_URL = "https://example.test/projectInfos";
 
 let server: TestServer;
 let prisma: typeof import("../../backend/src/infrastructure/prisma").prisma;
@@ -405,6 +407,93 @@ describe("APIプロフィール・案件フロー", () => {
     );
     assert.equal(changed.status, 200);
     assert.equal(changed.data.status, "面談待ち");
+  });
+
+  /**
+   * @testData 営業token、モック外部案件APIレスポンス、同一外部IDの再取り込み。
+   * @expected 外部案件はFrichy案件へ変換されて作成され、同じ外部IDの再実行では重複せず更新扱いになる。
+   */
+  it("sales can import external projects into Frichy jobs without duplicates", async () => {
+    const sales = await login(server, "sales@frichy.jp", "sales123");
+    const originalFetch = globalThis.fetch;
+    let callCount = 0;
+
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      if (!url.includes("example.test/projectInfos")) {
+        return originalFetch(input, init);
+      }
+
+      callCount += 1;
+      assert.equal(
+        (init?.headers as Record<string, string>)["X-Api-Key"],
+        "api-regression-external-key",
+      );
+      return new Response(
+        JSON.stringify({
+          count: 1,
+          projects: [
+            {
+              id: "api-external-001",
+              projectName: `外部API取り込みテスト ${callCount}`,
+              requiredSkills: "TypeScript、Nuxt.js / GCP",
+              unitPrice: 80,
+              location: "東京",
+              startPeriod: "2026-08月〜",
+              remoteRatio: "週3リモート",
+              receivedAt: "2026-06-25T10:00:00+09:00",
+            },
+          ],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }) as typeof fetch;
+
+    try {
+      const first = await server.request<{
+        fetched: number;
+        created: number;
+        updated: number;
+        failed: number;
+      }>("/jobs/import/external", { method: "POST" }, sales.token);
+      assert.equal(first.status, 200);
+      assert.equal(first.data.fetched, 1);
+      assert.equal(first.data.created, 1);
+      assert.equal(first.data.updated, 0);
+      assert.equal(first.data.failed, 0);
+
+      const second = await server.request<{
+        created: number;
+        updated: number;
+        failed: number;
+      }>("/jobs/import/external", { method: "POST" }, sales.token);
+      assert.equal(second.status, 200);
+      assert.equal(second.data.created, 0);
+      assert.equal(second.data.updated, 1);
+      assert.equal(second.data.failed, 0);
+
+      const imported = await prisma.job.findFirstOrThrow({
+        where: {
+          externalSource: "simpleprj",
+          externalId: "api-external-001",
+        },
+        include: { skills: { include: { skill: true } } },
+      });
+      created.jobIds.add(imported.id);
+      assert.equal(imported.title, "外部API取り込みテスト 2");
+      assert.equal(imported.rateMin, 80);
+      assert.equal(imported.remoteType, "hybrid");
+      assert.ok(
+        imported.skills.some((item) => item.skill.name === "TypeScript"),
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
 

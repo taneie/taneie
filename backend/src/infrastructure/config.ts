@@ -34,6 +34,12 @@ export const config = {
   blobReadWriteToken: readEnv("BLOB_READ_WRITE_TOKEN", ""),
   blobUploadCallbackUrl: readEnv("BLOB_UPLOAD_CALLBACK_URL", ""),
   gcsBucketName: readEnv("GCS_BUCKET_NAME", ""),
+  externalProjectsApiUrl: readEnv(
+    "EXTERNAL_PROJECTS_API_URL",
+    "https://simpleprj-0305-489903.web.app/api/external/projectInfos",
+  ),
+  externalProjectsApiKey: readEnv("EXTERNAL_PROJECTS_API_KEY", ""),
+  externalProjectsImportSecret: readEnv("EXTERNAL_PROJECTS_IMPORT_SECRET", ""),
   resumeUploadMaxBytes: Number(
     readEnv("RESUME_UPLOAD_MAX_BYTES", String(10 * 1024 * 1024)),
   ),

@@ -1,5 +1,6 @@
-import type { Express } from "express";
+import type { Express, NextFunction, Response } from "express";
 import type { JobService } from "../../../application/services.js";
+import { config } from "../../../infrastructure/config.js";
 import {
   asyncHandler,
   requireAuth,
@@ -16,6 +17,14 @@ import {
 import { routeParam } from "./helpers.js";
 
 export function registerJobRoutes(app: Express, jobService: JobService) {
+  app.post(
+    "/api/jobs/import/external",
+    requireSalesOrImportSecret,
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(await jobService.importExternalProjects(req.auth?.userId));
+    }),
+  );
+
   app.get(
     "/api/jobs/scoutable/:freelancerProfileId",
     requireAuth,
@@ -70,4 +79,25 @@ export function registerJobRoutes(app: Express, jobService: JobService) {
       );
     }),
   );
+}
+
+function requireSalesOrImportSecret(
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  const importSecret = config.externalProjectsImportSecret.trim();
+  const requestSecret = req.get("X-Job-Import-Secret")?.trim();
+  if (importSecret && requestSecret === importSecret) {
+    next();
+    return;
+  }
+
+  requireAuth(req, res, (authError) => {
+    if (authError) {
+      next(authError);
+      return;
+    }
+    requireRole("sales")(req, res, next);
+  });
 }

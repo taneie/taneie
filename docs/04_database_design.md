@@ -124,6 +124,8 @@ erDiagram
 | `remote_type` | RemoteType   |   NO | リモート条件     |
 | `is_pinned`   | boolean      |   NO | 優先表示         |
 | `is_active`   | boolean      |   NO | 公開状態         |
+| `external_source` | varchar(100) | YES | 外部取り込み元 |
+| `external_id` | varchar(255) | YES | 外部案件ID。`external_source` と組み合わせて一意 |
 | `created_by`  | UUID         |  YES | 作成営業ユーザー |
 
 ### 5.4 applications

@@ -31,11 +31,14 @@ env:
   APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL || 'https://frichy-322534405950.asia-northeast1.run.app' }}
   EMAIL_FROM: ${{ vars.EMAIL_FROM || '' }}
   EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO || '' }}
+  EXTERNAL_PROJECTS_API_URL: ${{ vars.EXTERNAL_PROJECTS_API_URL || 'https://simpleprj-0305-489903.web.app/api/external/projectInfos' }}
   SECRET_DATABASE_URL: ${{ vars.SECRET_DATABASE_URL || 'frichy-prod-database-url' }}
   SECRET_JWT_SECRET: ${{ vars.SECRET_JWT_SECRET || 'frichy-prod-jwt-secret' }}
   SECRET_DATA_ENCRYPTION_KEY: ${{ vars.SECRET_DATA_ENCRYPTION_KEY || 'frichy-prod-data-encryption-key' }}
   SECRET_CORS_ORIGIN: ${{ vars.SECRET_CORS_ORIGIN || 'frichy-prod-cors-origin' }}
   SECRET_RESEND_API_KEY: ${{ vars.SECRET_RESEND_API_KEY || '' }}
+  SECRET_EXTERNAL_PROJECTS_API_KEY: ${{ vars.SECRET_EXTERNAL_PROJECTS_API_KEY || 'frichy-prod-external-projects-api-key' }}
+  SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET: ${{ vars.SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET || 'frichy-prod-external-projects-import-secret' }}
 
 jobs:
   deploy:
@@ -131,6 +134,7 @@ jobs:
             "NUXT_PUBLIC_SHOW_DEMO_LOGIN=${NUXT_PUBLIC_SHOW_DEMO_LOGIN}"
             "GCS_BUCKET_NAME=${GCS_BUCKET_NAME}"
             "APP_PUBLIC_URL=${APP_PUBLIC_URL}"
+            "EXTERNAL_PROJECTS_API_URL=${EXTERNAL_PROJECTS_API_URL}"
           )
           if [ -n "${EMAIL_FROM}" ]; then
             ENV_VARS+=("EMAIL_FROM=${EMAIL_FROM}")
@@ -144,6 +148,8 @@ jobs:
             "JWT_SECRET=${SECRET_JWT_SECRET}:latest"
             "DATA_ENCRYPTION_KEY=${SECRET_DATA_ENCRYPTION_KEY}:latest"
             "CORS_ORIGIN=${SECRET_CORS_ORIGIN}:latest"
+            "EXTERNAL_PROJECTS_API_KEY=${SECRET_EXTERNAL_PROJECTS_API_KEY}:latest"
+            "EXTERNAL_PROJECTS_IMPORT_SECRET=${SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET}:latest"
           )
           if [ -n "${SECRET_RESEND_API_KEY}" ]; then
             SECRETS+=("RESEND_API_KEY=${SECRET_RESEND_API_KEY}:latest")

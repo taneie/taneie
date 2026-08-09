@@ -26,6 +26,7 @@
 | GET      | `/jobs`                        | 必要 | freelancer / sales | 案件一覧取得                 |
 | GET      | `/jobs/:id`                    | 必要 | freelancer / sales | 案件詳細取得                 |
 | POST     | `/jobs`                        | 必要 | sales              | 案件登録                     |
+| POST     | `/jobs/import/external`        | 必要 | sales / import secret | 外部案件API取り込み       |
 | PATCH    | `/jobs/:id`                    | 必要 | sales              | 案件の優先表示・公開状態更新 |
 | GET      | `/freelancers`                 | 必要 | sales              | 求職者一覧取得               |
 | GET      | `/profile/me`                  | 必要 | freelancer         | 自分のプロフィール取得       |
@@ -156,6 +157,31 @@
 {
   "isPinned": true,
   "isActive": false
+}
+```
+
+### 4.5 外部案件API取り込み
+
+`POST /api/jobs/import/external`
+
+外部案件APIから直近30日分の案件を取得し、Frichyの案件形式へ変換して登録/更新する。
+同一案件は `externalSource` と `externalId` で判定し、重複作成せず更新する。
+
+認証は以下のいずれか。
+
+- 営業ユーザーのJWT
+- `X-Job-Import-Secret` headerと `EXTERNAL_PROJECTS_IMPORT_SECRET` の一致
+
+#### Response
+
+```json
+{
+  "fetched": 3492,
+  "imported": 3492,
+  "created": 100,
+  "updated": 3392,
+  "skipped": 0,
+  "failed": 0
 }
 ```
 

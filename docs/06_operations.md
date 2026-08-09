@@ -564,6 +564,7 @@ curl -i https://frichy-322534405950.asia-northeast1.run.app/api/health
 | 主要API | プロフィール、案件情報、チャットの取得でエラーが出ない |
 | レジュメ | 本番ではGCS保存が有効で、アップロード/閲覧導線が想定通り動く |
 | 生存確認メール | `RESEND_API_KEY` / `EMAIL_FROM` 設定済み環境では営業画面から送信できる |
+| 外部案件取り込み | `EXTERNAL_PROJECTS_API_KEY` 設定済み環境では手動取り込みAPIが実行できる |
 
 ### 12.5 Artifact Registryへimageだけpushする手順
 
@@ -581,14 +582,70 @@ Cloud Runへ反映せず、imageだけをArtifact Registryへ置く場合はGitH
 
 | 変更対象 | 反映方法 |
 | -------- | -------- |
-| `DATABASE_URL` / `JWT_SECRET` / `DATA_ENCRYPTION_KEY` / `CORS_ORIGIN` / `RESEND_API_KEY` | GCP Secret Managerの新versionを追加し、`Deploy Cloud Run` を再実行する |
-| `NUXT_PUBLIC_API_BASE` / `NUXT_PUBLIC_SHOW_DEMO_LOGIN` / `GCS_BUCKET_NAME` / `APP_PUBLIC_URL` / `EMAIL_FROM` / `EMAIL_REPLY_TO` | GitHub Actions Variablesを更新し、`Deploy Cloud Run` を再実行する |
+| `DATABASE_URL` / `JWT_SECRET` / `DATA_ENCRYPTION_KEY` / `CORS_ORIGIN` / `RESEND_API_KEY` / `EXTERNAL_PROJECTS_API_KEY` / `EXTERNAL_PROJECTS_IMPORT_SECRET` | GCP Secret Managerの新versionを追加し、`Deploy Cloud Run` を再実行する |
+| `NUXT_PUBLIC_API_BASE` / `NUXT_PUBLIC_SHOW_DEMO_LOGIN` / `GCS_BUCKET_NAME` / `APP_PUBLIC_URL` / `EMAIL_FROM` / `EMAIL_REPLY_TO` / `EXTERNAL_PROJECTS_API_URL` | GitHub Actions Variablesを更新し、`Deploy Cloud Run` を再実行する |
 | Vercel開発環境の値 | Vercel Project SettingsのEnvironment Variablesを更新し、Vercelで再デプロイする |
 
 秘密値はGitHub repositoryへcommitしない。
 `RESEND_API_KEY` をCloud Runへ渡す場合は、GitHub Actions Variable `SECRET_RESEND_API_KEY` にGCP Secret Manager上のsecret名を設定する。
+外部案件APIキーは既定で Secret Manager の `frichy-prod-external-projects-api-key`、取り込み用共有secretは `frichy-prod-external-projects-import-secret` をCloud Runへ渡す。
 
-### 12.7 rollback手順
+### 12.7 外部案件API取り込み
+
+外部案件APIから案件メール由来の案件情報を取得し、Frichyの案件形式へ変換して登録/更新する。
+同一案件は外部APIの `id` を `external_id` として保持し、重複作成せず更新する。
+
+本リリースでは取り込みAPIと手動実行手順だけを本番へ反映する。
+日次実行のCloud Scheduler jobはまだ作成しない。
+
+#### 手動実行
+
+営業ユーザーでログインしてtokenを取得し、取り込みAPIを実行する。
+
+```bash
+TOKEN="$(curl -s -X POST 'https://frichy-322534405950.asia-northeast1.run.app/api/auth/login' \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"sales@frichy.jp","password":"sales123"}' | jq -r '.token')"
+
+curl -s -X POST 'https://frichy-322534405950.asia-northeast1.run.app/api/jobs/import/external' \
+  -H "Authorization: Bearer ${TOKEN}"
+```
+
+ローカルや一時実行用CLI:
+
+```bash
+EXTERNAL_PROJECTS_API_KEY='<external-api-key>' npm run jobs:import:external
+```
+
+#### 日次実行を開始する場合
+
+運用開始時は JST 08:00 と 20:00 に実行する。
+Cloud Scheduler jobを作成するまでは自動実行されない。
+
+```bash
+IMPORT_SECRET="$(gcloud secrets versions access latest \
+  --project frichy \
+  --secret frichy-prod-external-projects-import-secret)"
+
+gcloud scheduler jobs create http frichy-external-project-import \
+  --project frichy \
+  --location asia-northeast1 \
+  --schedule '0 8,20 * * *' \
+  --time-zone 'Asia/Tokyo' \
+  --uri 'https://frichy-322534405950.asia-northeast1.run.app/api/jobs/import/external' \
+  --http-method POST \
+  --headers "X-Job-Import-Secret=${IMPORT_SECRET}"
+```
+
+作成後は以下で手動実行確認する。
+
+```bash
+gcloud scheduler jobs run frichy-external-project-import \
+  --project frichy \
+  --location asia-northeast1
+```
+
+### 12.8 rollback手順
 
 本番デプロイ後に重大な問題が出た場合は、Cloud Runの直前の正常revisionへtrafficを戻す。
 
@@ -601,7 +658,7 @@ Cloud Runへ反映せず、imageだけをArtifact Registryへ置く場合はGitH
 DB migrationを伴うリリースをrollbackする場合、アプリrevisionだけ戻してもDB schemaは戻らない。
 破壊的migrationを含む場合は、事前にDB rollback手順を個別に用意する。
 
-### 12.8 関連コマンド
+### 12.9 関連コマンド
 
 | コマンド | 内容 |
 | -------- | ---- |
@@ -612,6 +669,7 @@ DB migrationを伴うリリースをrollbackする場合、アプリrevisionだ�
 | `npm run api:start` | コンパイル済みAPIを起動 |
 | `npm run gcp:build` | Cloud Run container build内で使う本番向けbuild |
 | `npm run gcp:start` | Cloud Run runtimeでAPIを起動 |
+| `npm run jobs:import:external` | 外部案件APIから案件を手動取り込み |
 
 `npm run generate` / `npm run build` / `npm run typecheck` は、Nuxtの古いlockでCIやVercel buildが止まらないよう `NUXT_IGNORE_LOCK=1` を自動付与する。
 
