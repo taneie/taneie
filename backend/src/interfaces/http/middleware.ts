@@ -1,7 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
 import { Prisma } from "@prisma/client";
+import { timingSafeEqual } from "node:crypto";
 import { ZodError, type ZodSchema } from "zod";
 import { AppError, type AuthContext } from "../../domain/types.js";
+import { config } from "../../infrastructure/config.js";
 import { prisma } from "../../infrastructure/prisma.js";
 import { verifyToken } from "../../infrastructure/security.js";
 import { decryptText } from "../../infrastructure/crypto.js";
@@ -30,6 +32,62 @@ export function validateBody<T>(schema: ZodSchema<T>) {
     req.body = result.data;
     next();
   };
+}
+
+export function requireBasicAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const username = config.basicAuthUser;
+  const password = config.basicAuthPassword;
+  if (!username || !password) {
+    next();
+    return;
+  }
+
+  const authorization = req.headers.authorization || "";
+  if (authorization.startsWith("Bearer ")) {
+    next();
+    return;
+  }
+
+  if (isValidBasicAuthHeader(authorization, username, password)) {
+    next();
+    return;
+  }
+
+  res.setHeader("WWW-Authenticate", 'Basic realm="Frichy", charset="UTF-8"');
+  res.status(401).send("Authentication required");
+}
+
+export function isValidBasicAuthHeader(
+  authorization: string,
+  username: string,
+  password: string,
+) {
+  const [scheme, credentials] = authorization.split(" ");
+  if (scheme !== "Basic" || !credentials) return false;
+
+  const decoded = Buffer.from(credentials, "base64").toString("utf8");
+  const separatorIndex = decoded.indexOf(":");
+  if (separatorIndex < 0) return false;
+
+  const inputUsername = decoded.slice(0, separatorIndex);
+  const inputPassword = decoded.slice(separatorIndex + 1);
+  return (
+    safeEquals(inputUsername, username) &&
+    safeEquals(inputPassword, password)
+  );
+}
+
+function safeEquals(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return (
+    leftBuffer.length === rightBuffer.length &&
+    timingSafeEqual(leftBuffer, rightBuffer)
+  );
 }
 
 export async function requireAuth(

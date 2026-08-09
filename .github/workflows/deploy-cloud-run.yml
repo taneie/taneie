@@ -36,6 +36,8 @@ env:
   SECRET_JWT_SECRET: ${{ vars.SECRET_JWT_SECRET || 'frichy-prod-jwt-secret' }}
   SECRET_DATA_ENCRYPTION_KEY: ${{ vars.SECRET_DATA_ENCRYPTION_KEY || 'frichy-prod-data-encryption-key' }}
   SECRET_CORS_ORIGIN: ${{ vars.SECRET_CORS_ORIGIN || 'frichy-prod-cors-origin' }}
+  SECRET_BASIC_AUTH_USER: ${{ vars.SECRET_BASIC_AUTH_USER || 'frichy-prod-basic-auth-user' }}
+  SECRET_BASIC_AUTH_PASSWORD: ${{ vars.SECRET_BASIC_AUTH_PASSWORD || 'frichy-prod-basic-auth-password' }}
   SECRET_RESEND_API_KEY: ${{ vars.SECRET_RESEND_API_KEY || '' }}
   SECRET_EXTERNAL_PROJECTS_API_KEY: ${{ vars.SECRET_EXTERNAL_PROJECTS_API_KEY || 'frichy-prod-external-projects-api-key' }}
   SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET: ${{ vars.SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET || 'frichy-prod-external-projects-import-secret' }}
@@ -148,6 +150,8 @@ jobs:
             "JWT_SECRET=${SECRET_JWT_SECRET}:latest"
             "DATA_ENCRYPTION_KEY=${SECRET_DATA_ENCRYPTION_KEY}:latest"
             "CORS_ORIGIN=${SECRET_CORS_ORIGIN}:latest"
+            "BASIC_AUTH_USER=${SECRET_BASIC_AUTH_USER}:latest"
+            "BASIC_AUTH_PASSWORD=${SECRET_BASIC_AUTH_PASSWORD}:latest"
             "EXTERNAL_PROJECTS_API_KEY=${SECRET_EXTERNAL_PROJECTS_API_KEY}:latest"
             "EXTERNAL_PROJECTS_IMPORT_SECRET=${SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET}:latest"
           )
