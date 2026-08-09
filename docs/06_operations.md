@@ -486,6 +486,7 @@ git push origin main
 Vercel Project SettingsのRoot Directoryがrepository rootの場合は `vercel.json`、`Frontend` の場合は `Frontend/vercel.json` が使われる。
 どちらも `npm run generate` で `Frontend/.output/public` を配信する設定にそろえている。
 旧Root Directoryの `src/frontend/elev8-sp` を参照している場合も、互換用 `src/frontend/elev8-sp/vercel.json` から同じbuildへ委譲する。
+旧配信パス `src/Elev8/Backend/wwwroot/sp` を参照している場合も、互換用 `src/Elev8/Backend/wwwroot/sp/vercel.json` から同じbuildへ委譲する。
 
 4. 開発環境URLで以下を確認する。
 
