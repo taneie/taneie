@@ -241,6 +241,7 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import type { Message } from "~/composables/frichy/types";
 
 const {
+  state,
   currentRole,
   selectedFreelancer,
   activeChatFreelancerId,
@@ -278,11 +279,25 @@ const emptyMeetingText = computed(() =>
 const emptyChatText = computed(
   () => "この求職者とのメッセージはまだありません。",
 );
-const canShowMeetingForm = computed(
+const activeInitialMeetingRequests = computed(() => {
+  const freelancerId = activeChatFreelancerId.value;
+  if (!freelancerId) return [];
+  return state.value.meetingRequests.filter(
+    (meeting) => meeting.freelancerId === freelancerId && !meeting.applicationId,
+  );
+});
+const canSalesCreateInitialMeeting = computed(
   () =>
-    (currentRole.value === "sales" && Boolean(rescheduleMeetingId.value)) ||
-    (currentRole.value !== "sales" && meetingThreadMode.value === "job"),
+    currentRole.value === "sales" &&
+    meetingThreadMode.value === "initial" &&
+    !activeInitialMeetingRequests.value.length,
 );
+const canShowMeetingForm = computed(() => {
+  if (currentRole.value === "sales") {
+    return Boolean(rescheduleMeetingId.value) || canSalesCreateInitialMeeting.value;
+  }
+  return meetingThreadMode.value === "job";
+});
 const canCompleteInitialMeeting = computed(
   () =>
     currentRole.value === "sales" &&
@@ -290,7 +305,9 @@ const canCompleteInitialMeeting = computed(
     !selectedFreelancer.value.initialMeetingCompleted,
 );
 const meetingFormLabel = computed(() =>
-  currentRole.value === "sales" ? "リスケ候補日時" : "候補日時",
+  currentRole.value === "sales" && rescheduleMeetingId.value
+    ? "リスケ候補日時"
+    : "候補日時",
 );
 
 function isOwnMessage(message: Message) {
@@ -401,6 +418,14 @@ function removeCandidate(index: number) {
   if (!candidates.value.length) candidates.value.push("");
 }
 
+function hasInitialMeetingCandidateForActiveFreelancer() {
+  const freelancerId = activeChatFreelancerId.value;
+  if (!freelancerId) return false;
+  return state.value.meetingRequests.some(
+    (meeting) => meeting.freelancerId === freelancerId && !meeting.applicationId,
+  );
+}
+
 async function scrollChatToBottom() {
   await nextTick();
   const target = messageListRef.value;
@@ -434,6 +459,13 @@ watch(
   ],
   () => {
     rescheduleMeetingId.value = "";
+    if (
+      currentRole.value === "sales" &&
+      !hasInitialMeetingCandidateForActiveFreelancer()
+    ) {
+      setMeetingThreadMode("initial");
+      return;
+    }
     if (!activeFreelancerApplications.value.length) {
       setMeetingThreadMode("initial");
       return;

@@ -338,6 +338,24 @@ describe("UIアクセシビリティ・ローディング体験", () => {
   });
 
   /**
+   * @testData MeetingChatの営業ロール、初回面談候補0件、応募案件ありの求職者。
+   * @expected 本人の初回候補がない場合は営業側でも初回面談フォームが表示され、候補登録後もリスケ表示にはならない。
+   */
+  it("sales can create initial meeting candidates when the freelancer has no wishes", () => {
+    const meetingChat = read("Frontend/components/organisms/MeetingChat.vue");
+
+    assert.match(meetingChat, /const activeInitialMeetingRequests = computed/);
+    assert.match(meetingChat, /const canSalesCreateInitialMeeting = computed/);
+    assert.match(meetingChat, /currentRole\.value === "sales"/);
+    assert.match(meetingChat, /meetingThreadMode\.value === "initial"/);
+    assert.match(meetingChat, /!activeInitialMeetingRequests\.value\.length/);
+    assert.match(meetingChat, /Boolean\(rescheduleMeetingId\.value\) \|\| canSalesCreateInitialMeeting\.value/);
+    assert.match(meetingChat, /function hasInitialMeetingCandidateForActiveFreelancer/);
+    assert.match(meetingChat, /setMeetingThreadMode\("initial"\)/);
+    assert.match(meetingChat, /rescheduleMeetingId\.value\s*\?\s*"リスケ候補日時"\s*:\s*"候補日時"/);
+  });
+
+  /**
    * @testData AdminPageの応募者一覧、成約/見送りステータス、ApplicationsTableへの入力。
    * @expected 進行中応募と成約・見送り応募が別カードに分かれて表示される。
    */
