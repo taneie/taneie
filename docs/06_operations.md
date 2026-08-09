@@ -483,6 +483,9 @@ git push origin main
 
 3. Vercelのdeploymentが成功したことを確認する。
 
+Vercel Project SettingsのRoot Directoryがrepository rootの場合は `vercel.json`、`Frontend` の場合は `Frontend/vercel.json` が使われる。
+どちらも `npm run generate` で `Frontend/.output/public` を配信する設定にそろえている。
+
 4. 開発環境URLで以下を確認する。
 
 | 観点 | 確認内容 |
