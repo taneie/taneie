@@ -24,11 +24,11 @@
           <AppIcon :name="item.icon" />
           <span>{{ item.label }}</span>
           <span
-            v-if="navBadgeCounts[item.view]"
+            v-if="navBadgeCount(item.view)"
             :class="$style.navBadge"
-            :aria-label="`${item.label}に${navBadgeCounts[item.view]}件の未対応があります`"
+            :aria-label="`${item.label}に${navBadgeCount(item.view)}件の未対応があります`"
           >
-            {{ formatBadgeCount(navBadgeCounts[item.view]) }}
+            {{ formatBadgeCount(navBadgeCount(item.view)) }}
           </span>
         </button>
       </nav>
@@ -77,6 +77,10 @@ const navBadgeCounts = computed<Partial<Record<ViewKey, number>>>(() => ({
 
 function formatBadgeCount(count = 0) {
   return count > 99 ? "99+" : String(count);
+}
+
+function navBadgeCount(view: ViewKey) {
+  return navBadgeCounts.value[view] || 0;
 }
 
 function goRoleHome() {

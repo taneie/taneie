@@ -260,7 +260,6 @@ const {
   updateMeetingStatus,
   updateInitialMeetingCompleted,
   sendMessage,
-  markActiveChatAsRead,
   markDirty,
   clearUnsavedChanges,
   getJob,
@@ -413,7 +412,6 @@ async function scrollChatToBottom() {
 }
 
 onMounted(() => {
-  void markActiveChatAsRead();
   void scrollChatToBottom();
 });
 
@@ -425,7 +423,6 @@ watch(
     activeMeetingJobId.value,
   ],
   () => {
-    void markActiveChatAsRead();
     void scrollChatToBottom();
   },
 );

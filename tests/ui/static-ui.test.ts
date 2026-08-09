@@ -297,9 +297,22 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.match(appHeader, /meeting:\s*currentUnreadChatCount\.value/);
     assert.match(appHeader, /contact:\s*state\.value\.contactInquiries\.filter/);
     assert.match(appHeader, /inquiry\.status === "new"/);
+    assert.match(appHeader, /function navBadgeCount\(view: ViewKey\)/);
+    assert.match(appHeader, /v-if="navBadgeCount\(item\.view\)"/);
     assert.match(appHeader, /formatBadgeCount/);
     assert.match(appHeader, /\$style\.navBadge/);
     assert.doesNotMatch(appHeader, /currentRole === 'freelancer'/);
+  });
+
+  /**
+   * @testData MeetingChatのmounted/watch処理、runtime側の明示既読化関数。
+   * @expected チャット画面componentは表示更新だけ行い、未読の既読化はruntimeの画面遷移/対象選択に集約する。
+   */
+  it("meeting chat does not auto-clear unread badges from component watches", () => {
+    const meetingChat = read("Frontend/components/organisms/MeetingChat.vue");
+
+    assert.doesNotMatch(meetingChat, /markActiveChatAsRead/);
+    assert.match(meetingChat, /void scrollChatToBottom\(\)/);
   });
 
   /**
