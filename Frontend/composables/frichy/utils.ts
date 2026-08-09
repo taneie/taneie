@@ -1,5 +1,37 @@
 import type { Freelancer, Profile } from "./types";
 
+export const JOB_SUMMARY_PREVIEW_LIMIT = 200;
+
+const HIDDEN_JOB_SUMMARY_KEYS = new Set([
+  "id",
+  "externalid",
+  "external_id",
+  "documentid",
+  "document_id",
+  "created",
+  "createdat",
+  "created_at",
+  "updated",
+  "updatedat",
+  "updated_at",
+  "receivedat",
+  "received_at",
+  "receivedatms",
+  "received_at_ms",
+  "timestamp",
+]);
+
+const HIDDEN_JOB_SUMMARY_LABELS = new Set([
+  "外部案件ID",
+  "ドキュメントID",
+  "案件ID",
+  "作成日時",
+  "更新日時",
+  "登録日時",
+  "取得日時",
+  "受信日時",
+]);
+
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -35,6 +67,52 @@ export function splitCsv(value: string | number | null | undefined) {
     .split(/[,、\n]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+export function sanitizeJobSummary(value = "") {
+  return String(value || "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => !isHiddenJobSummaryLine(line))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+export function toJobSummaryDisplay(
+  value = "",
+  expanded = false,
+  limit = JOB_SUMMARY_PREVIEW_LIMIT,
+) {
+  const fullText = sanitizeJobSummary(value);
+  const isCollapsible = fullText.length > limit;
+  const previewText = isCollapsible
+    ? `${fullText.slice(0, limit).trimEnd()}...`
+    : fullText;
+
+  return {
+    fullText,
+    previewText,
+    text: expanded ? fullText : previewText,
+    isCollapsible,
+  };
+}
+
+function isHiddenJobSummaryLine(line: string) {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+
+  const separatorIndex = trimmed.search(/[:：]/);
+  if (separatorIndex < 0) return false;
+
+  const label = trimmed.slice(0, separatorIndex).trim();
+  const normalizedLabel = label.replace(/[\s_-]/g, "").toLowerCase();
+  return (
+    HIDDEN_JOB_SUMMARY_LABELS.has(label) ||
+    HIDDEN_JOB_SUMMARY_KEYS.has(label.toLowerCase()) ||
+    HIDDEN_JOB_SUMMARY_KEYS.has(normalizedLabel)
+  );
 }
 
 export function profileSkillList(profile: Pick<

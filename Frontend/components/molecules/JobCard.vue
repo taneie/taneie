@@ -21,7 +21,7 @@
           </div>
         </div>
 
-        <p :class="$style.summaryText">{{ job.summary }}</p>
+        <JobSummaryText :summary="job.summary" :reset-key="job.id" />
 
         <div :class="$style.tags">
           <TagBadge
@@ -81,7 +81,7 @@
       </summary>
 
       <div :class="$style.mobileDetail">
-        <span :class="$style.mobileDescription">{{ job.summary }}</span>
+        <JobSummaryText :summary="job.summary" :reset-key="job.id" compact />
         <span :class="$style.mobileTags">
           <TagBadge
             v-for="skill in job.required"
@@ -222,20 +222,12 @@ function formatMarginAmount(value: number) {
   overflow-wrap: anywhere;
 }
 
-.card p,
-.mobileDescription {
-  overflow-wrap: anywhere;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
 .metaLine {
   margin: 8px 0;
+  color: var(--muted);
   font-size: 13px;
-}
-
-.summaryText {
-  margin: 10px 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .tags,
@@ -342,11 +334,6 @@ function formatMarginAmount(value: number) {
 
   .mobileCard[open] .mobileChevron {
     transform: rotate(180deg);
-  }
-
-  .mobileDescription {
-    margin: 0;
-    font-size: 13px;
   }
 
   .mobileDetail {

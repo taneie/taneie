@@ -8,8 +8,10 @@ import {
   formatJstDateTime,
   maskName,
   profileSkillList,
+  sanitizeJobSummary,
   splitCsv,
   streamTone,
+  toJobSummaryDisplay,
   toApiDateTime,
   uid,
 } from "../Frontend/composables/frichy/utils";
@@ -84,6 +86,43 @@ describe("フロントエンド共通ユーティリティ", () => {
     assert.deepEqual(splitCsv(123), ["123"]);
     assert.deepEqual(splitCsv(null), []);
     assert.deepEqual(splitCsv(" , \n、"), []);
+  });
+
+  /**
+   * @testData 改行を含む案件サマリとcreated_at、受信日時、外部案件IDのメタ情報行。
+   * @expected 表示用サマリではメタ情報行だけを除外し、業務内容の改行は保持される。
+   */
+  it("案件サマリは不要なメタ情報を除外し改行を保持する", () => {
+    assert.equal(
+      sanitizeJobSummary(
+        [
+          "外部案件ID: abc",
+          "必須スキル: TypeScript",
+          "created_at: 2026-08-09T10:00:00Z",
+          "業務内容: 管理画面開発",
+          "受信日時: 2026-08-09T19:00:00+09:00",
+          "勤務地: 東京",
+        ].join("\n"),
+      ),
+      ["必須スキル: TypeScript", "業務内容: 管理画面開発", "勤務地: 東京"].join("\n"),
+    );
+  });
+
+  /**
+   * @testData 201文字の案件サマリ。
+   * @expected 初期表示は200文字と省略記号に折りたたまれ、展開時は全文が表示される。
+   */
+  it("案件サマリは200文字を超える場合だけ折りたたむ", () => {
+    const summary = `${"a".repeat(200)}b`;
+
+    assert.deepEqual(toJobSummaryDisplay(summary, false), {
+      fullText: summary,
+      previewText: `${"a".repeat(200)}...`,
+      text: `${"a".repeat(200)}...`,
+      isCollapsible: true,
+    });
+    assert.equal(toJobSummaryDisplay(summary, true).text, summary);
+    assert.equal(toJobSummaryDisplay("短いサマリ").isCollapsible, false);
   });
 
   /**

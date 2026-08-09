@@ -93,21 +93,25 @@
       </form>
 
       <div :class="$style.jobList">
-        <button
+        <article
           v-for="job in scoutJobPicker.jobs"
           :key="job.id"
-          type="button"
+          role="button"
+          tabindex="0"
+          :aria-pressed="scoutJobPicker.selectedJobId === job.id"
           :class="[
             $style.jobOption,
             { [$style.jobOptionSelected]: scoutJobPicker.selectedJobId === job.id },
           ]"
           @click="selectScoutJob(job.id)"
+          @keydown.enter.prevent="selectScoutJob(job.id)"
+          @keydown.space.prevent="selectScoutJob(job.id)"
         >
           <span :class="$style.jobOptionHead">
             <strong>{{ job.title }}</strong>
             <StreamBadge :value="job.stream" />
           </span>
-          <span :class="$style.jobOptionSummary">{{ job.summary }}</span>
+          <JobSummaryText :summary="job.summary" :reset-key="job.id" compact />
           <span :class="$style.jobOptionMeta">
             {{ job.client }} / {{ job.rateMin }}-{{ job.rateMax }}万円 / {{ job.remote }}
           </span>
@@ -124,7 +128,7 @@
               >{{ skill }}</TagBadge
             >
           </span>
-        </button>
+        </article>
 
         <div
           v-if="!scoutJobPicker.loading && scoutJobPicker.jobs.length === 0"
@@ -437,8 +441,17 @@ function closeResumePreviewDialog() {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #fff;
+  cursor: pointer;
+  outline: none;
   text-align: left;
   box-shadow: 0 8px 22px rgba(29, 78, 137, 0.05);
+}
+
+.jobOption:focus-visible {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 3px rgba(29, 78, 137, 0.16),
+    0 12px 28px rgba(29, 95, 211, 0.12);
 }
 
 .jobOptionSelected {
@@ -456,7 +469,6 @@ function closeResumePreviewDialog() {
   color: #10294f;
 }
 
-.jobOptionSummary,
 .jobOptionMeta {
   color: var(--muted);
   font-size: 13px;
