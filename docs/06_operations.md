@@ -141,15 +141,15 @@ docker compose version
 
 ### 4.5 Node.jsをWSL2 Ubuntuにインストール
 
-Node.jsはLTS版を使用する。組織標準がある場合は、そのバージョンに合わせる。
+Node.jsはVercel / Dockerfile と合わせて 24.x を使用する。
 
 `nvm` を使う例:
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 source ~/.bashrc
-nvm install --lts
-nvm use --lts
+nvm install 24
+nvm use 24
 node -v
 npm -v
 ```
@@ -219,7 +219,7 @@ http://127.0.0.1:5173/
 ### 5.1 前提
 
 - Homebrew導入済み
-- Node.js LTSを使用
+- Node.js 24.xを使用
 - Docker Desktopは使わない
 - PostgreSQLはColima上のDocker runtimeで起動する
 
@@ -259,15 +259,15 @@ docker ps
 
 ### 5.4 Node.jsをインストール
 
-組織標準がなければLTS版を使用する。
+Node.jsはVercel / Dockerfile と合わせて 24.x を使用する。
 
 `nvm` を使う例:
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 source ~/.zshrc
-nvm install --lts
-nvm use --lts
+nvm install 24
+nvm use 24
 node -v
 npm -v
 ```
@@ -532,22 +532,26 @@ DB migrationがない変更ではこの手順は不要。
 Cloud Run serviceの公開設定は既存のIAMを維持する。
 `Deploy Cloud Run` workflowはrevision更新だけを行い、`--allow-unauthenticated` によるIAM変更は行わない。
 
-認証方式はworkflow手動実行時の `auth_method` で選ぶ。既定は `workload_identity` で、以下のWorkload Identity設定を使う。
+認証方式はworkflow手動実行時の `auth_method` で選ぶ。既定は `auto`。
+`auto` は `GCP_CREDENTIALS_JSON` が設定されていればJSON認証を優先し、未設定の場合だけWorkload Identity設定を使う。
+未作成または削除済みのWorkload Identity Providerへ誤って向かわないよう、Provider名はGitHub Variablesで明示する。
 
-| 値 | 既定値 |
+| 値 | 設定例 |
 | -- | ------ |
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/322534405950/locations/global/workloadIdentityPools/github/providers/github` |
 | `GCP_DEPLOY_SERVICE_ACCOUNT` | `frichy-github-deployer@frichy.iam.gserviceaccount.com` |
 
 別projectへ向ける場合はGitHub Actions Variablesで上書きする。
-Workload Identityを使わない場合は `GCP_CREDENTIALS_JSON` をGitHub Actions Secretsに設定し、workflow実行時の `auth_method` で `credentials_json` を選ぶ。
+Workload Identityを使わない場合は `GCP_CREDENTIALS_JSON` をGitHub Actions Secretsに設定する。
+`auth_method=credentials_json` を選ぶとJSON認証だけを使う。
 
 | 設定場所 | 必要な値 |
 | -------- | -------- |
-| GitHub Actions Variables | `GCP_WORKLOAD_IDENTITY_PROVIDER`、`GCP_DEPLOY_SERVICE_ACCOUNT` |
-| GitHub Actions Secrets | `GCP_CREDENTIALS_JSON`。`auth_method=credentials_json` の場合だけ必要 |
+| GitHub Actions Variables | Workload Identityを使う場合だけ `GCP_WORKLOAD_IDENTITY_PROVIDER`、`GCP_DEPLOY_SERVICE_ACCOUNT` |
+| GitHub Actions Secrets | JSON認証を使う場合だけ `GCP_CREDENTIALS_JSON` |
 
-通常はWorkload Identityを使う。`Select Google Cloud auth method` で落ちる場合は、`auth_method` の選択と上記設定を確認する。
+`google-github-actions/auth` が `invalid_target` で落ちる場合は、`GCP_WORKLOAD_IDENTITY_PROVIDER` が実在するPool/Providerを指しているか確認する。
+急ぎで復旧する場合は `GCP_CREDENTIALS_JSON` を設定し、`auth_method=credentials_json` で実行する。
 
 6. 本番URLで疎通確認する。
 

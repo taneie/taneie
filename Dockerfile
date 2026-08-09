@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:22-bookworm-slim AS build
+FROM node:24-bookworm-slim AS build
 WORKDIR /app
 
 RUN apt-get update \
@@ -25,7 +25,7 @@ COPY backend ./backend
 COPY Frontend ./Frontend
 RUN npm run gcp:build
 
-FROM node:22-bookworm-slim AS runtime
+FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 
 RUN apt-get update \

@@ -145,13 +145,13 @@ backend/prisma/
 ローカル環境では以下を使用します。
 
 ```txt
-Node.js
+Node.js 24.x
 npm
 Docker
 Git
 ```
 
-Node.js は LTS 版の利用を推奨します。
+Node.js は Vercel / Dockerfile と合わせて 24.x を使用します。
 
 ---
 
