@@ -239,6 +239,23 @@ export interface ProfileTermsInput {
   resume?: File | null;
 }
 
+export interface ProfileRegistrationInput {
+  basic: Pick<Profile, "name" | "nameKana" | "email" | "phone" | "role">;
+  skills: Pick<
+    Profile,
+    | "languages"
+    | "db"
+    | "frameworks"
+    | "cloud"
+    | "otherSkills"
+    | "years"
+    | "skillExperiences"
+  >;
+  terms: ProfileTermsInput;
+  meetingCandidates: string[] | string;
+  pledgeAccepted: boolean;
+}
+
 export interface ResumeUploadIntent {
   pathname: string;
   clientPayload: string;

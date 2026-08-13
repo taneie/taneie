@@ -123,6 +123,36 @@ describe("UI可読性・レスポンシブスタイル", () => {
   });
 
   /**
+   * @testData ProfileWizardの各入力ステップ、ヘッダー操作内の共通登録ボタン、フォーム同期watch、一括保存ランタイム。
+   * @expected 各ステップでは保存submitを持たず、初期状態に戻すボタンの右にある共通登録ボタンだけで一括保存し、ステップ移動で入力内容を再同期しない。
+   */
+  it("プロフィール入力は共通の登録ボタンだけで保存する", () => {
+    const source = read("Frontend/components/organisms/ProfileWizard.vue");
+    const runtime = read("Frontend/composables/frichy/useFrichyRuntime.ts");
+    const resetButton = source.indexOf('@click="resetProfileForm"');
+    const registerButton = source.indexOf('@click="registerProfile"');
+
+    assert.doesNotMatch(source, /保存して次へ|登録完了/);
+    assert.doesNotMatch(source, /@submit\.prevent="save/);
+    assert.match(source, />登録する<\/BaseButton\s*>/);
+    assert.ok(registerButton > resetButton);
+    assert.match(source, /\$style\.headerActions/);
+    assert.doesNotMatch(source, /\$style\.stepActions/);
+    assert.match(source, /function buildProfileRegistrationInput\(\)/);
+    assert.match(
+      source,
+      /async function registerProfile\(\)[\s\S]*saveProfileRegistration\(buildProfileRegistrationInput\(\)\)/,
+    );
+    assert.match(source, /watch\(\(\) => state\.value\.profile\.id, hydrateForms/);
+    assert.doesNotMatch(source, /state\.value\.profile\.id,\s*state\.value\.wizardStep/);
+    assert.match(
+      runtime,
+      /async function saveProfileRegistration\(values: ProfileRegistrationInput\)/,
+    );
+    assert.match(runtime, /validateProfileRegistration\(values, candidates\)/);
+  });
+
+  /**
    * @testData TagBadgeの商流/スキル表示、狭いカード幅、長いタグ文字列。
    * @expected バッジは1行で省略され、折り返しで楕円形に崩れない。
    */

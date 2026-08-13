@@ -43,16 +43,20 @@
     <section :class="$style.panel">
       <div :class="$style.panelHeader">
         <h2 :class="$style.panelTitle">{{ steps[state.wizardStep - 1] }}</h2>
-        <BaseButton variant="secondary" @click="resetProfile"
-          >初期状態に戻す</BaseButton
-        >
+        <div :class="$style.headerActions">
+          <BaseButton variant="secondary" @click="resetProfileForm"
+            >初期状態に戻す</BaseButton
+          >
+          <BaseButton type="button" icon="calendar" @click="registerProfile"
+            >登録する</BaseButton
+          >
+        </div>
       </div>
 
       <div :class="$style.panelBody">
-        <form
+        <div
           v-if="state.wizardStep === 1"
           :class="$style.formGrid"
-          @submit.prevent="saveBasic"
         >
           <FormInput
             v-model="basic.name"
@@ -88,15 +92,11 @@
             placeholder="職種を選択してください"
             @update:model-value="markDirty"
           />
-          <div :class="$style.actions">
-            <BaseButton type="submit" icon="user">保存して次へ</BaseButton>
-          </div>
-        </form>
+        </div>
 
-        <form
+        <div
           v-else-if="state.wizardStep === 2"
           :class="$style.formGrid"
-          @submit.prevent="saveSkills"
         >
           <fieldset :class="$style.skillGroup">
             <legend>開発言語</legend>
@@ -176,15 +176,11 @@
               @update:model-value="markDirty"
             />
           </fieldset>
-          <div :class="$style.actions">
-            <BaseButton type="submit" icon="user">保存して次へ</BaseButton>
-          </div>
-        </form>
+        </div>
 
-        <form
+        <div
           v-else-if="state.wizardStep === 3"
           :class="$style.formGrid"
-          @submit.prevent="saveTerms"
         >
           <FormInput
             v-model="terms.desiredRate"
@@ -249,15 +245,11 @@
               }}{{ profile.resumeSize ? ` / ${profile.resumeSize}` : "" }}
             </p>
           </div>
-          <div :class="$style.actions">
-            <BaseButton type="submit" icon="user">保存して次へ</BaseButton>
-          </div>
-        </form>
+        </div>
 
-        <form
+        <div
           v-else
           :class="[$style.formGrid, $style.one]"
-          @submit.prevent="saveMeeting"
         >
           <div :class="$style.field">
             <span>初回面談の候補日</span>
@@ -314,13 +306,7 @@
               <span>上記の誓約条件を確認し、同意します。</span>
             </label>
           </div>
-          <div :class="$style.actions">
-            <BaseButton type="submit" icon="calendar">登録完了</BaseButton>
-            <BaseButton variant="ghost" icon="search" @click="setView('jobs')"
-              >案件検索へ</BaseButton
-            >
-          </div>
-        </form>
+        </div>
       </div>
     </section>
   </div>
@@ -329,19 +315,17 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
-import type { ProfileTermsInput } from "~/composables/frichy/types";
+import type {
+  ProfileRegistrationInput,
+  ProfileTermsInput,
+} from "~/composables/frichy/types";
 
 const {
   state,
   remoteOptions,
   availabilityOptions,
-  setView,
-  saveProfileBasic,
-  saveProfileSkills,
-  saveProfileTerms,
-  saveProfileMeeting,
+  saveProfileRegistration,
   resetProfile,
-  confirmDiscardChanges,
   persist,
   splitCsv,
   markDirty,
@@ -414,7 +398,7 @@ const selectedResumeFileLabel = computed(() => {
   return `${terms.resume.name} / ${formatFileSize(terms.resume.size)}`;
 });
 
-watch(() => [state.value.profile.id, state.value.wizardStep], hydrateForms, {
+watch(() => state.value.profile.id, hydrateForms, {
   immediate: true,
 });
 
@@ -466,11 +450,13 @@ function hydrateForms() {
   pledgeAccepted.value = Boolean(p.pledgeAccepted || p.pledgedAt);
 }
 
-async function moveStep(step: number) {
-  if (state.value.wizardStep !== step && !(await confirmDiscardChanges()))
-    return;
+function moveStep(step: number) {
   state.value.wizardStep = step;
   persist();
+}
+
+async function resetProfileForm() {
+  if (await resetProfile()) hydrateForms();
 }
 
 function onResumeChange(event: Event) {
@@ -496,40 +482,39 @@ function removeMeetingCandidate(index: number) {
   markDirty();
 }
 
-function saveBasic() {
-  saveProfileBasic({
-    name: basic.name,
-    nameKana: basic.nameKana,
-    email: basic.email,
-    phone: basic.phone,
-    role: basic.role,
-  });
-}
-
-function saveSkills() {
+function buildProfileRegistrationInput(): ProfileRegistrationInput {
   const otherSkills = splitCsv(skills.other);
-  saveProfileSkills({
-    languages: skills.languages.join(", "),
-    db: skills.db.join(", "),
-    frameworks: skills.frameworks.join(", "),
-    cloud: skills.cloud.join(", "),
-    otherSkills: otherSkills.join(", "),
-    years: skills.years,
-    skillExperiences: Object.fromEntries(
-      selectedSkillNames.value.map((skillName) => [
-        skillName,
-        skills.skillExperiences[skillName] || "",
-      ]),
-    ),
-  });
+
+  return {
+    basic: {
+      name: basic.name,
+      nameKana: basic.nameKana,
+      email: basic.email,
+      phone: basic.phone,
+      role: basic.role,
+    },
+    skills: {
+      languages: skills.languages.join(", "),
+      db: skills.db.join(", "),
+      frameworks: skills.frameworks.join(", "),
+      cloud: skills.cloud.join(", "),
+      otherSkills: otherSkills.join(", "),
+      years: skills.years,
+      skillExperiences: Object.fromEntries(
+        selectedSkillNames.value.map((skillName) => [
+          skillName,
+          skills.skillExperiences[skillName] || "",
+        ]),
+      ),
+    },
+    terms,
+    meetingCandidates: meetingCandidates.value,
+    pledgeAccepted: pledgeAccepted.value,
+  };
 }
 
-function saveTerms() {
-  saveProfileTerms(terms);
-}
-
-function saveMeeting() {
-  saveProfileMeeting(meetingCandidates.value, pledgeAccepted.value);
+async function registerProfile() {
+  await saveProfileRegistration(buildProfileRegistrationInput());
 }
 
 function toDateTimeLocal(value = "") {
@@ -587,6 +572,12 @@ function formatFileSize(bytes: number) {
   color: #10294f;
   font-size: 16px;
   overflow-wrap: anywhere;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
 }
 
 .panelBody {

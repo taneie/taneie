@@ -36,6 +36,7 @@ import type {
   MeetingRequest,
   Message,
   Profile,
+  ProfileRegistrationInput,
   ProfileTermsInput,
   RegisterInput,
   ResumePreviewFile,
@@ -1236,15 +1237,7 @@ async function saveProfileSkills(
     | "skillExperiences"
   >,
 ) {
-  const hasSkill = [
-    values.languages,
-    values.db,
-    values.frameworks,
-    values.cloud,
-    values.otherSkills,
-  ].some((value) => splitCsv(value).length);
-
-  if (!hasSkill) {
+  if (!hasProfileSkill(values)) {
     showToast("スキルはチェックまたはその他を1つ以上入力してください。");
     return;
   }
@@ -1356,8 +1349,163 @@ async function saveProfileMeeting(
   }
 }
 
+async function saveProfileRegistration(values: ProfileRegistrationInput) {
+  const candidates = uniqueMeetingCandidates(
+    Array.isArray(values.meetingCandidates)
+      ? values.meetingCandidates
+      : values.meetingCandidates.split("\n"),
+  );
+  if (!validateProfileRegistration(values, candidates)) return;
+
+  Object.assign(state.value.profile, values.basic, values.skills, {
+    desiredRate: values.terms.desiredRate,
+    startDate: values.terms.startDate,
+    workRate: values.terms.workRate,
+    remote: values.terms.remote,
+    availability: values.terms.availability,
+    meetingCandidates: candidates,
+    pledgeAccepted: true,
+    pledgedAt: state.value.profile.pledgedAt || new Date().toISOString(),
+    lastUpdated: today(),
+  });
+
+  try {
+    if (values.terms.resume?.name) {
+      if (isLocalDemoFreelancerSession()) {
+        state.value.profile.resumeName = values.terms.resume.name;
+        state.value.profile.resumeType =
+          values.terms.resume.type || "application/octet-stream";
+        state.value.profile.resumeSize = formatFileSize(
+          values.terms.resume.size,
+        );
+      } else {
+        const uploaded = await uploadResumeFile(values.terms.resume);
+        if (!uploaded) return;
+        state.value.profile.resumeName = values.terms.resume.name;
+        state.value.profile.resumeType =
+          values.terms.resume.type || "application/octet-stream";
+        state.value.profile.resumeSize = formatFileSize(
+          values.terms.resume.size,
+        );
+      }
+    }
+
+    const saved = await saveProfileToApi("");
+    if (!saved) return;
+    if (isLocalDemoFreelancerSession()) {
+      saveLocalDemoMeetingRequests(candidates);
+      clearUnsavedChanges();
+      persist();
+      await setView("jobs");
+      showToast("登録が完了しました。");
+      return;
+    }
+    const newCandidates = filterNewMeetingCandidates(
+      candidates,
+      meetingCandidatesForProfile(state.value.profile.id),
+    );
+    await Promise.all(
+      newCandidates.map((candidate) =>
+        apiRequest("/meeting-requests", {
+          method: "POST",
+          body: JSON.stringify({ candidateAt: toApiDateTime(candidate) }),
+        }),
+      ),
+    );
+    await loadWorkspace();
+    clearUnsavedChanges();
+    state.value.profile.meetingCandidates = candidates;
+    state.value.profile.pledgeAccepted = true;
+    if (!state.value.profile.pledgedAt)
+      state.value.profile.pledgedAt = new Date().toISOString();
+    await setView("jobs");
+    showToast("登録が完了しました。");
+  } catch (error) {
+    showToast(
+      error instanceof Error ? error.message : "プロフィール登録に失敗しました。",
+    );
+  }
+}
+
+function hasProfileSkill(
+  values: Pick<
+    Profile,
+    "languages" | "db" | "frameworks" | "cloud" | "otherSkills"
+  >,
+) {
+  return [
+    values.languages,
+    values.db,
+    values.frameworks,
+    values.cloud,
+    values.otherSkills,
+  ].some((value) => splitCsv(value).length);
+}
+
+function validateProfileRegistration(
+  values: ProfileRegistrationInput,
+  candidates: string[],
+) {
+  if (
+    !values.basic.name ||
+    !values.basic.email ||
+    !values.basic.phone ||
+    !values.basic.role
+  ) {
+    return showProfileRegistrationError(
+      "基本情報をすべて入力してください。",
+      1,
+    );
+  }
+  if (!hasProfileSkill(values.skills)) {
+    return showProfileRegistrationError(
+      "スキルはチェックまたはその他を1つ以上入力してください。",
+      2,
+    );
+  }
+  if (!String(values.skills.years || "").trim()) {
+    return showProfileRegistrationError("経験年数を入力してください。", 2);
+  }
+  if (
+    !values.terms.desiredRate ||
+    !values.terms.startDate ||
+    !values.terms.workRate ||
+    !values.terms.remote ||
+    !values.terms.availability
+  ) {
+    return showProfileRegistrationError(
+      "条件をすべて入力してください。",
+      3,
+    );
+  }
+  if (!state.value.profile.resumeName && !values.terms.resume?.name) {
+    return showProfileRegistrationError("レジュメを登録してください。", 3);
+  }
+  if (!candidates.length) {
+    return showProfileRegistrationError(
+      "初回面談の候補日を1つ以上入力してください。",
+      4,
+    );
+  }
+  if (!values.pledgeAccepted) {
+    return showProfileRegistrationError(
+      "案件閲覧には誓約条件への同意が必要です。",
+      4,
+    );
+  }
+
+  return true;
+}
+
+function showProfileRegistrationError(message: string, step: number) {
+  state.value.wizardStep = step;
+  persist();
+  showToast(message);
+  return false;
+}
+
 async function resetProfile() {
-  if (!(await confirmDiscardChanges())) return;
+  if (!(await confirmDiscardChanges())) return false;
   const profileId =
     currentUser.value?.freelancerId || state.value.profile.id || "fr-current";
   state.value.profile = blankProfile(profileId);
@@ -1373,6 +1521,7 @@ async function resetProfile() {
   persist();
   scrollToPageTop();
   showToast("初期状態に戻しました。");
+  return true;
 }
 
 async function createJob(values: JobInput) {
@@ -2873,6 +3022,7 @@ export function useFrichyRuntime() {
     saveProfileSkills,
     saveProfileTerms,
     saveProfileMeeting,
+    saveProfileRegistration,
     resetProfile,
     createJob,
     selectJob,
