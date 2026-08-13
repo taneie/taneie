@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 import {
   firstProfileRegistrationErrorKey,
   hasProfileRegistrationValidationErrors,
+  isValidProfilePhoneNumber,
+  normalizeProfilePhoneNumber,
   profileRegistrationErrorSteps,
   validateProfileRegistrationInput,
 } from "../Frontend/composables/frichy/profileValidation";
@@ -102,5 +104,33 @@ describe("プロフィール登録バリデーション", () => {
 
     assert.equal(hasProfileRegistrationValidationErrors(errors), false);
     assert.equal(errors.resume, undefined);
+  });
+
+  /**
+   * @testData 不正なemailと短い電話番号、ハイフンあり/なしの妥当な電話番号。
+   * @expected email/電話番号の形式エラーが返り、妥当な電話番号はハイフン有無どちらも許容され正規化できる。
+   */
+  it("メールと電話番号の形式を検証し電話番号を正規化する", () => {
+    const errors = validateProfileRegistrationInput(
+      registrationInput({
+        basic: {
+          name: "山田 太郎",
+          nameKana: "やまだ たろう",
+          email: "invalid",
+          phone: "090-111",
+          role: "フロントエンドエンジニア",
+        },
+      }),
+      { hasExistingResume: true },
+    );
+
+    assert.equal(errors.email, "メールアドレスの形式で入力してください。");
+    assert.equal(
+      errors.phone,
+      "電話番号は10〜11桁の数字で入力してください（ハイフン可）。",
+    );
+    assert.equal(isValidProfilePhoneNumber("090-1111-2222"), true);
+    assert.equal(isValidProfilePhoneNumber("09011112222"), true);
+    assert.equal(normalizeProfilePhoneNumber("090-1111-2222"), "09011112222");
   });
 });

@@ -64,6 +64,11 @@ import {
 } from "./utils";
 import { freelancerToProfile, profileToApi } from "./profileMapping";
 import {
+  isValidProfileEmail,
+  isValidProfilePhoneNumber,
+  normalizeProfilePhoneNumber,
+} from "./profileValidation";
+import {
   RESUME_ALLOWED_MIME_TYPES,
   resolveResumeMimeType,
 } from "./resumeUpload";
@@ -710,7 +715,12 @@ const profileRequirementItems = computed(() => {
     {
       label: "基本情報",
       step: 1,
-      done: Boolean(p.name && p.email && p.phone && p.role),
+      done: Boolean(
+        p.name &&
+          isValidProfileEmail(p.email) &&
+          isValidProfilePhoneNumber(p.phone) &&
+          p.role,
+      ),
     },
     {
       label: "スキル詳細",
@@ -1355,17 +1365,22 @@ async function saveProfileRegistration(values: ProfileRegistrationInput) {
   applyProfileRegistrationDraft(values, candidates);
   if (!validateProfileRegistration(values, candidates)) return;
 
-  Object.assign(state.value.profile, values.basic, values.skills, {
-    desiredRate: values.terms.desiredRate,
-    startDate: values.terms.startDate,
-    workRate: values.terms.workRate,
-    remote: values.terms.remote,
-    availability: values.terms.availability,
-    meetingCandidates: candidates,
-    pledgeAccepted: true,
-    pledgedAt: state.value.profile.pledgedAt || new Date().toISOString(),
-    lastUpdated: today(),
-  });
+  Object.assign(
+    state.value.profile,
+    normalizedProfileBasic(values),
+    values.skills,
+    {
+      desiredRate: values.terms.desiredRate,
+      startDate: values.terms.startDate,
+      workRate: values.terms.workRate,
+      remote: values.terms.remote,
+      availability: values.terms.availability,
+      meetingCandidates: candidates,
+      pledgeAccepted: true,
+      pledgedAt: state.value.profile.pledgedAt || new Date().toISOString(),
+      lastUpdated: today(),
+    },
+  );
 
   try {
     if (values.terms.resume?.name) {
@@ -1436,16 +1451,29 @@ function applyProfileRegistrationDraft(
         ? values.meetingCandidates
         : values.meetingCandidates.split("\n"),
     );
-  Object.assign(state.value.profile, values.basic, values.skills, {
-    desiredRate: values.terms.desiredRate,
-    startDate: values.terms.startDate,
-    workRate: values.terms.workRate,
-    remote: values.terms.remote,
-    availability: values.terms.availability,
-    meetingCandidates: candidates,
-    pledgeAccepted: values.pledgeAccepted,
-    pledgedAt: values.pledgeAccepted ? state.value.profile.pledgedAt : "",
-  });
+  Object.assign(
+    state.value.profile,
+    normalizedProfileBasic(values),
+    values.skills,
+    {
+      desiredRate: values.terms.desiredRate,
+      startDate: values.terms.startDate,
+      workRate: values.terms.workRate,
+      remote: values.terms.remote,
+      availability: values.terms.availability,
+      meetingCandidates: candidates,
+      pledgeAccepted: values.pledgeAccepted,
+      pledgedAt: values.pledgeAccepted ? state.value.profile.pledgedAt : "",
+    },
+  );
+}
+
+function normalizedProfileBasic(values: ProfileRegistrationInput) {
+  return {
+    ...values.basic,
+    email: values.basic.email.trim(),
+    phone: normalizeProfilePhoneNumber(values.basic.phone),
+  };
 }
 
 function hasProfileSkill(

@@ -34,6 +34,30 @@ function emptyStringAsUndefined<T extends z.ZodType>(schema: T) {
   );
 }
 
+const phoneInputPattern = /^\d{2,4}-?\d{2,4}-?\d{3,4}$/;
+
+function normalizePhoneNumber(value: string) {
+  return value.trim().replace(/-/g, "");
+}
+
+function isValidPhoneNumber(value: string) {
+  const trimmed = value.trim();
+  const normalized = normalizePhoneNumber(trimmed);
+
+  return (
+    phoneInputPattern.test(trimmed) &&
+    /^\d+$/.test(normalized) &&
+    (normalized.length === 10 || normalized.length === 11)
+  );
+}
+
+const profilePhone = z
+  .string()
+  .trim()
+  .max(50)
+  .refine(isValidPhoneNumber, { message: "Invalid phone number" })
+  .transform(normalizePhoneNumber);
+
 const remoteType = z
   .union([
     z.enum(["full_remote", "hybrid", "onsite"]),
@@ -177,7 +201,7 @@ export const updateJobFlagsSchema = z.object({
 export const updateProfileSchema = z.object({
   name: emptyStringAsUndefined(z.string().trim().min(1).max(255)),
   nameKana: emptyStringAsUndefined(z.string().trim().max(255)),
-  phone: emptyStringAsUndefined(z.string().trim().max(50)),
+  phone: emptyStringAsUndefined(profilePhone),
   roleTitle: emptyStringAsUndefined(roleTitle),
   yearsExperience: emptyStringAsUndefined(z.coerce.number().min(0).max(99)),
   desiredRate: emptyStringAsUndefined(z.coerce.number().int().min(0)),

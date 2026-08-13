@@ -56,6 +56,7 @@ describe("フロントエンドのプロフィール変換", () => {
     const payload = profileToApi(profileFixture());
 
     assert.equal(payload.name, "山田 太郎");
+    assert.equal(payload.phone, "09011112222");
     assert.equal(payload.yearsExperience, 6);
     assert.equal(payload.desiredRate, 850000);
     assert.equal(payload.startDate, "2026-09-01");

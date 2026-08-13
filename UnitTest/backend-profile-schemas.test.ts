@@ -32,6 +32,7 @@ describe("プロフィールAPI入力スキーマ", () => {
     assert.equal(parsed.name, "山田 太郎");
     assert.equal(parsed.remoteType, "full_remote");
     assert.equal(parsed.availabilityStatus, "ready");
+    assert.equal(parsed.phone, "09011112222");
     assert.equal(parsed.yearsExperience, 6);
     assert.equal(parsed.skillExperiences?.[0].yearsExperience, 5);
   });
@@ -74,6 +75,8 @@ describe("プロフィールAPI入力スキーマ", () => {
       skillExperiences: [{ name: "", yearsExperience: 1 }],
     });
     expectInvalid(updateProfileSchema, { roleTitle: "不明な職種" });
+    expectInvalid(updateProfileSchema, { phone: "090-111" });
+    expectInvalid(updateProfileSchema, { phone: "090-xxxx-2222" });
   });
 
   /**

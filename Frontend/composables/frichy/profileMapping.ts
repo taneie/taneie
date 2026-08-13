@@ -1,6 +1,7 @@
 import { blankProfile } from "./state";
 import type { Freelancer, Profile } from "./types";
 import { categorizeSkills, profileSkillList } from "./utils";
+import { normalizeProfilePhoneNumber } from "./profileValidation";
 
 export type ProfileApiPayload = {
   name?: string;
@@ -72,7 +73,7 @@ export function profileToApi(profile: Profile): ProfileApiPayload {
   return {
     name: nonEmpty(profile.name),
     nameKana: nonEmpty(profile.nameKana),
-    phone: nonEmpty(profile.phone),
+    phone: nonEmpty(normalizeProfilePhoneNumber(profile.phone)),
     roleTitle: nonEmpty(profile.role),
     yearsExperience: optionalNumber(profile.years),
     desiredRate: optionalNumber(profile.desiredRate),

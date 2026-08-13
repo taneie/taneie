@@ -1,6 +1,9 @@
 import type { ProfileRegistrationInput } from "./types";
 import { splitCsv } from "./utils";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_INPUT_PATTERN = /^\d{2,4}-?\d{2,4}-?\d{3,4}$/;
+
 export const profileRegistrationErrorKeys = [
   "name",
   "email",
@@ -53,7 +56,11 @@ export function validateProfileRegistrationInput(
   if (!values.basic.name.trim()) errors.name = "お名前を入力してください。";
   if (!values.basic.email.trim())
     errors.email = "メールアドレスを入力してください。";
+  else if (!isValidProfileEmail(values.basic.email))
+    errors.email = "メールアドレスの形式で入力してください。";
   if (!values.basic.phone.trim()) errors.phone = "電話番号を入力してください。";
+  else if (!isValidProfilePhoneNumber(values.basic.phone))
+    errors.phone = "電話番号は10〜11桁の数字で入力してください（ハイフン可）。";
   if (!values.basic.role.trim()) errors.role = "職種を選択してください。";
   if (
     ![
@@ -100,6 +107,25 @@ export function firstProfileRegistrationErrorKey(
   errors: ProfileRegistrationValidationErrors,
 ) {
   return profileRegistrationErrorKeys.find((key) => Boolean(errors[key]));
+}
+
+export function isValidProfileEmail(value: string) {
+  return EMAIL_PATTERN.test(value.trim());
+}
+
+export function normalizeProfilePhoneNumber(value: string) {
+  return value.trim().replace(/-/g, "");
+}
+
+export function isValidProfilePhoneNumber(value: string) {
+  const trimmed = value.trim();
+  const normalized = normalizeProfilePhoneNumber(trimmed);
+
+  return (
+    PHONE_INPUT_PATTERN.test(trimmed) &&
+    /^\d+$/.test(normalized) &&
+    (normalized.length === 10 || normalized.length === 11)
+  );
 }
 
 function profileRegistrationCandidates(values: ProfileRegistrationInput) {
