@@ -39,13 +39,13 @@ describe("フロントエンド共通ユーティリティ", () => {
   });
 
   /**
-   * @testData 即稼働可、予定あり、停止中、空文字の稼働状況ラベル。
+   * @testData 即稼働可、予定あり、営業停止中、空文字の稼働状況ラベル。
    * @expected 稼働状況ラベルがready/soon/pauseのCSS class用値へ分類される。
    */
   it("availabilityClass maps known and unknown values", () => {
     assert.equal(availabilityClass("即稼働可"), "ready");
     assert.equal(availabilityClass("稼働可能開始日"), "soon");
-    assert.equal(availabilityClass("現在は案件停止中"), "pause");
+    assert.equal(availabilityClass("営業停止中"), "pause");
     assert.equal(availabilityClass(""), "pause");
   });
 
@@ -60,8 +60,8 @@ describe("フロントエンド共通ユーティリティ", () => {
   });
 
   /**
-   * @testData 即稼働可、予定あり、停止中の求職者fixture。
-   * @expected 稼働状況の優先度が即稼働可 > 予定あり > 停止中のrankになる。
+   * @testData 即稼働可、予定あり、営業停止中の求職者fixture。
+   * @expected 稼働状況の優先度が即稼働可 > 予定あり > 営業停止中のrankになる。
    */
   it("availabilityRank sorts ready users above scheduled and paused users", () => {
     assert.equal(availabilityRank(freelancerFixture({ availability: "即稼働可" })), 3);
@@ -70,7 +70,7 @@ describe("フロントエンド共通ユーティリティ", () => {
       2,
     );
     assert.equal(
-      availabilityRank(freelancerFixture({ availability: "現在は案件停止中" })),
+      availabilityRank(freelancerFixture({ availability: "営業停止中" })),
       1,
     );
   });

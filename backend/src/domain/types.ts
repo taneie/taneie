@@ -39,6 +39,7 @@ export const labelToAvailabilityStatus = {
   即稼働可: "ready",
   稼働可能開始日: "scheduled",
   "2026年7月から空き予定": "scheduled",
+  営業停止中: "paused",
   現在は案件停止中: "paused",
 } as const;
 

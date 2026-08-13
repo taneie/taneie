@@ -81,7 +81,7 @@ export const remoteOptions = ["フルリモート", "一部リモート", "常�
 export const availabilityOptions = [
   "即稼働可",
   "稼働可能開始日",
-  "現在は案件停止中",
+  "営業停止中",
 ];
 export const roleTitleOptions = [
   "フロントエンドエンジニア",

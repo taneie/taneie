@@ -51,7 +51,7 @@ describe("スカウト対象の絞り込み・並び替え", () => {
         id: "a",
         desiredRate: 70,
         yearsExperience: 3,
-        availability: "現在は案件停止中",
+        availability: "営業停止中",
         lastUpdated: "2026-07-01",
       }),
       freelancerFixture({
