@@ -1,6 +1,6 @@
 <template>
   <select
-    :class="$style.control"
+    :class="[$style.control, { [$style.invalid]: error }]"
     :name="name"
     :value="modelValue"
     @change="onChange"
@@ -20,6 +20,7 @@ defineProps<{
   options: readonly string[];
   modelValue: string;
   placeholder?: string;
+  error?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -48,5 +49,15 @@ function onChange(event: Event) {
 .control:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
+}
+
+.invalid {
+  border-color: #d83f4b;
+  background: #fff7f7;
+}
+
+.invalid:focus {
+  border-color: #d83f4b;
+  box-shadow: 0 0 0 3px rgba(216, 63, 75, 0.16);
 }
 </style>

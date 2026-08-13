@@ -63,7 +63,8 @@
             label="お名前"
             name="name"
             autocomplete="given-name"
-            @update:model-value="markDirty"
+            :error="validationErrors.name"
+            @update:model-value="markProfileFieldDirty('name')"
           />
           <FormInput
             v-model="basic.nameKana"
@@ -76,13 +77,15 @@
             label="メール"
             name="email"
             type="email"
-            @update:model-value="markDirty"
+            :error="validationErrors.email"
+            @update:model-value="markProfileFieldDirty('email')"
           />
           <FormInput
             v-model="basic.phone"
             label="電話番号"
             name="phone"
-            @update:model-value="markDirty"
+            :error="validationErrors.phone"
+            @update:model-value="markProfileFieldDirty('phone')"
           />
           <FormSelect
             v-model="basic.role"
@@ -90,7 +93,8 @@
             name="role"
             :options="roleTitleOptions"
             placeholder="職種を選択してください"
-            @update:model-value="markDirty"
+            :error="validationErrors.role"
+            @update:model-value="markProfileFieldDirty('role')"
           />
         </div>
 
@@ -98,50 +102,70 @@
           v-else-if="state.wizardStep === 2"
           :class="$style.formGrid"
         >
-          <fieldset :class="$style.skillGroup">
+          <fieldset
+            :class="[
+              $style.skillGroup,
+              { [$style.invalidBox]: validationErrors.skills },
+            ]"
+          >
             <legend>開発言語</legend>
             <AppCheckboxPill
               v-for="option in languageOptions"
               :key="option"
               v-model="skills.languages"
               :value="option"
-              @change="markDirty"
+              @change="markProfileFieldDirty('skills')"
             >
               {{ option }}
             </AppCheckboxPill>
           </fieldset>
-          <fieldset :class="$style.skillGroup">
+          <fieldset
+            :class="[
+              $style.skillGroup,
+              { [$style.invalidBox]: validationErrors.skills },
+            ]"
+          >
             <legend>DB</legend>
             <AppCheckboxPill
               v-for="option in dbOptions"
               :key="option"
               v-model="skills.db"
               :value="option"
-              @change="markDirty"
+              @change="markProfileFieldDirty('skills')"
             >
               {{ option }}
             </AppCheckboxPill>
           </fieldset>
-          <fieldset :class="$style.skillGroup">
+          <fieldset
+            :class="[
+              $style.skillGroup,
+              { [$style.invalidBox]: validationErrors.skills },
+            ]"
+          >
             <legend>フレームワーク</legend>
             <AppCheckboxPill
               v-for="option in frameworkOptions"
               :key="option"
               v-model="skills.frameworks"
               :value="option"
-              @change="markDirty"
+              @change="markProfileFieldDirty('skills')"
             >
               {{ option }}
             </AppCheckboxPill>
           </fieldset>
-          <fieldset :class="$style.skillGroup">
+          <fieldset
+            :class="[
+              $style.skillGroup,
+              { [$style.invalidBox]: validationErrors.skills },
+            ]"
+          >
             <legend>クラウド</legend>
             <AppCheckboxPill
               v-for="option in cloudOptions"
               :key="option"
               v-model="skills.cloud"
               :value="option"
-              @change="markDirty"
+              @change="markProfileFieldDirty('skills')"
             >
               {{ option }}
             </AppCheckboxPill>
@@ -151,15 +175,22 @@
               v-model="skills.other"
               name="otherSkills"
               placeholder="Docker, Kubernetes, GitHub Actions など"
-              @update:model-value="markDirty"
+              @update:model-value="markProfileFieldDirty('skills')"
             />
           </FieldLabel>
+          <p
+            v-if="validationErrors.skills"
+            :class="[$style.errorText, $style.full]"
+          >
+            {{ validationErrors.skills }}
+          </p>
           <FormInput
             v-model="skills.years"
             label="経験年数"
             name="years"
             type="number"
-            @update:model-value="markDirty"
+            :error="validationErrors.years"
+            @update:model-value="markProfileFieldDirty('years')"
           />
           <fieldset
             v-if="selectedSkillNames.length"
@@ -187,37 +218,47 @@
             label="希望単価（万円）"
             name="desiredRate"
             type="number"
-            @update:model-value="markDirty"
+            :error="validationErrors.desiredRate"
+            @update:model-value="markProfileFieldDirty('desiredRate')"
           />
           <FormInput
             v-model="terms.startDate"
             label="稼働開始可能日"
             name="startDate"
             type="date"
-            @update:model-value="markDirty"
+            :error="validationErrors.startDate"
+            @update:model-value="markProfileFieldDirty('startDate')"
           />
           <FormSelect
             v-model="terms.workRate"
             label="稼働率"
             name="workRate"
             :options="['', '週3', '週4', '週5']"
-            @update:model-value="markDirty"
+            :error="validationErrors.workRate"
+            @update:model-value="markProfileFieldDirty('workRate')"
           />
           <FormSelect
             v-model="terms.remote"
             label="リモート可否"
             name="remote"
             :options="['', ...remoteOptions]"
-            @update:model-value="markDirty"
+            :error="validationErrors.remote"
+            @update:model-value="markProfileFieldDirty('remote')"
           />
           <FormSelect
             v-model="terms.availability"
             label="提案可能ステータス"
             name="availability"
             :options="['', ...availabilityOptions]"
-            @update:model-value="markDirty"
+            :error="validationErrors.availability"
+            @update:model-value="markProfileFieldDirty('availability')"
           />
-          <div :class="$style.field">
+          <div
+            :class="[
+              $style.field,
+              { [$style.invalidField]: validationErrors.resume },
+            ]"
+          >
             <span>レジュメ（PDF / Word / Excel）</span>
             <div :class="$style.filePicker">
               <BaseButton
@@ -237,6 +278,9 @@
               accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               @change="onResumeChange"
             />
+            <p v-if="validationErrors.resume" :class="$style.errorText">
+              {{ validationErrors.resume }}
+            </p>
           </div>
           <div :class="[$style.card, $style.full]">
             <strong>登録済みレジュメ</strong>
@@ -261,9 +305,15 @@
               >
                 <input
                   v-model="meetingCandidates[index]"
-                  :class="$style.control"
+                  :class="[
+                    $style.control,
+                    {
+                      [$style.invalidControl]:
+                        validationErrors.meetingCandidates,
+                    },
+                  ]"
                   type="datetime-local"
-                  @input="markDirty"
+                  @input="markProfileFieldDirty('meetingCandidates')"
                 />
                 <BaseButton
                   v-if="meetingCandidates.length > 1"
@@ -274,6 +324,12 @@
                 </BaseButton>
               </div>
             </div>
+            <p
+              v-if="validationErrors.meetingCandidates"
+              :class="$style.errorText"
+            >
+              {{ validationErrors.meetingCandidates }}
+            </p>
             <BaseButton
               variant="secondary"
               icon="plus"
@@ -281,7 +337,12 @@
               >候補日を追加</BaseButton
             >
           </div>
-          <div :class="$style.pledgeBox">
+          <div
+            :class="[
+              $style.pledgeBox,
+              { [$style.invalidBox]: validationErrors.pledgeAccepted },
+            ]"
+          >
             <h3>案件閲覧前の誓約条件</h3>
             <ul>
               <li>
@@ -301,10 +362,13 @@
               <input
                 v-model="pledgeAccepted"
                 type="checkbox"
-                @change="markDirty"
+                @change="markProfileFieldDirty('pledgeAccepted')"
               />
               <span>上記の誓約条件を確認し、同意します。</span>
             </label>
+            <p v-if="validationErrors.pledgeAccepted" :class="$style.errorText">
+              {{ validationErrors.pledgeAccepted }}
+            </p>
           </div>
         </div>
       </div>
@@ -315,6 +379,15 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import {
+  firstProfileRegistrationErrorKey,
+  hasProfileRegistrationValidationErrors,
+  profileRegistrationErrorKeys,
+  profileRegistrationErrorSteps,
+  validateProfileRegistrationInput,
+  type ProfileRegistrationErrorKey,
+  type ProfileRegistrationValidationErrors,
+} from "~/composables/frichy/profileValidation";
 import type {
   ProfileRegistrationInput,
   ProfileTermsInput,
@@ -366,6 +439,7 @@ const terms = reactive<ProfileTermsInput>({
 const meetingCandidates = ref<string[]>([""]);
 const pledgeAccepted = ref(false);
 const resumeInput = ref<HTMLInputElement | null>(null);
+const validationErrors = reactive<ProfileRegistrationValidationErrors>({});
 const languageOptions = languageSkillOptions;
 const dbOptions = dbSkillOptions;
 const frameworkOptions = frameworkSkillOptions;
@@ -462,7 +536,7 @@ async function resetProfileForm() {
 function onResumeChange(event: Event) {
   const [file] = Array.from((event.target as HTMLInputElement).files || []);
   terms.resume = file || null;
-  markDirty();
+  markProfileFieldDirty("resume");
 }
 
 function openResumeFilePicker() {
@@ -514,7 +588,30 @@ function buildProfileRegistrationInput(): ProfileRegistrationInput {
 }
 
 async function registerProfile() {
-  await saveProfileRegistration(buildProfileRegistrationInput());
+  const input = buildProfileRegistrationInput();
+  const errors = validateProfileRegistrationInput(input, {
+    hasExistingResume: Boolean(profile.value.resumeName),
+  });
+  setValidationErrors(errors);
+  if (hasProfileRegistrationValidationErrors(errors)) {
+    const firstError = firstProfileRegistrationErrorKey(errors);
+    if (firstError) moveStep(profileRegistrationErrorSteps[firstError]);
+    return;
+  }
+
+  await saveProfileRegistration(input);
+}
+
+function markProfileFieldDirty(...keys: ProfileRegistrationErrorKey[]) {
+  keys.forEach((key) => delete validationErrors[key]);
+  markDirty();
+}
+
+function setValidationErrors(errors: ProfileRegistrationValidationErrors) {
+  profileRegistrationErrorKeys.forEach((key) => {
+    if (errors[key]) validationErrors[key] = errors[key];
+    else delete validationErrors[key];
+  });
 }
 
 function toDateTimeLocal(value = "") {
@@ -624,6 +721,16 @@ textarea.control {
   box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
 }
 
+.invalidControl {
+  border-color: #d83f4b;
+  background: #fff7f7;
+}
+
+.invalidControl:focus {
+  border-color: #d83f4b;
+  box-shadow: 0 0 0 3px rgba(216, 63, 75, 0.16);
+}
+
 .filePicker {
   position: relative;
   display: flex;
@@ -680,6 +787,26 @@ textarea.control {
   color: #263f63;
   font-size: 13px;
   font-weight: 800;
+}
+
+.invalidBox {
+  border-color: #d83f4b;
+  background: #fff7f7;
+}
+
+.invalidField {
+  border: 1px solid #d83f4b;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff7f7;
+}
+
+.errorText {
+  margin: 0;
+  color: #b8202d;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
 }
 
 .skillExperienceGroup {

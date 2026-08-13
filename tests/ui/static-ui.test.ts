@@ -141,7 +141,7 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(source, /function buildProfileRegistrationInput\(\)/);
     assert.match(
       source,
-      /async function registerProfile\(\)[\s\S]*saveProfileRegistration\(buildProfileRegistrationInput\(\)\)/,
+      /async function registerProfile\(\)[\s\S]*validateProfileRegistrationInput\(input[\s\S]*saveProfileRegistration\(input\)/,
     );
     assert.match(source, /watch\(\(\) => state\.value\.profile\.id, hydrateForms/);
     assert.doesNotMatch(source, /state\.value\.profile\.id,\s*state\.value\.wizardStep/);
@@ -150,6 +150,11 @@ describe("UI可読性・レスポンシブスタイル", () => {
       /async function saveProfileRegistration\(values: ProfileRegistrationInput\)/,
     );
     assert.match(runtime, /validateProfileRegistration\(values, candidates\)/);
+    assert.match(source, /validateProfileRegistrationInput\(input/);
+    assert.match(source, /:error="validationErrors\.email"/);
+    assert.match(source, /:error="validationErrors\.phone"/);
+    assert.match(source, /\$style\.invalidControl/);
+    assert.match(source, /\$style\.errorText/);
   });
 
   /**
