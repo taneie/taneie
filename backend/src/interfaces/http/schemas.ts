@@ -35,6 +35,7 @@ function emptyStringAsUndefined<T extends z.ZodType>(schema: T) {
 }
 
 const phoneInputPattern = /^\d{2,4}-?\d{2,4}-?\d{3,4}$/;
+const hiraganaInputPattern = /^[ぁ-ゖー\s　]+$/u;
 
 function normalizePhoneNumber(value: string) {
   return value.trim().replace(/-/g, "");
@@ -57,6 +58,14 @@ const profilePhone = z
   .max(50)
   .refine(isValidPhoneNumber, { message: "Invalid phone number" })
   .transform(normalizePhoneNumber);
+
+const profileNameKana = z
+  .string()
+  .trim()
+  .max(255)
+  .refine((value) => hiraganaInputPattern.test(value), {
+    message: "Invalid hiragana name kana",
+  });
 
 const remoteType = z
   .union([
@@ -200,7 +209,7 @@ export const updateJobFlagsSchema = z.object({
 
 export const updateProfileSchema = z.object({
   name: emptyStringAsUndefined(z.string().trim().min(1).max(255)),
-  nameKana: emptyStringAsUndefined(z.string().trim().max(255)),
+  nameKana: emptyStringAsUndefined(profileNameKana),
   phone: emptyStringAsUndefined(profilePhone),
   roleTitle: emptyStringAsUndefined(roleTitle),
   yearsExperience: emptyStringAsUndefined(z.coerce.number().min(0).max(99)),

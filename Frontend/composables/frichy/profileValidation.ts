@@ -2,10 +2,12 @@ import type { ProfileRegistrationInput } from "./types";
 import { splitCsv } from "./utils";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const HIRAGANA_PATTERN = /^[ぁ-ゖー\s　]+$/u;
 const PHONE_INPUT_PATTERN = /^\d{2,4}-?\d{2,4}-?\d{3,4}$/;
 
 export const profileRegistrationErrorKeys = [
   "name",
+  "nameKana",
   "email",
   "phone",
   "role",
@@ -33,6 +35,7 @@ export const profileRegistrationErrorSteps: Record<
   number
 > = {
   name: 1,
+  nameKana: 1,
   email: 1,
   phone: 1,
   role: 1,
@@ -54,6 +57,10 @@ export function validateProfileRegistrationInput(
 ): ProfileRegistrationValidationErrors {
   const errors: ProfileRegistrationValidationErrors = {};
   if (!values.basic.name.trim()) errors.name = "お名前を入力してください。";
+  if (!values.basic.nameKana.trim())
+    errors.nameKana = "お名前（ふりがな）を入力してください。";
+  else if (!isValidProfileNameKana(values.basic.nameKana))
+    errors.nameKana = "お名前（ふりがな）はひらがなで入力してください。";
   if (!values.basic.email.trim())
     errors.email = "メールアドレスを入力してください。";
   else if (!isValidProfileEmail(values.basic.email))
@@ -111,6 +118,10 @@ export function firstProfileRegistrationErrorKey(
 
 export function isValidProfileEmail(value: string) {
   return EMAIL_PATTERN.test(value.trim());
+}
+
+export function isValidProfileNameKana(value: string) {
+  return HIRAGANA_PATTERN.test(value.trim());
 }
 
 export function normalizeProfilePhoneNumber(value: string) {

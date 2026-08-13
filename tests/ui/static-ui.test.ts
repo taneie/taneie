@@ -154,6 +154,7 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(runtime, /label: "面談候補"[\s\S]*done: Boolean\(p\.meetingCandidates\.length\)/);
     assert.doesNotMatch(runtime, /label: "面談候補"[\s\S]*meetingRequests\.some/);
     assert.match(source, /validateProfileRegistrationInput\(input/);
+    assert.match(source, /:error="validationErrors\.nameKana"/);
     assert.match(source, /:error="validationErrors\.email"/);
     assert.match(source, /:error="validationErrors\.phone"/);
     assert.match(source, /\$style\.invalidControl/);

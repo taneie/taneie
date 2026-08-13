@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   firstProfileRegistrationErrorKey,
   hasProfileRegistrationValidationErrors,
+  isValidProfileNameKana,
   isValidProfilePhoneNumber,
   normalizeProfilePhoneNumber,
   profileRegistrationErrorSteps,
@@ -83,6 +84,7 @@ describe("プロフィール登録バリデーション", () => {
 
     assert.equal(hasProfileRegistrationValidationErrors(errors), true);
     assert.equal(errors.name, "お名前を入力してください。");
+    assert.equal(errors.nameKana, "お名前（ふりがな）を入力してください。");
     assert.equal(errors.email, "メールアドレスを入力してください。");
     assert.equal(errors.phone, "電話番号を入力してください。");
     assert.equal(errors.skills, "スキルはチェックまたはその他を1つ以上入力してください。");
@@ -132,5 +134,32 @@ describe("プロフィール登録バリデーション", () => {
     assert.equal(isValidProfilePhoneNumber("090-1111-2222"), true);
     assert.equal(isValidProfilePhoneNumber("09011112222"), true);
     assert.equal(normalizeProfilePhoneNumber("090-1111-2222"), "09011112222");
+  });
+
+  /**
+   * @testData カタカナを含むふりがな、漢字を含むふりがな、ひらがなと空白だけのふりがな。
+   * @expected ふりがなはひらがなだけ許可され、カタカナや漢字を含む場合は項目エラーになる。
+   */
+  it("ふりがなはひらがなだけ許可する", () => {
+    const errors = validateProfileRegistrationInput(
+      registrationInput({
+        basic: {
+          name: "山田 太郎",
+          nameKana: "ヤマダ 太郎",
+          email: "freelancer@example.com",
+          phone: "090-1111-2222",
+          role: "フロントエンドエンジニア",
+        },
+      }),
+      { hasExistingResume: true },
+    );
+
+    assert.equal(
+      errors.nameKana,
+      "お名前（ふりがな）はひらがなで入力してください。",
+    );
+    assert.equal(isValidProfileNameKana("やまだ たろう"), true);
+    assert.equal(isValidProfileNameKana("ヤマダ タロウ"), false);
+    assert.equal(isValidProfileNameKana("山田 たろう"), false);
   });
 });

@@ -70,7 +70,8 @@
             v-model="basic.nameKana"
             label="お名前（ふりがな）"
             name="nameKana"
-            @update:model-value="markDirty"
+            :error="validationErrors.nameKana"
+            @update:model-value="markProfileFieldDirty('nameKana')"
           />
           <FormInput
             v-model="basic.email"

@@ -65,6 +65,7 @@ import {
 import { freelancerToProfile, profileToApi } from "./profileMapping";
 import {
   isValidProfileEmail,
+  isValidProfileNameKana,
   isValidProfilePhoneNumber,
   normalizeProfilePhoneNumber,
 } from "./profileValidation";
@@ -717,6 +718,7 @@ const profileRequirementItems = computed(() => {
       step: 1,
       done: Boolean(
         p.name &&
+          isValidProfileNameKana(p.nameKana) &&
           isValidProfileEmail(p.email) &&
           isValidProfilePhoneNumber(p.phone) &&
           p.role,
