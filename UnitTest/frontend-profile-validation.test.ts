@@ -109,6 +109,30 @@ describe("プロフィール登録バリデーション", () => {
   });
 
   /**
+   * @testData 既存レジュメ削除予定だが、新しいレジュメファイルを選択していないプロフィール登録入力。
+   * @expected 削除予定中は既存レジュメを有効扱いせず、レジュメ必須エラーが返る。
+   */
+  it("既存レジュメ削除予定では新しいレジュメ未選択を許容しない", () => {
+    const errors = validateProfileRegistrationInput(
+      registrationInput({
+        terms: {
+          desiredRate: "80",
+          startDate: "2026-09-01",
+          workRate: "週5",
+          remote: "フルリモート",
+          availability: "即稼働可",
+          resume: null,
+          deleteExistingResume: true,
+          deleteExistingResumeId: "resume-old",
+        },
+      }),
+      { hasExistingResume: false },
+    );
+
+    assert.equal(errors.resume, "レジュメを登録してください。");
+  });
+
+  /**
    * @testData 不正なemailと短い電話番号、ハイフンあり/なしの妥当な電話番号。
    * @expected email/電話番号の形式エラーが返り、妥当な電話番号はハイフン有無どちらも許容され正規化できる。
    */

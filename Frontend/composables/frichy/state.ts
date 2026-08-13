@@ -22,6 +22,7 @@ export function createSeedState(): FrichyState {
         remote: "フルリモート",
         availability: "稼働可能開始日",
         lastUpdated: "2026-06-04",
+        resumeId: "resume-demo-yamada",
         resumeName: "職務経歴書_山田太郎.pdf",
       },
       {
@@ -35,6 +36,7 @@ export function createSeedState(): FrichyState {
         remote: "フルリモート",
         availability: "即稼働可",
         lastUpdated: "2026-06-03",
+        resumeId: "resume-demo-sato",
         resumeName: "skill_sheet_sato.docx",
       },
       {
@@ -48,6 +50,7 @@ export function createSeedState(): FrichyState {
         remote: "一部リモート",
         availability: "即稼働可",
         lastUpdated: "2026-05-12",
+        resumeId: "resume-demo-suzuki",
         resumeName: "resume_suzuki.pdf",
       },
     ],
@@ -178,6 +181,7 @@ export function blankProfile(id = "fr-current"): Profile {
     workRate: "",
     remote: "",
     availability: "",
+    resumeId: "",
     resumeName: "",
     resumeType: "",
     resumeSize: "",

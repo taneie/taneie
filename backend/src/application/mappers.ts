@@ -114,6 +114,7 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
     initialMeetingCompleted: profile.initialMeetingCompleted,
     initialMeetingCompletedAt: profile.initialMeetingCompletedAt?.toISOString() || "",
     lastUpdated: profile.lastUpdatedOn?.toISOString().slice(0, 10) || "",
+    resumeId: latestResume?.id || "",
     resumeName: decryptText(latestResume?.originalFilename) || "",
     publicCode: profile.publicCode,
   };

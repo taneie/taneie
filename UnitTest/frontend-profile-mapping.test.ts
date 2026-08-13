@@ -32,6 +32,7 @@ describe("フロントエンドのプロフィール変換", () => {
     assert.equal(profile.cloud, "GCP");
     assert.equal(profile.otherSkills, "GraphQL");
     assert.equal(profile.skillExperiences.TypeScript, "5");
+    assert.equal(profile.resumeId, "resume-test");
     assert.equal(profile.pledgeAccepted, true);
   });
 

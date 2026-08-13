@@ -15,6 +15,7 @@ export function freelancerFixture(
     remote: "フルリモート",
     availability: "即稼働可",
     lastUpdated: "2026-08-01",
+    resumeId: "resume-test",
     resumeName: "resume.pdf",
     ...overrides,
   };

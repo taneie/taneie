@@ -1,4 +1,5 @@
 import {
+  del,
   get,
   head,
   type PutBlobResult,
@@ -61,12 +62,43 @@ const docxPreviewMimeTypes = new Set([
 
 const storage = new Storage();
 
+type ResumeStorageDelete = (pathname: string) => Promise<void>;
+
+async function deleteResumeStorageObject(pathname: string) {
+  if (usesGcsResumeStorage()) {
+    if (!config.gcsBucketName.trim()) {
+      throw new AppError(
+        503,
+        "レジュメ保存用のGCSバケットが未設定です。",
+        "GCS_NOT_CONFIGURED",
+      );
+    }
+    await storage
+      .bucket(config.gcsBucketName)
+      .file(pathname)
+      .delete({ ignoreNotFound: true });
+    return;
+  }
+
+  if (!hasValidBlobReadWriteToken()) {
+    throw new AppError(
+      503,
+      "レジュメアップロード用のBlobトークンが未設定、またはダミー値です。",
+      "BLOB_NOT_CONFIGURED",
+    );
+  }
+  await del(pathname, { token: config.blobReadWriteToken });
+}
+
 export function isDocxPreviewMimeType(mimeType: string) {
   return docxPreviewMimeTypes.has(mimeType);
 }
 
 export class ResumeService {
-  constructor(private readonly db: PrismaClient) {}
+  constructor(
+    private readonly db: PrismaClient,
+    private readonly deleteStoredResumeObject: ResumeStorageDelete = deleteResumeStorageObject,
+  ) {}
 
   async createLatest(userId: string, input: ResumeMetadataInput) {
     const profile = await this.db.freelancerProfile.findUniqueOrThrow({
@@ -269,6 +301,45 @@ export class ResumeService {
 
   async download(auth: AuthContext, freelancerProfileId: string) {
     return this.downloadReadableResume(auth, freelancerProfileId);
+  }
+
+  async deleteOwnResume(userId: string, resumeId: string) {
+    const resume = await this.db.resume.findFirst({
+      where: {
+        id: resumeId,
+        freelancerProfile: { userId },
+      },
+      include: {
+        uploadedFile: true,
+      },
+    });
+    if (!resume) {
+      throw new AppError(404, "レジュメが見つかりません。", "RESUME_NOT_FOUND");
+    }
+    if (resume.isLatest) {
+      throw new AppError(
+        409,
+        "最新レジュメは登録完了後に置き換えてから削除してください。",
+        "RESUME_DELETE_REQUIRES_REPLACEMENT",
+      );
+    }
+
+    const pathname = resume.uploadedFile?.blobPath || resume.storageKey;
+    if (pathname) await this.deleteStoredResumeObject(pathname);
+
+    await this.db.$transaction(async (tx) => {
+      await tx.resume.delete({ where: { id: resume.id } });
+      if (resume.uploadedFileId) {
+        await tx.uploadedFile.deleteMany({
+          where: {
+            id: resume.uploadedFileId,
+            resumes: { none: {} },
+          },
+        });
+      }
+    });
+
+    return { deleted: true };
   }
 
   private async downloadReadableResume(

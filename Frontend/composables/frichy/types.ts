@@ -64,6 +64,7 @@ export interface Profile {
   workRate: string;
   remote: string;
   availability: string;
+  resumeId: string;
   resumeName: string;
   resumeType: string;
   resumeSize: string;
@@ -90,6 +91,7 @@ export interface Freelancer {
   remote: string;
   availability: string;
   lastUpdated: string;
+  resumeId?: string;
   resumeName: string;
   pledgedAt?: string;
   initialMeetingCompleted?: boolean;
@@ -237,6 +239,8 @@ export interface ProfileTermsInput {
   remote: string;
   availability: string;
   resume?: File | null;
+  deleteExistingResume?: boolean;
+  deleteExistingResumeId?: string;
 }
 
 export interface ProfileRegistrationInput {
@@ -262,6 +266,10 @@ export interface ResumeUploadIntent {
   allowedContentTypes: string[];
   maximumSizeInBytes: number;
   uploadMode?: "api" | "blob";
+}
+
+export interface ResumeUploadResult {
+  id: string;
 }
 
 export interface ResumePreviewFile {

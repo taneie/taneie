@@ -40,6 +40,7 @@ import type {
   ProfileTermsInput,
   RegisterInput,
   ResumePreviewFile,
+  ResumeUploadResult,
   ResumeUploadIntent,
   Role,
   ScoutFilters,
@@ -400,7 +401,7 @@ async function uploadResumeFile(file: File) {
     }),
   });
   if (intent.uploadMode === "api") {
-    await rawApiRequest("/resumes/gcs-upload", {
+    const response = await rawApiRequest("/resumes/gcs-upload", {
       method: "POST",
       headers: {
         "Content-Type": mimeType,
@@ -410,7 +411,7 @@ async function uploadResumeFile(file: File) {
       body: file,
     });
 
-    return true;
+    return (await response.json()) as ResumeUploadResult;
   }
 
   const { upload } = await import("@vercel/blob/client");
@@ -435,7 +436,7 @@ async function uploadResumeFile(file: File) {
     contentType: mimeType,
     multipart,
   });
-  await apiRequest("/resumes/complete", {
+  return apiRequest<ResumeUploadResult>("/resumes/complete", {
     method: "POST",
     body: JSON.stringify({
       originalFilename: file.name,
@@ -445,8 +446,13 @@ async function uploadResumeFile(file: File) {
       blobUrl: blob.url,
     }),
   });
+}
 
-  return true;
+async function deleteResumeFile(resumeId: string) {
+  await apiRequest<{ deleted: boolean }>(
+    `/resumes/${encodeURIComponent(resumeId)}`,
+    { method: "DELETE" },
+  );
 }
 
 function setAuth(
@@ -1270,30 +1276,11 @@ async function saveProfileTerms(values: ProfileTermsInput) {
   });
 
   if (values.resume?.name) {
-    if (isLocalDemoFreelancerSession()) {
-      state.value.profile.resumeName = values.resume.name;
-      state.value.profile.resumeType =
-        values.resume.type || "application/octet-stream";
-      state.value.profile.resumeSize = formatFileSize(values.resume.size);
-      await saveProfileToApi("稼働条件とレジュメを保存しました。", 4);
-      return;
-    }
-
-    try {
-      const uploaded = await uploadResumeFile(values.resume);
-      if (!uploaded) return;
-      state.value.profile.resumeName = values.resume.name;
-      state.value.profile.resumeType =
-        values.resume.type || "application/octet-stream";
-      state.value.profile.resumeSize = formatFileSize(values.resume.size);
-    } catch (error) {
-      showToast(
-        error instanceof Error
-          ? `レジュメ保存に失敗しました。${error.message}`
-          : "レジュメ保存に失敗しました。",
-      );
-      return;
-    }
+    await saveProfileToApi(
+      "稼働条件を保存しました。レジュメは登録時にアップロードされます。",
+      4,
+    );
+    return;
   }
 
   await saveProfileToApi("稼働条件とレジュメを保存しました。", 4);
@@ -1365,7 +1352,7 @@ async function saveProfileRegistration(values: ProfileRegistrationInput) {
       : values.meetingCandidates.split("\n"),
   );
   applyProfileRegistrationDraft(values, candidates);
-  if (!validateProfileRegistration(values, candidates)) return;
+  if (!validateProfileRegistration(values, candidates)) return false;
 
   Object.assign(
     state.value.profile,
@@ -1384,9 +1371,16 @@ async function saveProfileRegistration(values: ProfileRegistrationInput) {
     },
   );
 
+  const replacedResumeId =
+    values.terms.deleteExistingResume && values.terms.deleteExistingResumeId
+      ? values.terms.deleteExistingResumeId
+      : "";
+
   try {
     if (values.terms.resume?.name) {
       if (isLocalDemoFreelancerSession()) {
+        state.value.profile.resumeId =
+          replacedResumeId || state.value.profile.resumeId;
         state.value.profile.resumeName = values.terms.resume.name;
         state.value.profile.resumeType =
           values.terms.resume.type || "application/octet-stream";
@@ -1395,7 +1389,8 @@ async function saveProfileRegistration(values: ProfileRegistrationInput) {
         );
       } else {
         const uploaded = await uploadResumeFile(values.terms.resume);
-        if (!uploaded) return;
+        if (!uploaded) return false;
+        state.value.profile.resumeId = uploaded.id;
         state.value.profile.resumeName = values.terms.resume.name;
         state.value.profile.resumeType =
           values.terms.resume.type || "application/octet-stream";
@@ -1406,14 +1401,17 @@ async function saveProfileRegistration(values: ProfileRegistrationInput) {
     }
 
     const saved = await saveProfileToApi("");
-    if (!saved) return;
+    if (!saved) return false;
     if (isLocalDemoFreelancerSession()) {
       saveLocalDemoMeetingRequests(candidates);
       clearUnsavedChanges();
       persist();
       await setView("jobs");
       showToast("登録が完了しました。");
-      return;
+      return true;
+    }
+    if (replacedResumeId && values.terms.resume?.name) {
+      await deleteResumeFile(replacedResumeId);
     }
     const newCandidates = filterNewMeetingCandidates(
       candidates,
@@ -1435,10 +1433,12 @@ async function saveProfileRegistration(values: ProfileRegistrationInput) {
       state.value.profile.pledgedAt = new Date().toISOString();
     await setView("jobs");
     showToast("登録が完了しました。");
+    return true;
   } catch (error) {
     showToast(
       error instanceof Error ? error.message : "プロフィール登録に失敗しました。",
     );
+    return false;
   }
 }
 
@@ -1529,7 +1529,10 @@ function validateProfileRegistration(
       3,
     );
   }
-  if (!state.value.profile.resumeName && !values.terms.resume?.name) {
+  if (
+    (!state.value.profile.resumeName || values.terms.deleteExistingResume) &&
+    !values.terms.resume?.name
+  ) {
     return showProfileRegistrationError("レジュメを登録してください。", 3);
   }
   if (!candidates.length) {
@@ -2753,6 +2756,7 @@ function syncProfileToFreelancer() {
     remote: profile.remote,
     availability: profile.availability,
     lastUpdated: profile.lastUpdated || today(),
+    resumeId: profile.resumeId,
     resumeName: profile.resumeName,
     pledgedAt: profile.pledgedAt,
     initialMeetingCompleted: profile.initialMeetingCompleted,
@@ -2798,6 +2802,7 @@ async function saveProfileToApi(message: string, nextWizardStep?: number) {
     );
     state.value.profile = {
       ...nextProfile,
+      resumeId: previousProfile.resumeId,
       resumeName: previousProfile.resumeName,
       resumeType: previousProfile.resumeType,
       resumeSize: previousProfile.resumeSize,

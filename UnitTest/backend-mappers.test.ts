@@ -160,6 +160,7 @@ describe("求職者Mapper", () => {
 
     assert.equal(freelancer.name, "山田 太郎");
     assert.equal(freelancer.email, "freelancer@example.com");
+    assert.equal(freelancer.resumeId, "resume-id");
     assert.equal(freelancer.resumeName, "resume.pdf");
     assert.deepEqual(freelancer.skillExperiences, [
       { name: "TypeScript", yearsExperience: 5 },

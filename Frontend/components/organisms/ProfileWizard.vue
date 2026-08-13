@@ -283,12 +283,44 @@
               {{ validationErrors.resume }}
             </p>
           </div>
-          <div :class="[$style.card, $style.full]">
+          <div
+            :class="[
+              $style.card,
+              $style.full,
+              { [$style.invalidField]: validationErrors.resume },
+            ]"
+          >
             <strong>登録済みレジュメ</strong>
-            <p>
+            <p v-if="pendingDeletedResume" :class="$style.deletedResume">
+              削除予定:
+              {{ pendingDeletedResume.name
+              }}{{ pendingDeletedResume.size ? ` / ${pendingDeletedResume.size}` : "" }}
+            </p>
+            <p v-else>
               {{ profile.resumeName || "未登録"
               }}{{ profile.resumeSize ? ` / ${profile.resumeSize}` : "" }}
             </p>
+            <div
+              v-if="profile.resumeName || pendingDeletedResume"
+              :class="$style.resumeActions"
+            >
+              <BaseButton
+                v-if="profile.resumeName && !pendingDeletedResume"
+                type="button"
+                variant="secondary"
+                @click="requestResumeDeletion"
+              >
+                削除
+              </BaseButton>
+              <BaseButton
+                v-if="pendingDeletedResume"
+                type="button"
+                variant="secondary"
+                @click="cancelResumeDeletion"
+              >
+                削除を取り消す
+              </BaseButton>
+            </div>
           </div>
         </div>
 
@@ -441,6 +473,12 @@ const terms = reactive<ProfileTermsInput>({
 const meetingCandidates = ref<string[]>([""]);
 const pledgeAccepted = ref(false);
 const resumeInput = ref<HTMLInputElement | null>(null);
+const pendingDeletedResume = ref<{
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+} | null>(null);
 const validationErrors = reactive<ProfileRegistrationValidationErrors>({});
 const languageOptions = languageSkillOptions;
 const dbOptions = dbSkillOptions;
@@ -519,6 +557,7 @@ function hydrateForms() {
     availability: p.availability,
     resume: null,
   });
+  pendingDeletedResume.value = null;
   const candidates = (p.meetingCandidates || [])
     .map(toDateTimeLocal)
     .filter(Boolean);
@@ -538,6 +577,22 @@ async function resetProfileForm() {
 function onResumeChange(event: Event) {
   const [file] = Array.from((event.target as HTMLInputElement).files || []);
   terms.resume = file || null;
+  markProfileFieldDirty("resume");
+}
+
+function requestResumeDeletion() {
+  if (!profile.value.resumeName) return;
+  pendingDeletedResume.value = {
+    id: profile.value.resumeId,
+    name: profile.value.resumeName,
+    type: profile.value.resumeType,
+    size: profile.value.resumeSize,
+  };
+  markProfileFieldDirty("resume");
+}
+
+function cancelResumeDeletion() {
+  pendingDeletedResume.value = null;
   markProfileFieldDirty("resume");
 }
 
@@ -583,7 +638,11 @@ function buildProfileRegistrationInput(): ProfileRegistrationInput {
         ]),
       ),
     },
-    terms,
+    terms: {
+      ...terms,
+      deleteExistingResume: Boolean(pendingDeletedResume.value),
+      deleteExistingResumeId: pendingDeletedResume.value?.id || "",
+    },
     meetingCandidates: meetingCandidates.value,
     pledgeAccepted: pledgeAccepted.value,
   };
@@ -593,7 +652,9 @@ async function registerProfile() {
   const input = buildProfileRegistrationInput();
   applyProfileRegistrationDraft(input);
   const errors = validateProfileRegistrationInput(input, {
-    hasExistingResume: Boolean(profile.value.resumeName),
+    hasExistingResume: Boolean(
+      profile.value.resumeName && !pendingDeletedResume.value,
+    ),
   });
   setValidationErrors(errors);
   if (hasProfileRegistrationValidationErrors(errors)) {
@@ -602,7 +663,8 @@ async function registerProfile() {
     return;
   }
 
-  await saveProfileRegistration(input);
+  const saved = await saveProfileRegistration(input);
+  if (saved) pendingDeletedResume.value = null;
 }
 
 function markProfileFieldDirty(...keys: ProfileRegistrationErrorKey[]) {
@@ -758,6 +820,18 @@ textarea.control {
   font-size: 13px;
   font-weight: 700;
   overflow-wrap: anywhere;
+}
+
+.deletedResume {
+  color: #b8202d;
+  font-weight: 800;
+}
+
+.resumeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .dateRows {

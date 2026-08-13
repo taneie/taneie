@@ -59,6 +59,7 @@ export function freelancerToProfile(
     workRate: freelancer.workRate || "",
     remote: freelancer.remote,
     availability: freelancer.availability || "",
+    resumeId: freelancer.resumeId || "",
     resumeName: freelancer.resumeName || "",
     pledgeAccepted: Boolean(freelancer.pledgedAt),
     pledgedAt: freelancer.pledgedAt || "",

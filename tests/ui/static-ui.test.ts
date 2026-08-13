@@ -276,16 +276,23 @@ describe("UIアクセシビリティ・ローディング体験", () => {
   });
 
   /**
-   * @testData ProfileWizardのレジュメ選択UI、hidden file input、明示ボタン、クリックハンドラ。
-   * @expected native file inputを直接押させず、`ファイルを選択`ボタンからfile inputを開ける構造になっている。
+   * @testData ProfileWizardのレジュメ選択UI、hidden file input、明示ボタン、クリックハンドラ、削除予定UI。
+   * @expected native file inputを直接押させず、選択時にはアップロードせず、削除は登録まで保留できる。
    */
   it("resume file selection is triggered by an explicit button", () => {
     const profileWizard = read("Frontend/components/organisms/ProfileWizard.vue");
+    const onResumeChangeBody = profileWizard.match(
+      /function onResumeChange\([\s\S]*?\n}\n\nfunction openResumeFilePicker/,
+    )?.[0] || "";
 
     assert.match(profileWizard, /ファイルを選択/);
     assert.match(profileWizard, /ref="resumeInput"/);
     assert.match(profileWizard, /@click="openResumeFilePicker"/);
     assert.match(profileWizard, /resumeInput\.value\.click\(\)/);
+    assert.doesNotMatch(onResumeChangeBody, /uploadResumeFile|apiRequest|rawApiRequest/);
+    assert.match(profileWizard, /pendingDeletedResume/);
+    assert.match(profileWizard, /deleteExistingResumeId/);
+    assert.match(profileWizard, /削除を取り消す/);
     assert.match(profileWizard, /\.fileInput\s*\{[\s\S]*position:\s*absolute/);
   });
 

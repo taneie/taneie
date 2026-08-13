@@ -170,6 +170,20 @@ export function registerResumeRoutes(
     }),
   );
 
+  app.delete(
+    "/api/resumes/:resumeId",
+    requireAuth,
+    requireRole("freelancer"),
+    asyncHandler<AuthedRequest>(async (req, res) => {
+      res.json(
+        await resumeService.deleteOwnResume(
+          req.auth!.userId,
+          routeParam(req.params.resumeId),
+        ),
+      );
+    }),
+  );
+
   app.get(
     "/api/resumes/freelancers/:freelancerId/preview",
     requireAuth,
