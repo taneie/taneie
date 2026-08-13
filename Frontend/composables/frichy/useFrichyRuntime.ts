@@ -740,10 +740,7 @@ const profileRequirementItems = computed(() => {
     {
       label: "面談候補",
       step: 4,
-      done:
-        state.value.meetingRequests.some(
-          (meeting) => meeting.freelancerId === p.id,
-        ) || Boolean(p.meetingCandidates.length),
+      done: Boolean(p.meetingCandidates.length),
     },
     { label: "誓約同意", step: 4, done: Boolean(p.pledgeAccepted || p.pledgedAt) },
   ];
@@ -1355,6 +1352,7 @@ async function saveProfileRegistration(values: ProfileRegistrationInput) {
       ? values.meetingCandidates
       : values.meetingCandidates.split("\n"),
   );
+  applyProfileRegistrationDraft(values, candidates);
   if (!validateProfileRegistration(values, candidates)) return;
 
   Object.assign(state.value.profile, values.basic, values.skills, {
@@ -1425,6 +1423,29 @@ async function saveProfileRegistration(values: ProfileRegistrationInput) {
       error instanceof Error ? error.message : "プロフィール登録に失敗しました。",
     );
   }
+}
+
+function applyProfileRegistrationDraft(
+  values: ProfileRegistrationInput,
+  normalizedCandidates?: string[],
+) {
+  const candidates =
+    normalizedCandidates ||
+    uniqueMeetingCandidates(
+      Array.isArray(values.meetingCandidates)
+        ? values.meetingCandidates
+        : values.meetingCandidates.split("\n"),
+    );
+  Object.assign(state.value.profile, values.basic, values.skills, {
+    desiredRate: values.terms.desiredRate,
+    startDate: values.terms.startDate,
+    workRate: values.terms.workRate,
+    remote: values.terms.remote,
+    availability: values.terms.availability,
+    meetingCandidates: candidates,
+    pledgeAccepted: values.pledgeAccepted,
+    pledgedAt: values.pledgeAccepted ? state.value.profile.pledgedAt : "",
+  });
 }
 
 function hasProfileSkill(
@@ -3022,6 +3043,7 @@ export function useFrichyRuntime() {
     saveProfileSkills,
     saveProfileTerms,
     saveProfileMeeting,
+    applyProfileRegistrationDraft,
     saveProfileRegistration,
     resetProfile,
     createJob,

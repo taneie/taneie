@@ -397,6 +397,7 @@ const {
   state,
   remoteOptions,
   availabilityOptions,
+  applyProfileRegistrationDraft,
   saveProfileRegistration,
   resetProfile,
   persist,
@@ -589,6 +590,7 @@ function buildProfileRegistrationInput(): ProfileRegistrationInput {
 
 async function registerProfile() {
   const input = buildProfileRegistrationInput();
+  applyProfileRegistrationDraft(input);
   const errors = validateProfileRegistrationInput(input, {
     hasExistingResume: Boolean(profile.value.resumeName),
   });
