@@ -76,11 +76,22 @@ export class CommunicationService {
       }
     }
 
+    const candidateAt = new Date(input.candidateAt);
+    const existing = await this.db.meetingRequest.findFirst({
+      where: {
+        freelancerProfileId: profileId,
+        applicationId: input.applicationId || null,
+        candidateAt,
+      },
+      include: { application: { select: { jobId: true } } },
+    });
+    if (existing) return existing;
+
     return this.db.meetingRequest.create({
       data: {
         freelancerProfileId: profileId,
         applicationId: input.applicationId,
-        candidateAt: new Date(input.candidateAt),
+        candidateAt,
         status: "candidate",
         createdBy: context.userId,
       },

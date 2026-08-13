@@ -5,14 +5,17 @@ import {
   availabilityRank,
   categorizeSkills,
   clone,
+  filterNewMeetingCandidates,
   formatJstDateTime,
   maskName,
+  normalizeMeetingCandidateKey,
   profileSkillList,
   sanitizeJobSummary,
   splitCsv,
   streamTone,
   toJobSummaryDisplay,
   toApiDateTime,
+  uniqueMeetingCandidates,
   uid,
 } from "../Frontend/composables/frichy/utils";
 import {
@@ -204,6 +207,33 @@ describe("フロントエンド共通ユーティリティ", () => {
     assert.equal(formatJstDateTime("2026-08-20T10:00"), "2026-08-20 10:00");
     assert.equal(formatJstDateTime("invalid-value"), "invalid-value");
     assert.equal(formatJstDateTime("   "), "");
+  });
+
+  /**
+   * @testData 同じ面談候補日時を`datetime-local`、空白区切り、UTC保存値で混在させた入力と既存候補。
+   * @expected 表記差分を同一日時として扱い、既存登録済みの候補は再POST対象から除外される。
+   */
+  it("meeting candidate helpers normalize and exclude existing candidates", () => {
+    assert.equal(
+      normalizeMeetingCandidateKey("2026-08-20T10:00"),
+      "2026-08-20 10:00",
+    );
+    assert.deepEqual(
+      uniqueMeetingCandidates([
+        "2026-08-20T10:00",
+        "2026-08-20 10:00",
+        " 2026-08-21T11:30 ",
+        "",
+      ]),
+      ["2026-08-20T10:00", "2026-08-21T11:30"],
+    );
+    assert.deepEqual(
+      filterNewMeetingCandidates(
+        ["2026-08-20T10:00", "2026-08-21T11:30", "2026-08-21 11:30"],
+        ["2026-08-20T01:00:00.000Z"],
+      ),
+      ["2026-08-21T11:30"],
+    );
   });
 
   /**

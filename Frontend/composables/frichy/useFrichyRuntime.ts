@@ -49,6 +49,7 @@ import type {
 import {
   availabilityClass,
   clone,
+  filterNewMeetingCandidates,
   formatJstDateTime,
   maskName,
   nowLabel,
@@ -58,6 +59,7 @@ import {
   streamTone,
   today,
   toApiDateTime,
+  uniqueMeetingCandidates,
 } from "./utils";
 import { freelancerToProfile, profileToApi } from "./profileMapping";
 import {
@@ -1146,11 +1148,11 @@ function isLocalDemoFreelancerSession() {
 
 function saveLocalDemoMeetingRequests(candidates: string[]) {
   const profileId = state.value.profile.id;
-  const candidateSet = new Set(candidates);
   state.value.meetingRequests = [
     ...state.value.meetingRequests.filter(
       (meeting) =>
-        meeting.freelancerId !== profileId || !candidateSet.has(meeting.candidate),
+        meeting.freelancerId !== profileId ||
+        Boolean(meeting.applicationId || meeting.jobId),
     ),
     ...candidates.map((candidate, index) => ({
       id: `local-demo-meeting-${Date.now()}-${index}`,
@@ -1303,13 +1305,11 @@ async function saveProfileMeeting(
     showToast("案件閲覧には誓約条件への同意が必要です。");
     return;
   }
-  const candidates = (
+  const candidates = uniqueMeetingCandidates(
     Array.isArray(meetingCandidateValues)
       ? meetingCandidateValues
       : meetingCandidateValues.split("\n")
-  )
-    .map((candidate) => candidate.trim())
-    .filter(Boolean);
+  );
   if (!candidates.length) {
     showToast("初回面談の候補日を1つ以上入力してください。");
     return;
@@ -1330,8 +1330,12 @@ async function saveProfileMeeting(
       showToast("登録が完了しました。");
       return;
     }
+    const newCandidates = filterNewMeetingCandidates(
+      candidates,
+      meetingCandidatesForProfile(state.value.profile.id),
+    );
     await Promise.all(
-      candidates.map((candidate) =>
+      newCandidates.map((candidate) =>
         apiRequest("/meeting-requests", {
           method: "POST",
           body: JSON.stringify({ candidateAt: toApiDateTime(candidate) }),

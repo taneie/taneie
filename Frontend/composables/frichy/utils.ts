@@ -228,6 +228,32 @@ export function toApiDateTime(value: string) {
     : `${normalized}+09:00`;
 }
 
+export function normalizeMeetingCandidateKey(value = "") {
+  return formatJstDateTime(toApiDateTime(value));
+}
+
+export function uniqueMeetingCandidates(values: string[]) {
+  const seen = new Set<string>();
+  return values.map((value) => value.trim()).filter((value) => {
+    const key = normalizeMeetingCandidateKey(value);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function filterNewMeetingCandidates(
+  candidates: string[],
+  existingCandidates: string[],
+) {
+  const existingKeys = new Set(
+    existingCandidates.map(normalizeMeetingCandidateKey).filter(Boolean),
+  );
+  return uniqueMeetingCandidates(candidates).filter(
+    (candidate) => !existingKeys.has(normalizeMeetingCandidateKey(candidate)),
+  );
+}
+
 export function uid(prefix: string) {
   const random =
     globalThis.crypto?.randomUUID?.().slice(0, 8) ||

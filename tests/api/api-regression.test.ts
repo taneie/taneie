@@ -609,8 +609,8 @@ describe("APIレジュメ確認フロー", () => {
 
 describe("API面談・メッセージ・問い合わせフロー", () => {
   /**
-   * @testData timezoneなし日時、営業のprofile未指定request、求職者のtimezone付き面談候補、求職者/営業のstatus更新request。
-   * @expected 不正日時と営業profile未指定は400、求職者は候補作成可、求職者status更新は403、営業status更新は成功する。
+   * @testData timezoneなし日時、営業のprofile未指定request、求職者のtimezone付き面談候補、同一候補の再POST、求職者/営業のstatus更新request。
+   * @expected 不正日時と営業profile未指定は400、求職者は候補作成可、同一候補は既存IDを返し、求職者status更新は403、営業status更新は成功する。
    */
   it("meeting requests validate date/role and support sales status updates", async () => {
     const freelancer = await login(
@@ -652,6 +652,17 @@ describe("API面談・メッセージ・問い合わせフロー", () => {
     created.meetingIds.add(meeting.data.id);
     assert.equal(meeting.status, 201);
     assert.equal(meeting.data.status, "候補");
+
+    const duplicated = await server.request<{ id: string; status: string }>(
+      "/meeting-requests",
+      {
+        method: "POST",
+        body: JSON.stringify({ candidateAt: "2026-08-20T10:00:00+09:00" }),
+      },
+      freelancer.token,
+    );
+    assert.equal(duplicated.status, 201);
+    assert.equal(duplicated.data.id, meeting.data.id);
 
     const updateAsFreelancer = await server.request(
       `/meeting-requests/${meeting.data.id}/status`,
