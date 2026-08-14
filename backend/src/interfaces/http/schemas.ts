@@ -167,6 +167,7 @@ export const listScoutableJobsQuerySchema = z.object({
 
 export const importExternalJobsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
+  onlyNew: z.stringbool().default(false),
 });
 
 export const createJobSchema = z

@@ -150,9 +150,20 @@ export function resolveRemoteType(remoteRatio: string): JobInput["remoteType"] {
 export class ExternalProjectImportService {
   constructor(private readonly db: PrismaClient) {}
 
-  async importProjects(createdBy?: string | null, limit?: number) {
+  async importProjects(createdBy?: string | null, limit?: number, onlyNew = false) {
     const fetchedProjects = await fetchExternalProjects();
-    const projects = limit ? fetchedProjects.slice(0, limit) : fetchedProjects;
+    let candidates = fetchedProjects;
+    if (onlyNew) {
+      const existing = await this.db.job.findMany({
+        where: { externalSource: EXTERNAL_SOURCE },
+        select: { externalId: true },
+      });
+      const existingIds = new Set(existing.map((job) => job.externalId).filter(Boolean));
+      candidates = fetchedProjects.filter(
+        (project) => !existingIds.has(asDisplayText(project.id)),
+      );
+    }
+    const projects = limit ? candidates.slice(0, limit) : candidates;
     const result: ExternalProjectImportResult = {
       fetched: projects.length,
       imported: 0,

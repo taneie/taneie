@@ -41,7 +41,9 @@ describe("案件API入力スキーマ", () => {
   });
 
   it("importExternalJobsQuerySchema accepts a bounded import limit", () => {
-    assert.equal(expectValid(importExternalJobsQuerySchema, { limit: "10" }).limit, 10);
+    const parsed = expectValid(importExternalJobsQuerySchema, { limit: "10", onlyNew: "true" });
+    assert.equal(parsed.limit, 10);
+    assert.equal(parsed.onlyNew, true);
     expectInvalid(importExternalJobsQuerySchema, { limit: "0" });
     expectInvalid(importExternalJobsQuerySchema, { limit: "101" });
   });

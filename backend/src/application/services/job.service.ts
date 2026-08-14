@@ -213,8 +213,8 @@ export class JobService {
     return mapJob(job);
   }
 
-  async importExternalProjects(createdBy?: string | null, limit?: number) {
-    return this.externalProjectImportService.importProjects(createdBy, limit);
+  async importExternalProjects(createdBy?: string | null, limit?: number, onlyNew = false) {
+    return this.externalProjectImportService.importProjects(createdBy, limit, onlyNew);
   }
 
   private buildScoutableJobWhere(
