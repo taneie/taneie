@@ -106,6 +106,7 @@
                   {{ inquiry.answerBody ? "追加メッセージを送信" : "回答する" }}
                 </BaseButton>
                 <BaseButton
+                  v-if="canCloseInquiry(inquiry)"
                   type="button"
                   variant="secondary"
                   @click="closeInquiry(inquiry.id)"
@@ -234,6 +235,7 @@
                   追加メッセージを送信
                 </BaseButton>
                 <BaseButton
+                  v-if="canCloseInquiry(inquiry)"
                   type="button"
                   variant="secondary"
                   @click="closeInquiry(inquiry.id)"
@@ -346,6 +348,10 @@ async function closeInquiry(id: string) {
 
 function canReplyToInquiry(inquiry: ContactInquiry) {
   return inquiry.status !== "closed";
+}
+
+function canCloseInquiry(inquiry: ContactInquiry) {
+  return inquiry.status !== "closed" && Boolean(inquiry.answeredAt);
 }
 
 function statusLabel(status: string) {

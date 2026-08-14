@@ -824,6 +824,13 @@ describe("API面談・メッセージ・問い合わせフロー", () => {
     );
     expectErrorCode(freelancerAnswer, 403, "FORBIDDEN");
 
+    const unansweredClose = await server.request(
+      `/contact-inquiries/${inquiry.data.id}/close`,
+      { method: "PATCH" },
+      sales.token,
+    );
+    expectErrorCode(unansweredClose, 409, "CONTACT_REPLY_REQUIRED");
+
     const answered = await server.request<{ status: string; answerBody: string }>(
       `/contact-inquiries/${inquiry.data.id}/answer`,
       {

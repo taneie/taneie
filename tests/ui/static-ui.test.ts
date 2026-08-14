@@ -434,6 +434,8 @@ describe("UIアクセシビリティ・ローディング体験", () => {
 
     assert.match(contactPage, /sendAdditionalMessage\(inquiry\.id\)/);
     assert.match(contactPage, /closeInquiry\(inquiry\.id\)/);
+    assert.match(contactPage, /v-if="canCloseInquiry\(inquiry\)"/);
+    assert.match(contactPage, /Boolean\(inquiry\.answeredAt\)/);
     assert.match(contactPage, /function canReplyToInquiry/);
     assert.match(contactPage, /status === "closed"/);
     assert.match(contactPage, /追加メッセージを送信/);

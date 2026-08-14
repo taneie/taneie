@@ -131,6 +131,13 @@ export class ContactService {
     if (existing.status === "closed") {
       return mapContactInquiry(existing);
     }
+    if (!existing.answeredAt || !existing.answeredBy) {
+      throw new AppError(
+        409,
+        "営業から返信するまで問い合わせをクローズできません。",
+        "CONTACT_REPLY_REQUIRED",
+      );
+    }
 
     const inquiry = await this.db.contactInquiry.update({
       where: { id },
