@@ -4,17 +4,16 @@
       <tr>
         <th>案件</th>
         <th>単価</th>
-        <th>商流</th>
         <th>並び替え</th>
         <th>公開</th>
       </tr>
     </thead>
     <tbody>
       <tr v-if="loading">
-        <td :class="$style.stateCell" colspan="5">案件を取得しています。</td>
+        <td :class="$style.stateCell" colspan="4">案件を取得しています。</td>
       </tr>
       <tr v-else-if="displayJobs.length === 0">
-        <td :class="$style.stateCell" colspan="5">
+        <td :class="$style.stateCell" colspan="4">
           条件に合う案件はありません。
         </td>
       </tr>
@@ -22,9 +21,6 @@
         <tr v-for="job in displayJobs" :key="job.id">
           <td data-label="案件">{{ job.title }}<br />{{ job.client }}</td>
           <td data-label="単価">{{ job.rateMin }}-{{ job.rateMax }}万円</td>
-          <td data-label="商流">
-            <StreamBadge :value="job.stream" />
-          </td>
           <td data-label="並び替え">
             <BaseButton variant="secondary" @click="toggleJobSort(job.id)">{{
               job.sortFlag ? "上位" : "通常"

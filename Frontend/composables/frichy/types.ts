@@ -117,7 +117,6 @@ export interface Job {
   ageLimit: string;
   receivedAt: string | null;
   receivedAtMs: number | null;
-  stream: string;
   remote: string;
   sortFlag: boolean;
   active: boolean;
@@ -199,7 +198,6 @@ export interface JobFilters {
   skill: string;
   rate: string;
   remote: string;
-  stream: string;
 }
 
 export interface JobListResponse {
@@ -299,7 +297,6 @@ export interface JobInput {
   nice: string;
   rateMin: string | number;
   rateMax: string | number;
-  stream: string;
   remote: string;
   sortFlag: boolean;
 }

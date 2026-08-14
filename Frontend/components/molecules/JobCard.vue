@@ -39,7 +39,6 @@
       </div>
 
       <aside :class="$style.cardAside">
-        <StreamBadge :value="job.stream" />
         <div :class="$style.desktopActions">
           <BaseButton
             v-if="role === 'freelancer'"
@@ -73,10 +72,6 @@
           {{ job.client }} / {{ job.unitPrice || `${job.rateMin}-${job.rateMax}万円` }} /
           {{ job.remoteRatio || job.remote }}
         </p>
-        <span :class="$style.mobileBadges">
-          <StreamBadge :value="job.stream" />
-        </span>
-        
       </summary>
 
       <div :class="$style.mobileDetail">
@@ -95,8 +90,6 @@
             >{{ skill }}</TagBadge
           >
         </span>
-
-        
         <div :class="$style.mobileActions">
           <BaseButton
             v-if="role === 'freelancer'"

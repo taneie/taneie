@@ -146,7 +146,7 @@
           />
           <CoverageCard
             title="案件候補"
-            :body="`商流フィルタ ${endDirectJobs}件 / 稼働ステータス`"
+            :body="`優先案件 ${priorityJobs.length}件 / 稼働ステータス`"
             tone="blue"
           />
           <CoverageCard
@@ -255,9 +255,6 @@ const readyFreelancers = computed(
       (freelancer) => freelancer.availability === "即稼働可",
     ).length,
 );
-const endDirectJobs = computed(
-  () => state.value.jobs.filter((job) => job.stream === "エンド直").length,
-);
 const selectedSummaryMonthLabel = computed(() =>
   formatMonthLabel(selectedSummaryMonth.value),
 );
@@ -364,7 +361,7 @@ const filteredPriorityJobs = computed(() => {
   const keyword = prioritySearch.value.trim().toLowerCase();
   if (!keyword) return priorityJobs.value;
   return priorityJobs.value.filter((job) =>
-    [job.title, job.client, job.summary, job.stream, job.remote, ...job.required, ...job.nice]
+    [job.title, job.client, job.summary, job.remote, ...job.required, ...job.nice]
       .join(" ")
       .toLowerCase()
       .includes(keyword),

@@ -47,7 +47,7 @@ describe("案件API入力スキーマ", () => {
   });
 
   /**
-   * @testData 日本語ラベルの商流/リモート種別、単価範囲、必須/尚可スキル、逆転した単価範囲、空title。
+   * @testData 日本語ラベルのリモート種別、単価範囲、必須/尚可スキル、逆転した単価範囲、空title。
    * @expected 日本語ラベルと数値文字列は保存値へ正規化され、単価逆転や空titleは拒否される。
    */
   it("createJobSchema accepts Japanese labels and rejects invalid ranges", () => {
@@ -60,11 +60,9 @@ describe("案件API入力スキーマ", () => {
       rateMin: "700000",
       rateMax: "900000",
       marginRate: "12.5",
-      streamType: "エンド直",
       remoteType: "フルリモート",
       isPinned: true,
     });
-    assert.equal(parsed.streamType, "end_direct");
     assert.equal(parsed.remoteType, "full_remote");
     assert.equal(parsed.rateMin, 700000);
     assert.equal(parsed.marginRate, 12.5);
@@ -72,7 +70,6 @@ describe("案件API入力スキーマ", () => {
       title: "案件",
       rateMin: 700000,
       rateMax: 900000,
-      streamType: "end_direct",
       remoteType: "full_remote",
     });
     assert.equal(withoutMargin.marginRate, 0);
@@ -81,7 +78,6 @@ describe("案件API入力スキーマ", () => {
       rateMin: 900000,
       rateMax: 700000,
       marginRate: 10,
-      streamType: "end_direct",
       remoteType: "full_remote",
     });
     expectInvalid(createJobSchema, {
@@ -89,7 +85,6 @@ describe("案件API入力スキーマ", () => {
       rateMin: 700000,
       rateMax: 900000,
       marginRate: 10,
-      streamType: "end_direct",
       remoteType: "full_remote",
     });
   });

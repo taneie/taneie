@@ -162,7 +162,7 @@ describe("UI可読性・レスポンシブスタイル", () => {
   });
 
   /**
-   * @testData TagBadgeの商流/スキル表示、狭いカード幅、長いタグ文字列。
+   * @testData TagBadgeのスキル表示、狭いカード幅、長いタグ文字列。
    * @expected バッジは1行で省略され、折り返しで楕円形に崩れない。
    */
   it("tag badges stay single-line to prevent distorted pills", () => {
@@ -174,26 +174,17 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.doesNotMatch(source, /white-space:\s*normal/);
   });
 
-  /**
-   * @testData StreamBadgeの固定寸法、商流表示を持つ主要component。
-   * @expected 商流は画面やエリアに依存せず、固定正円の専用バッジで表示される。
-   */
-  it("stream values use a fixed circular badge in every stream display area", () => {
-    const streamBadge = read("Frontend/components/atoms/StreamBadge.vue");
+  it("job screens do not expose stream context", () => {
     const jobCard = read("Frontend/components/molecules/JobCard.vue");
     const applicationsTable = read("Frontend/components/organisms/ApplicationsTable.vue");
     const jobsAdminTable = read("Frontend/components/organisms/JobsAdminTable.vue");
     const scoutPage = read("Frontend/components/pages/ScoutPage.vue");
     const loginPanel = read("Frontend/components/organisms/LoginPanel.vue");
+    const jobsPage = read("Frontend/components/pages/JobsPage.vue");
+    const adminPage = read("Frontend/components/pages/AdminPage.vue");
+    const source = [jobCard, applicationsTable, jobsAdminTable, scoutPage, loginPanel, jobsPage, adminPage].join("\n");
 
-    assert.match(streamBadge, /width:\s*52px/);
-    assert.match(streamBadge, /height:\s*52px/);
-    assert.match(streamBadge, /border-radius:\s*50%/);
-    assert.match(jobCard, /<StreamBadge :value="job\.stream" \/>/);
-    assert.match(applicationsTable, /<StreamBadge :value="getJob\(application\.jobId\)\?\.stream \|\| ''" \/>/);
-    assert.match(jobsAdminTable, /<StreamBadge :value="job\.stream" \/>/);
-    assert.match(scoutPage, /<StreamBadge :value="job\.stream" \/>/);
-    assert.match(loginPanel, /<StreamBadge :value="project\.stream" \/>/);
+    assert.doesNotMatch(source, /StreamBadge|job\.stream|project\.stream|filters\.stream|商流/);
   });
 });
 

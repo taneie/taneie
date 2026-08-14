@@ -15,7 +15,6 @@ import {
   labelToApplicationStatus,
   labelToAvailabilityStatus,
   labelToRemoteType,
-  labelToStreamType,
 } from "../domain/types.js";
 import { decryptText } from "../infrastructure/crypto.js";
 
@@ -33,10 +32,6 @@ type ApplicationWithRelations = Application & {
 
 export function toRemoteLabel(value: string | null | undefined) {
   return value ? getKeyByValue(labelToRemoteType, value) : "";
-}
-
-export function toStreamLabel(value: string | null | undefined) {
-  return value ? getKeyByValue(labelToStreamType, value) : "";
 }
 
 export function toAvailabilityLabel(
@@ -83,7 +78,6 @@ export function mapJob(job: JobWithRelations) {
     receivedAtMs: job.externalReceivedAtMs != null
       ? Number(job.externalReceivedAtMs)
       : null,
-    stream: toStreamLabel(job.streamType),
     remote: toRemoteLabel(job.remoteType),
     sortFlag: job.isPinned,
     active: job.isActive,

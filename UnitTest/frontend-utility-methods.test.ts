@@ -12,7 +12,6 @@ import {
   profileSkillList,
   sanitizeJobSummary,
   splitCsv,
-  streamTone,
   toJobSummaryDisplay,
   toApiDateTime,
   uniqueMeetingCandidates,
@@ -47,16 +46,6 @@ describe("フロントエンド共通ユーティリティ", () => {
     assert.equal(availabilityClass("稼働可能開始日"), "soon");
     assert.equal(availabilityClass("営業停止中"), "pause");
     assert.equal(availabilityClass(""), "pause");
-  });
-
-  /**
-   * @testData エンド直、1次請け、その他の商流ラベル。
-   * @expected 商流ラベルがteal/blue/amberのtoneへ変換される。
-   */
-  it("streamTone maps direct, prime, and fallback streams", () => {
-    assert.equal(streamTone("エンド直"), "teal");
-    assert.equal(streamTone("1次請け"), "blue");
-    assert.equal(streamTone("その他"), "amber");
   });
 
   /**

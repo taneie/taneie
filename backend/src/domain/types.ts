@@ -28,13 +28,6 @@ export const labelToRemoteType = {
   常駐: "onsite",
 } as const;
 
-export const labelToStreamType = {
-  エンド直: "end_direct",
-  "1次請け": "prime",
-  "2次請け": "secondary",
-  その他: "other",
-} as const;
-
 export const labelToAvailabilityStatus = {
   即稼働可: "ready",
   稼働可能開始日: "scheduled",

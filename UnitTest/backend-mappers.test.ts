@@ -8,18 +8,16 @@ import {
   toApplicationStatusLabel,
   toAvailabilityLabel,
   toRemoteLabel,
-  toStreamLabel,
 } from "../backend/src/application/mappers";
 import { encryptText } from "../backend/src/infrastructure/crypto";
 
 describe("Mapperの表示ラベル変換", () => {
   /**
-   * @testData remote、stream、availability、application statusの保存値、availability note、scheduled status。
+   * @testData remote、availability、application statusの保存値、availability note、scheduled status。
    * @expected 保存値は画面表示ラベルへ変換され、readyのnoteは優先され、scheduledは固定文言「稼働可能開始日」になる。
    */
   it("label helper methods map stored enum values and notes", () => {
     assert.equal(toRemoteLabel("full_remote"), "フルリモート");
-    assert.equal(toStreamLabel("end_direct"), "エンド直");
     assert.equal(toAvailabilityLabel("ready"), "即稼働可");
     assert.equal(toAvailabilityLabel("ready", "個別メモ"), "個別メモ");
     assert.equal(
@@ -32,7 +30,7 @@ describe("Mapperの表示ラベル変換", () => {
 
 describe("案件Mapper", () => {
   /**
-   * @testData client未設定、必須/尚可スキル、外部案件の分離項目、保存値の商流/リモートを持つ案件record。
+   * @testData client未設定、必須/尚可スキル、外部案件の分離項目、保存値のリモート条件を持つ案件record。
    * @expected client未設定、スキル配列、案件条件、表示ラベルがUI向けに変換される。
    */
   it("mapJob maps relations, enum labels, and default client names", () => {
@@ -97,7 +95,7 @@ describe("案件Mapper", () => {
     assert.equal(job.settlementLower, "140");
     assert.equal(job.location, "東京");
     assert.equal(job.receivedAtMs, 1_754_060_400_000);
-    assert.equal(job.stream, "エンド直");
+    assert.equal("stream" in job, false);
     assert.equal(job.remote, "フルリモート");
   });
 });

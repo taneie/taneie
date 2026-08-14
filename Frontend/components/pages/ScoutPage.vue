@@ -109,7 +109,6 @@
         >
           <span :class="$style.jobOptionHead">
             <strong>{{ job.title }}</strong>
-            <StreamBadge :value="job.stream" />
           </span>
           <JobSummaryText :summary="job.summary" :reset-key="job.id" compact />
           <JobDetailList :job="job" compact />

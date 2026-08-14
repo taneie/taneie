@@ -4,7 +4,6 @@ import {
   labelToAvailabilityStatus,
   labelToMeetingStatus,
   labelToRemoteType,
-  labelToStreamType,
 } from "../../domain/types.js";
 
 const roleTitleOptions = [
@@ -83,22 +82,6 @@ const remoteType = z
       : value,
   );
 
-const streamType = z
-  .union([
-    z.enum(["end_direct", "prime", "secondary", "other"]),
-    z.enum(
-      Object.keys(labelToStreamType) as [
-        keyof typeof labelToStreamType,
-        ...Array<keyof typeof labelToStreamType>,
-      ],
-    ),
-  ])
-  .transform((value) =>
-    value in labelToStreamType
-      ? labelToStreamType[value as keyof typeof labelToStreamType]
-      : value,
-  );
-
 const availabilityStatus = z
   .union([
     z.enum(["ready", "scheduled", "paused"]),
@@ -174,7 +157,6 @@ export const listJobsQuerySchema = z.object({
   skill: z.string().trim().optional(),
   rate: z.coerce.number().int().min(0).optional(),
   remote: z.string().trim().optional(),
-  stream: z.string().trim().optional(),
   limit: z.coerce.number().int().min(1).max(50).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 });
@@ -197,7 +179,6 @@ export const createJobSchema = z
     rateMin: z.coerce.number().int().min(0),
     rateMax: z.coerce.number().int().min(0),
     marginRate: z.coerce.number().min(0).max(100).default(0),
-    streamType,
     remoteType,
     isPinned: z.boolean().default(false),
   })

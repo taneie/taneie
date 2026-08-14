@@ -1,6 +1,6 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { AppError, type AuthContext } from "../../domain/types.js";
-import { labelToRemoteType, labelToStreamType } from "../../domain/types.js";
+import { labelToRemoteType } from "../../domain/types.js";
 import { mapJob } from "../mappers.js";
 import { ExternalProjectImportService } from "./external-project-import.service.js";
 import {
@@ -178,7 +178,7 @@ export class JobService {
         rateMin: input.rateMin,
         rateMax: input.rateMax,
         marginRate: input.marginRate ?? 0,
-        streamType: input.streamType,
+        streamType: "other",
         remoteType: input.remoteType,
         isPinned: input.isPinned,
         isActive: true,
@@ -340,12 +340,6 @@ export class JobService {
     if (input.remote && input.remote in labelToRemoteType) {
       filters.push({
         remoteType: labelToRemoteType[input.remote as keyof typeof labelToRemoteType],
-      });
-    }
-
-    if (input.stream && input.stream in labelToStreamType) {
-      filters.push({
-        streamType: labelToStreamType[input.stream as keyof typeof labelToStreamType],
       });
     }
 

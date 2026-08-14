@@ -46,12 +46,6 @@ export function availabilityClass(value = "") {
   return "pause";
 }
 
-export function streamTone(value = "") {
-  if (value === "エンド直") return "teal";
-  if (value === "1次請け") return "blue";
-  return "amber";
-}
-
 export function availabilityRank(freelancer: Freelancer) {
   if (freelancer.availability === "即稼働可") return 3;
   if (

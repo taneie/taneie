@@ -27,7 +27,6 @@ export interface JobInput {
   rateMin: number;
   rateMax: number;
   marginRate?: number;
-  streamType: "end_direct" | "prime" | "secondary" | "other";
   remoteType: "full_remote" | "hybrid" | "onsite";
   isPinned: boolean;
 }
@@ -37,7 +36,6 @@ export interface JobListInput {
   skill?: string;
   rate?: number;
   remote?: string;
-  stream?: string;
   limit?: number;
   offset?: number;
 }

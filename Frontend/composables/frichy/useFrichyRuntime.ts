@@ -10,7 +10,6 @@ import {
   dbSkillOptions,
   defaultViewByRole,
   demoAccounts,
-  flowOptions,
   frameworkSkillOptions,
   languageSkillOptions,
   navItems,
@@ -58,7 +57,6 @@ import {
   profileSkillList,
   sleep,
   splitCsv,
-  streamTone,
   today,
   toApiDateTime,
   uniqueMeetingCandidates,
@@ -98,7 +96,6 @@ const filters = ref<JobFilters>({
   skill: "",
   rate: "",
   remote: "",
-  stream: "",
 });
 const jobPagination = ref<JobPagination>({
   total: 0,
@@ -1608,7 +1605,6 @@ async function createJob(values: JobInput) {
         nice: splitCsv(values.nice),
         rateMin,
         rateMax,
-        streamType: values.stream,
         remoteType: values.remote,
         isPinned: values.sortFlag,
       }),
@@ -1625,7 +1621,7 @@ async function createJob(values: JobInput) {
 }
 
 async function clearJobFilter() {
-  filters.value = { keyword: "", skill: "", rate: "", remote: "", stream: "" };
+  filters.value = { keyword: "", skill: "", rate: "", remote: "" };
   await fetchJobsPage({ reset: true });
 }
 
@@ -1688,7 +1684,6 @@ function buildJobQuery(offset: number) {
   if (values.skill.trim()) params.set("skill", values.skill.trim());
   if (values.rate) params.set("rate", values.rate);
   if (values.remote) params.set("remote", values.remote);
-  if (values.stream) params.set("stream", values.stream);
 
   return params.toString();
 }
@@ -3024,7 +3019,6 @@ export function useFrichyRuntime() {
     navItems,
     demoAccounts,
     statuses,
-    flowOptions,
     remoteOptions,
     availabilityOptions,
     roleTitleOptions,
@@ -3116,7 +3110,6 @@ export function useFrichyRuntime() {
     estimateRate,
     roleLabel,
     availabilityClass,
-    streamTone,
     splitCsv,
     maskName,
     markDirty,

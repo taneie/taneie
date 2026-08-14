@@ -23,7 +23,6 @@
           <div :class="$style.itemMain">
             <strong>{{ getJob(application.jobId)?.title || "" }}</strong>
             <span>{{ application.appliedAt }} / {{ application.status }}</span>
-            <StreamBadge :value="getJob(application.jobId)?.stream || ''" />
           </div>
           <StatusBadge :value="group.availability" />
           <select

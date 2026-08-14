@@ -58,7 +58,7 @@
         <mxCell id="c-job-info" value="案件情報を提供" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="1">
           <mxGeometry x="1700" y="450" width="220" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="sales-job-create" value="案件登録・条件整理&lt;br&gt;単価/スキル/リモート/商流/開始時期" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656" vertex="1" parent="1">
+        <mxCell id="sales-job-create" value="案件登録・条件整理&lt;br&gt;単価/スキル/リモート/開始時期" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656" vertex="1" parent="1">
           <mxGeometry x="1140" y="445" width="320" height="75" as="geometry" />
         </mxCell>
         <mxCell id="s-job-save" value="案件DBへ保存" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6" vertex="1" parent="1">

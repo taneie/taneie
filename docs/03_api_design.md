@@ -142,7 +142,6 @@
   "nice": ["AWS"],
   "rateMin": 80,
   "rateMax": 100,
-  "streamType": "end_direct",
   "remoteType": "hybrid",
   "isPinned": true
 }

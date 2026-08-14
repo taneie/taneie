@@ -205,7 +205,6 @@
               <article v-for="project in projects" :key="project.title">
                 <div :class="$style.projectMeta">
                   <span :class="$style.projectRemote">{{ project.remote }}</span>
-                  <StreamBadge :value="project.stream" />
                 </div>
                 <h3>{{ project.title }}</h3>
                 <p>{{ project.summary }}</p>
@@ -386,24 +385,21 @@ const projects = [
     summary: "Java/Spring Bootで決済基盤を刷新。設計から実装、テストまで担当。",
     rate: "80-100万円",
     skills: ["Java", "Spring Boot", "PostgreSQL"],
-    remote: "一部リモート",
-    stream: "エンド直"
+    remote: "一部リモート"
   },
   {
     title: "人材マッチングサービスのフロント開発",
     summary: "React/TypeScriptで候補者・営業向け画面を改善。UI実装と状態管理が中心。",
     rate: "70-90万円",
     skills: ["React", "TypeScript", "CSS"],
-    remote: "フルリモート",
-    stream: "1次請け"
+    remote: "フルリモート"
   },
   {
     title: "製造業向けクラウド基盤構築",
     summary: "AWS/Terraformで新規クラウド環境を設計。監視、権限、CI/CD整備を含む。",
     rate: "75-95万円",
     skills: ["AWS", "Terraform", "Linux"],
-    remote: "一部リモート",
-    stream: "2次請け"
+    remote: "一部リモート"
   }
 ];
 

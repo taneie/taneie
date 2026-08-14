@@ -62,12 +62,6 @@
             name="remote"
             :options="['', ...remoteOptions]"
           />
-          <FormSelect
-            v-model="filters.stream"
-            label="商流"
-            name="stream"
-            :options="['', ...flowOptions]"
-          />
           <div :class="$style.actions">
             <BaseButton type="submit" icon="search">検索</BaseButton>
             <BaseButton variant="secondary" @click="clearJobFilter"
@@ -136,7 +130,6 @@ const {
   currentRole,
   canViewJobs,
   profileRequirementItems,
-  flowOptions,
   remoteOptions,
   clearJobFilter,
   searchJobs,
@@ -158,8 +151,8 @@ const pageTitle = computed(() =>
 );
 const pageKicker = computed(() =>
   currentRole.value === "sales"
-    ? "登録済み案件の条件、単価、商流、スキル要件を確認します。"
-    : "キーワード、スキル、単価、リモート、商流で絞り込みます。",
+    ? "登録済み案件の条件、単価、スキル要件を確認します。"
+    : "キーワード、スキル、単価、リモートで絞り込みます。",
 );
 const filterTitle = computed(() =>
   currentRole.value === "sales" ? "案件情報の絞り込み" : "検索条件",

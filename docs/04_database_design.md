@@ -67,7 +67,7 @@ erDiagram
 | `RemoteType`              | `full_remote`, `hybrid`, `onsite`                             | リモート条件       |
 | `AvailabilityStatus`      | `ready`, `scheduled`, `paused`                                | 求職者の稼働状況   |
 | `SkillCategory`           | `language`, `database`, `framework`, `cloud`, `tool`, `other` | スキル分類         |
-| `StreamType`              | `end_direct`, `prime`, `secondary`, `other`                   | 商流               |
+| `StreamType`              | `end_direct`, `prime`, `secondary`, `other`                   | 既存DB互換用。画面・APIでは使用しない |
 | `JobSkillRequirementType` | `required`, `nice`                                            | 必須/歓迎スキル    |
 | `ApplicationStatus`       | `screening`, `meeting_pending`, `contracted`, `rejected`      | 応募ステータス     |
 | `MeetingStatus`           | `candidate`, `confirmed`, `reschedule`                        | 面談候補ステータス |
@@ -120,7 +120,7 @@ erDiagram
 | `rate_min`    | int          |   NO | 単価下限         |
 | `rate_max`    | int          |   NO | 単価上限         |
 | `margin_rate` | decimal(5,2) |   NO | 互換用。画面・APIでは使用しない |
-| `stream_type` | StreamType   |   NO | 商流             |
+| `stream_type` | StreamType   |   NO | 既存DB互換用。常に `other` を保存 |
 | `remote_type` | RemoteType   |   NO | リモート条件     |
 | `is_pinned`   | boolean      |   NO | 優先表示         |
 | `is_active`   | boolean      |   NO | 公開状態         |

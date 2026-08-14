@@ -76,7 +76,6 @@ export const statuses: ApplicationStatus[] = [
   "成約",
   "見送り",
 ];
-export const flowOptions = ["エンド直", "1次請け", "2次請け", "その他"];
 export const remoteOptions = ["フルリモート", "一部リモート", "常駐"];
 export const availabilityOptions = [
   "即稼働可",

@@ -49,13 +49,6 @@
             @update:model-value="markDirty"
           />
           <FormSelect
-            v-model="jobForm.stream"
-            label="商流"
-            name="stream"
-            :options="flowOptions"
-            @update:model-value="markDirty"
-          />
-          <FormSelect
             v-model="jobForm.remote"
             label="リモート"
             name="remote"
@@ -174,7 +167,6 @@ import type { ApplicationStatus, JobInput } from "~/composables/frichy/types";
 const {
   state,
   statuses,
-  flowOptions,
   remoteOptions,
   adminMatchedJobs,
   adminMatchedJobsLoading,
@@ -191,7 +183,6 @@ const initialJobForm = (): JobInput => ({
   client: "",
   rateMin: "70",
   rateMax: "90",
-  stream: "エンド直",
   remote: "フルリモート",
   required: "",
   nice: "",
