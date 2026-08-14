@@ -83,32 +83,32 @@ enum MessageType {
 }
 
 model User {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  role            UserRole
-  name            String    @db.VarChar(1000)
-  nameKana        String?   @map("name_kana") @db.VarChar(1000)
-  email           String    @db.VarChar(1000)
-  emailHash       String?   @unique @map("email_hash") @db.VarChar(128)
-  passwordHash    String    @map("password_hash") @db.VarChar(255)
-  phone           String?   @db.VarChar(1000)
-  isActive        Boolean   @default(true) @map("is_active")
-  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz(6)
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role         UserRole
+  name         String    @db.VarChar(1000)
+  nameKana     String?   @map("name_kana") @db.VarChar(1000)
+  email        String    @db.VarChar(1000)
+  emailHash    String?   @unique @map("email_hash") @db.VarChar(128)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  phone        String?   @db.VarChar(1000)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
 
-  freelancerProfile FreelancerProfile?
-  jobsCreated       Job[]                  @relation("JobCreatedBy")
-  changedStatuses   ApplicationStatusHistory[]
-  createdMeetings   MeetingRequest[]       @relation("MeetingCreatedBy")
-  sentMessages      Message[]              @relation("MessageSender")
-  receivedMessages  Message[]              @relation("MessageReceiver")
-  aliveCheckBatches AliveCheckBatch[]
-  privacyConsents   PrivacyPolicyConsent[]
-  pushSubscriptions  PushSubscription[]
-  contactInquiries   ContactInquiry[]       @relation("ContactInquiryCreatedBy")
-  answeredContactInquiries ContactInquiry[] @relation("ContactInquiryAnsweredBy")
-  passwordResetTokens PasswordResetToken[]
-  uploadedFiles UploadedFile[]
+  freelancerProfile        FreelancerProfile?
+  jobsCreated              Job[]                      @relation("JobCreatedBy")
+  changedStatuses          ApplicationStatusHistory[]
+  createdMeetings          MeetingRequest[]           @relation("MeetingCreatedBy")
+  sentMessages             Message[]                  @relation("MessageSender")
+  receivedMessages         Message[]                  @relation("MessageReceiver")
+  aliveCheckBatches        AliveCheckBatch[]
+  privacyConsents          PrivacyPolicyConsent[]
+  pushSubscriptions        PushSubscription[]
+  contactInquiries         ContactInquiry[]           @relation("ContactInquiryCreatedBy")
+  answeredContactInquiries ContactInquiry[]           @relation("ContactInquiryAnsweredBy")
+  passwordResetTokens      PasswordResetToken[]
+  uploadedFiles            UploadedFile[]
 
   @@map("users")
 }
@@ -128,23 +128,23 @@ model PasswordResetToken {
 }
 
 model FreelancerProfile {
-  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId             String              @unique @map("user_id") @db.Uuid
-  publicCode         String              @unique @map("public_code") @db.VarChar(100)
-  roleTitle          String?             @map("role_title") @db.VarChar(255)
-  yearsExperience    Decimal?            @map("years_experience") @db.Decimal(4, 1)
-  desiredRate        Int?                @map("desired_rate")
-  startDate          DateTime?           @map("start_date") @db.Date
-  workRate           String?             @map("work_rate") @db.VarChar(50)
-  remoteType         RemoteType?         @map("remote_type")
-  availabilityStatus AvailabilityStatus? @map("availability_status")
-  availabilityNote   String?             @map("availability_note") @db.VarChar(255)
-  pledgedAt          DateTime?           @map("pledged_at") @db.Timestamptz(6)
-  initialMeetingCompleted   Boolean     @default(false) @map("initial_meeting_completed")
-  initialMeetingCompletedAt DateTime?   @map("initial_meeting_completed_at") @db.Timestamptz(6)
-  lastUpdatedOn      DateTime?           @map("last_updated_on") @db.Date
-  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id                        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                    String              @unique @map("user_id") @db.Uuid
+  publicCode                String              @unique @map("public_code") @db.VarChar(100)
+  roleTitle                 String?             @map("role_title") @db.VarChar(255)
+  yearsExperience           Decimal?            @map("years_experience") @db.Decimal(4, 1)
+  desiredRate               Int?                @map("desired_rate")
+  startDate                 DateTime?           @map("start_date") @db.Date
+  workRate                  String?             @map("work_rate") @db.VarChar(50)
+  remoteType                RemoteType?         @map("remote_type")
+  availabilityStatus        AvailabilityStatus? @map("availability_status")
+  availabilityNote          String?             @map("availability_note") @db.VarChar(255)
+  pledgedAt                 DateTime?           @map("pledged_at") @db.Timestamptz(6)
+  initialMeetingCompleted   Boolean             @default(false) @map("initial_meeting_completed")
+  initialMeetingCompletedAt DateTime?           @map("initial_meeting_completed_at") @db.Timestamptz(6)
+  lastUpdatedOn             DateTime?           @map("last_updated_on") @db.Date
+  createdAt                 DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   skills            FreelancerSkill[]
@@ -240,35 +240,35 @@ model Client {
 }
 
 model Job {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clientId   String?    @map("client_id") @db.Uuid
-  title      String     @db.VarChar(255)
-  summary    String?
-  rateMin    Int        @default(0) @map("rate_min")
-  rateMax    Int        @default(0) @map("rate_max")
-  marginRate Decimal    @default(0) @map("margin_rate") @db.Decimal(5, 2)
-  streamType StreamType @map("stream_type")
-  remoteType RemoteType @map("remote_type")
-  isPinned   Boolean    @default(false) @map("is_pinned")
-  isActive   Boolean    @default(true) @map("is_active")
-  externalSource String? @map("external_source") @db.VarChar(100)
-  externalId     String? @map("external_id") @db.VarChar(255)
-  externalDedupeKey String? @map("external_dedupe_key") @db.VarChar(255)
-  externalReceivedAt DateTime? @map("external_received_at") @db.Timestamptz(6)
-  externalReceivedAtMs BigInt? @map("external_received_at_ms")
-  unitPrice String? @map("unit_price") @db.VarChar(255)
-  settlementLower String? @map("settlement_lower") @db.VarChar(100)
-  settlementUpper String? @map("settlement_upper") @db.VarChar(100)
-  location String?
-  startPeriod String? @map("start_period") @db.VarChar(255)
-  remoteRatio String? @map("remote_ratio") @db.VarChar(255)
-  foreignerAvailability String? @map("foreigner_availability") @db.VarChar(255)
-  ageLimit String? @map("age_limit") @db.VarChar(100)
-  externalCreatedAt DateTime? @map("external_created_at") @db.Timestamptz(6)
-  externalUpdatedAt DateTime? @map("external_updated_at") @db.Timestamptz(6)
-  createdBy  String?    @map("created_by") @db.Uuid
-  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime   @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId              String?    @map("client_id") @db.Uuid
+  title                 String     @db.VarChar(255)
+  summary               String?
+  rateMin               Int        @default(0) @map("rate_min")
+  rateMax               Int        @default(0) @map("rate_max")
+  marginRate            Decimal    @default(0) @map("margin_rate") @db.Decimal(5, 2)
+  streamType            StreamType @map("stream_type")
+  remoteType            RemoteType @map("remote_type")
+  isPinned              Boolean    @default(false) @map("is_pinned")
+  isActive              Boolean    @default(true) @map("is_active")
+  externalSource        String?    @map("external_source") @db.VarChar(100)
+  externalId            String?    @map("external_id") @db.VarChar(255)
+  externalDedupeKey     String?    @map("external_dedupe_key") @db.VarChar(255)
+  externalReceivedAt    DateTime?  @map("external_received_at") @db.Timestamptz(6)
+  externalReceivedAtMs  BigInt?    @map("external_received_at_ms")
+  unitPrice             String?    @map("unit_price") @db.VarChar(255)
+  settlementLower       String?    @map("settlement_lower") @db.VarChar(100)
+  settlementUpper       String?    @map("settlement_upper") @db.VarChar(100)
+  location              String?
+  startPeriod           String?    @map("start_period") @db.VarChar(255)
+  remoteRatio           String?    @map("remote_ratio") @db.VarChar(255)
+  foreignerAvailability String?    @map("foreigner_availability") @db.VarChar(255)
+  ageLimit              String?    @map("age_limit") @db.VarChar(100)
+  externalCreatedAt     DateTime?  @map("external_created_at") @db.Timestamptz(6)
+  externalUpdatedAt     DateTime?  @map("external_updated_at") @db.Timestamptz(6)
+  createdBy             String?    @map("created_by") @db.Uuid
+  createdAt             DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime   @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   client       Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
   creator      User?         @relation("JobCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
@@ -276,11 +276,11 @@ model Job {
   applications Application[]
   messages     Message[]
 
+  @@unique([externalSource, externalId])
   @@index([isActive, isPinned])
   @@index([remoteType])
   @@index([streamType])
   @@index([externalSource])
-  @@unique([externalSource, externalId])
   @@map("jobs")
 }
 
@@ -299,21 +299,53 @@ model JobSkill {
 
 model Application {
   id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  jobId               String            @map("job_id") @db.Uuid
+  jobId               String?           @map("job_id") @db.Uuid
+  sourceJobId         String            @map("source_job_id") @db.Uuid
   freelancerProfileId String            @map("freelancer_profile_id") @db.Uuid
   status              ApplicationStatus @default(screening)
   appliedAt           DateTime          @default(now()) @map("applied_at") @db.Timestamptz(6)
   updatedAt           DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
 
-  job               Job                        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job               Job?                       @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  jobSnapshot       ApplicationJobSnapshot?
   freelancerProfile FreelancerProfile          @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
   histories         ApplicationStatusHistory[]
   meetingRequests   MeetingRequest[]
   uploadedFiles     UploadedFile[]
 
-  @@unique([jobId, freelancerProfileId])
+  @@unique([sourceJobId, freelancerProfileId])
   @@index([status])
   @@map("applications")
+}
+
+model ApplicationJobSnapshot {
+  applicationId         String     @id @map("application_id") @db.Uuid
+  title                 String     @db.VarChar(255)
+  clientName            String     @map("client_name") @db.VarChar(255)
+  summary               String?
+  requiredSkills        Json       @default("[]") @map("required_skills")
+  niceSkills            Json       @default("[]") @map("nice_skills")
+  rateMin               Int        @default(0) @map("rate_min")
+  rateMax               Int        @default(0) @map("rate_max")
+  unitPrice             String?    @map("unit_price") @db.VarChar(255)
+  settlementLower       String?    @map("settlement_lower") @db.VarChar(100)
+  settlementUpper       String?    @map("settlement_upper") @db.VarChar(100)
+  location              String?
+  startPeriod           String?    @map("start_period") @db.VarChar(255)
+  remoteRatio           String?    @map("remote_ratio") @db.VarChar(255)
+  foreignerAvailability String?    @map("foreigner_availability") @db.VarChar(255)
+  ageLimit              String?    @map("age_limit") @db.VarChar(100)
+  receivedAt            DateTime?  @map("received_at") @db.Timestamptz(6)
+  receivedAtMs          BigInt?    @map("received_at_ms")
+  remoteType            RemoteType @map("remote_type")
+  isPinned              Boolean    @default(false) @map("is_pinned")
+  isActive              Boolean    @default(true) @map("is_active")
+  sourceCreatedAt       DateTime   @map("source_created_at") @db.Timestamptz(6)
+  capturedAt            DateTime   @default(now()) @map("captured_at") @db.Timestamptz(6)
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_job_snapshots")
 }
 
 model ApplicationStatusHistory {
@@ -325,8 +357,8 @@ model ApplicationStatusHistory {
   changedAt     DateTime           @default(now()) @map("changed_at") @db.Timestamptz(6)
   note          String?
 
-  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  changedByUser User?     @relation(fields: [changedBy], references: [id], onDelete: SetNull)
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedByUser User?       @relation(fields: [changedBy], references: [id], onDelete: SetNull)
 
   @@index([applicationId, changedAt])
   @@map("application_status_histories")
@@ -391,7 +423,7 @@ model AliveCheckTarget {
   sentAt              DateTime  @default(now()) @map("sent_at") @db.Timestamptz(6)
   respondedAt         DateTime? @map("responded_at") @db.Timestamptz(6)
 
-  batch             AliveCheckBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  batch             AliveCheckBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
   freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
 
   @@index([batchId])
@@ -400,12 +432,12 @@ model AliveCheckTarget {
 }
 
 model PrivacyPolicyConsent {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId         String   @map("user_id") @db.Uuid
-  policyVersion  String   @map("policy_version") @db.VarChar(50)
-  acceptedAt     DateTime @default(now()) @map("accepted_at") @db.Timestamptz(6)
-  ipAddress      String?  @map("ip_address") @db.VarChar(1000)
-  userAgent      String?  @map("user_agent") @db.VarChar(1000)
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  policyVersion String   @map("policy_version") @db.VarChar(50)
+  acceptedAt    DateTime @default(now()) @map("accepted_at") @db.Timestamptz(6)
+  ipAddress     String?  @map("ip_address") @db.VarChar(1000)
+  userAgent     String?  @map("user_agent") @db.VarChar(1000)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -415,15 +447,15 @@ model PrivacyPolicyConsent {
 }
 
 model PushSubscription {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  endpoint  String   @db.VarChar(1000)
-  endpointHash String? @unique @map("endpoint_hash") @db.VarChar(128)
-  p256dh    String   @db.VarChar(1000)
-  auth      String   @db.VarChar(1000)
-  userAgent String?  @map("user_agent") @db.VarChar(1000)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  endpoint     String   @db.VarChar(1000)
+  endpointHash String?  @unique @map("endpoint_hash") @db.VarChar(128)
+  p256dh       String   @db.VarChar(1000)
+  auth         String   @db.VarChar(1000)
+  userAgent    String?  @map("user_agent") @db.VarChar(1000)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

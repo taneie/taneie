@@ -28,7 +28,7 @@ export function registerMeetingRoutes(
           id: meeting.id,
           freelancerId: meeting.freelancerProfileId,
           applicationId: meeting.applicationId,
-          jobId: meeting.application?.jobId,
+          jobId: meeting.application?.sourceJobId,
           candidate: meeting.candidateAt.toISOString(),
           status: getKeyByValue(labelToMeetingStatus, meeting.status),
         })),
@@ -49,7 +49,7 @@ export function registerMeetingRoutes(
         id: meeting.id,
         freelancerProfileId: meeting.freelancerProfileId,
         applicationId: meeting.applicationId,
-        jobId: meeting.application?.jobId,
+        jobId: meeting.application?.sourceJobId,
         candidateAt: meeting.candidateAt.toISOString(),
         status: getKeyByValue(labelToMeetingStatus, meeting.status),
       });

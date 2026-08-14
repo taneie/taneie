@@ -15,6 +15,7 @@ export const freelancerInclude = {
 
 export const applicationInclude = {
   job: { include: jobInclude },
+  jobSnapshot: true,
   freelancerProfile: { include: freelancerInclude },
 } satisfies Prisma.ApplicationInclude;
 

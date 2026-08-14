@@ -596,17 +596,41 @@ async function main() {
 
   const application = await prisma.application.upsert({
     where: {
-      jobId_freelancerProfileId: {
-        jobId: job.id,
+      sourceJobId_freelancerProfileId: {
+        sourceJobId: job.id,
         freelancerProfileId: profile.id,
       },
     },
-    update: { status: "meeting_pending" },
+    update: { jobId: job.id, status: "meeting_pending" },
     create: {
       jobId: job.id,
+      sourceJobId: job.id,
       freelancerProfileId: profile.id,
       status: "meeting_pending",
     },
+  });
+
+  const snapshotJob = await prisma.job.findUniqueOrThrow({
+    where: { id: job.id },
+    include: { client: true, skills: { include: { skill: true } } },
+  });
+  const snapshotData = {
+    title: snapshotJob.title,
+    clientName: snapshotJob.client?.name || "未設定",
+    summary: snapshotJob.summary,
+    requiredSkills: snapshotJob.skills.filter((item) => item.requirementType === "required").map((item) => item.skill.name),
+    niceSkills: snapshotJob.skills.filter((item) => item.requirementType === "nice").map((item) => item.skill.name),
+    rateMin: snapshotJob.rateMin,
+    rateMax: snapshotJob.rateMax,
+    remoteType: snapshotJob.remoteType,
+    isPinned: snapshotJob.isPinned,
+    isActive: snapshotJob.isActive,
+    sourceCreatedAt: snapshotJob.createdAt,
+  };
+  await prisma.applicationJobSnapshot.upsert({
+    where: { applicationId: application.id },
+    update: snapshotData,
+    create: { applicationId: application.id, ...snapshotData },
   });
 
   await prisma.meetingRequest.deleteMany({

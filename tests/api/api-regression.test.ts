@@ -408,6 +408,16 @@ describe("APIプロフィール・案件フロー", () => {
     );
     assert.equal(changed.status, 200);
     assert.equal(changed.data.status, "面談待ち");
+
+    await prisma.job.delete({ where: { id: job.data.id } });
+    const applicationsAfterJobDelete = await server.request<
+      Array<{ id: string; jobId: string; job: { title: string } }>
+    >("/applications", {}, freelancer.token);
+    const preserved = applicationsAfterJobDelete.data.find(
+      (item) => item.id === application.data.id,
+    );
+    assert.equal(preserved?.jobId, job.data.id);
+    assert.match(preserved?.job.title || "", /^API回帰テスト案件/);
   });
 
   /**

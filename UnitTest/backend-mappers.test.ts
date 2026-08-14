@@ -188,6 +188,7 @@ describe("応募・メッセージMapper", () => {
     const application = mapApplication({
       id: "application-id",
       jobId: "job-id",
+      sourceJobId: "job-id",
       freelancerProfileId: "profile-id",
       status: "meeting_pending",
       appliedAt: new Date("2026-08-01T00:00:00.000Z"),
@@ -210,6 +211,7 @@ describe("応募・メッセージMapper", () => {
         client: { id: "client-id", name: "Client", createdAt: new Date() },
         skills: [],
       },
+      jobSnapshot: null,
       freelancerProfile: {
         id: "profile-id",
         userId: "user-id",

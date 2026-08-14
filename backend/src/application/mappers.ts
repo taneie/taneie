@@ -1,5 +1,6 @@
 import type {
   Application,
+  ApplicationJobSnapshot,
   Client,
   FreelancerProfile,
   FreelancerSkill,
@@ -26,9 +27,41 @@ type JobWithRelations = Job & {
 type FreelancerWithRelations = FreelancerProfile & { initialMeetingCompleted: boolean; initialMeetingCompletedAt: Date | null; user: User; skills: Array<FreelancerSkill & { skill: Skill }>; resumes: Resume[]; };
 
 type ApplicationWithRelations = Application & {
-  job: JobWithRelations;
+  job: JobWithRelations | null;
+  jobSnapshot: ApplicationJobSnapshot | null;
   freelancerProfile: FreelancerWithRelations;
 };
+
+function snapshotSkills(value: unknown) {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function mapApplicationJobSnapshot(snapshot: ApplicationJobSnapshot, sourceJobId: string) {
+  return {
+    id: sourceJobId,
+    title: snapshot.title,
+    client: snapshot.clientName,
+    summary: snapshot.summary || "",
+    required: snapshotSkills(snapshot.requiredSkills),
+    nice: snapshotSkills(snapshot.niceSkills),
+    rateMin: snapshot.rateMin,
+    rateMax: snapshot.rateMax,
+    unitPrice: snapshot.unitPrice || "",
+    settlementLower: snapshot.settlementLower || "",
+    settlementUpper: snapshot.settlementUpper || "",
+    location: snapshot.location || "",
+    startPeriod: snapshot.startPeriod || "",
+    remoteRatio: snapshot.remoteRatio || "",
+    foreignerAvailability: snapshot.foreignerAvailability || "",
+    ageLimit: snapshot.ageLimit || "",
+    receivedAt: snapshot.receivedAt,
+    receivedAtMs: snapshot.receivedAtMs == null ? null : Number(snapshot.receivedAtMs),
+    remote: toRemoteLabel(snapshot.remoteType),
+    sortFlag: snapshot.isPinned,
+    active: snapshot.isActive,
+    createdAt: snapshot.sourceCreatedAt,
+  };
+}
 
 export function toRemoteLabel(value: string | null | undefined) {
   return value ? getKeyByValue(labelToRemoteType, value) : "";
@@ -126,13 +159,19 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
 }
 
 export function mapApplication(application: ApplicationWithRelations) {
+  const job = application.job
+    ? mapJob(application.job)
+    : application.jobSnapshot
+      ? mapApplicationJobSnapshot(application.jobSnapshot, application.sourceJobId)
+      : null;
+
   return {
     id: application.id,
-    jobId: application.jobId,
+    jobId: application.sourceJobId,
     freelancerId: application.freelancerProfileId,
     status: toApplicationStatusLabel(application.status),
     appliedAt: application.appliedAt.toISOString().slice(0, 10),
-    job: mapJob(application.job),
+    job,
     freelancer: mapFreelancer(application.freelancerProfile),
   };
 }

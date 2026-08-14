@@ -27,7 +27,7 @@ export class CommunicationService {
         : { freelancerProfile: { userId: context.userId } };
     return this.db.meetingRequest.findMany({
       where,
-      include: { application: { select: { jobId: true } } },
+      include: { application: { select: { sourceJobId: true } } },
       orderBy: { candidateAt: "asc" },
     });
   }
@@ -83,7 +83,7 @@ export class CommunicationService {
         applicationId: input.applicationId || null,
         candidateAt,
       },
-      include: { application: { select: { jobId: true } } },
+      include: { application: { select: { sourceJobId: true } } },
     });
     if (existing) return existing;
 
@@ -95,7 +95,7 @@ export class CommunicationService {
         status: "candidate",
         createdBy: context.userId,
       },
-      include: { application: { select: { jobId: true } } },
+      include: { application: { select: { sourceJobId: true } } },
     });
   }
 
@@ -167,8 +167,8 @@ export class CommunicationService {
     if (input.jobId && messageType !== "scout") {
       const application = await this.db.application.findUnique({
         where: {
-          jobId_freelancerProfileId: {
-            jobId: input.jobId,
+          sourceJobId_freelancerProfileId: {
+            sourceJobId: input.jobId,
             freelancerProfileId: profile.id,
           },
         },
@@ -191,12 +191,23 @@ export class CommunicationService {
               where: { role: "sales", isActive: true },
             })
           ).id;
+    const linkedApplication = input.jobId && messageType !== "scout"
+      ? await this.db.application.findUnique({
+          where: {
+            sourceJobId_freelancerProfileId: {
+              sourceJobId: input.jobId,
+              freelancerProfileId: profile.id,
+            },
+          },
+          select: { jobId: true },
+        })
+      : null;
     const message = await this.db.message.create({
       data: {
         senderUserId: context.userId,
         receiverUserId,
         freelancerProfileId: profile.id,
-        jobId: input.jobId,
+        jobId: messageType === "scout" ? input.jobId : linkedApplication?.jobId,
         body: encryptText(input.body),
         messageType,
       },
