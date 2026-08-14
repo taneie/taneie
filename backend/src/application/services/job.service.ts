@@ -14,11 +14,13 @@ import {
 
 const DEFAULT_JOB_LIMIT = 10;
 type FreelancerMatchProfile = {
+  roleTitle: string | null;
   desiredRate: number | null;
   remoteType: string | null;
   skills: Array<{ skill: { name: string } }>;
 };
 type ListedJob = Prisma.JobGetPayload<{ include: typeof jobInclude }>;
+export const MINIMUM_MATCH_SCORE = 4;
 
 export class JobService {
   private readonly externalProjectImportService: ExternalProjectImportService;
@@ -36,6 +38,7 @@ export class JobService {
         await this.db.freelancerProfile.findUniqueOrThrow({
           where: { userId: context.userId },
           select: {
+            roleTitle: true,
             desiredRate: true,
             remoteType: true,
             skills: { include: { skill: true } },
@@ -43,7 +46,7 @@ export class JobService {
         });
     }
 
-    const where = this.buildListWhere(context, input, freelancerMatchProfile);
+    const where = this.buildListWhere(context, input);
     const orderBy = [
       { isPinned: "desc" as const },
       { createdAt: "desc" as const },
@@ -55,7 +58,7 @@ export class JobService {
         include: jobInclude,
         orderBy,
       });
-      const matchedJobs = this.filterJobsByFreelancerSkills(
+      const matchedJobs = this.rankJobsByFreelancerMatch(
         jobs,
         freelancerMatchProfile,
       );
@@ -130,10 +133,11 @@ export class JobService {
       where,
       include: jobInclude,
       orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
-      take: 30,
     });
 
-    return jobs.map(mapJob);
+    return this.rankJobsByFreelancerMatch(jobs, profile)
+      .slice(0, 30)
+      .map(mapJob);
   }
 
   async getById(context: AuthContext | undefined, id: string) {
@@ -255,53 +259,17 @@ export class JobService {
       });
     }
 
-    if (profile.desiredRate) {
-      filters.push({ rateMax: { gte: profile.desiredRate } });
-    }
-
-    if (profile.remoteType) {
-      filters.push({ remoteType: profile.remoteType as never });
-    }
-
-    const skillNames = profile.skills
-      .map((item) => item.skill.name)
-      .filter(Boolean);
-    if (!skillNames.length) {
-      filters.push({
-        id: { equals: "00000000-0000-0000-0000-000000000000" },
-      });
-    } else {
-      filters.push({
-        skills: {
-          some: {
-            skill: { name: { in: skillNames } },
-          },
-        },
-      });
-    }
-
     return { AND: filters };
   }
 
   private buildListWhere(
     context: AuthContext | undefined,
     input: JobListInput,
-    freelancerMatchProfile?: FreelancerMatchProfile,
   ) {
     const filters: Prisma.JobWhereInput[] = [];
 
     if (context?.role !== "sales") {
       filters.push({ isActive: true });
-    }
-
-    if (context?.role === "freelancer") {
-      if (freelancerMatchProfile?.desiredRate) {
-        filters.push({ rateMax: { gte: freelancerMatchProfile.desiredRate } });
-      }
-
-      if (freelancerMatchProfile?.remoteType) {
-        filters.push({ remoteType: freelancerMatchProfile.remoteType as never });
-      }
     }
 
     if (input.keyword) {
@@ -346,26 +314,110 @@ export class JobService {
     return filters.length ? { AND: filters } : {};
   }
 
-  private filterJobsByFreelancerSkills(
+  private rankJobsByFreelancerMatch(
     jobs: ListedJob[],
     profile: FreelancerMatchProfile,
   ) {
-    const profileSkills = new Set(
-      profile.skills
-        .map((item) => this.normalizeSkillName(item.skill.name))
-        .filter(Boolean),
-    );
+    return jobs
+      .map((job) => ({ job, score: calculateJobMatchScore(job, profile) }))
+      .filter((item) => item.score >= MINIMUM_MATCH_SCORE)
+      .sort((a, b) => b.score - a.score)
+      .map((item) => item.job);
+  }
+}
 
-    if (!profileSkills.size) return [];
+export function calculateJobMatchScore(
+  job: Pick<ListedJob, "title" | "summary" | "rateMin" | "rateMax" | "remoteType" | "skills">,
+  profile: FreelancerMatchProfile,
+) {
+  const profileSkills = profile.skills.map((item) => item.skill.name).filter(Boolean);
+  const matched = new Set<string>();
+  let score = 0;
 
-    return jobs.filter((job) =>
-      job.skills.some((item) =>
-        profileSkills.has(this.normalizeSkillName(item.skill.name)),
-      ),
-    );
+  for (const item of job.skills) {
+    const skill = profileSkills.find((name) => skillNamesMatch(name, item.skill.name));
+    if (!skill || matched.has(skill)) continue;
+    matched.add(skill);
+    score += item.requirementType === "required" ? 4 : 2;
   }
 
-  private normalizeSkillName(value: string) {
-    return value.trim().replace(/\s+/g, "").toLowerCase();
+  if (roleMatchesJob(profile.roleTitle || "", job)) score += 3;
+  if (rateMatches(profile.desiredRate, job.rateMin, job.rateMax)) score += 1;
+  if (remoteMatches(profile.remoteType, job.remoteType)) score += 1;
+  return score;
+}
+
+function skillNamesMatch(left: string, right: string) {
+  const a = normalizeSkillName(left);
+  const b = normalizeSkillName(right);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  return containsSkillTerm(a, b) || containsSkillTerm(b, a);
+}
+
+function containsSkillTerm(container: string, term: string) {
+  if (term.length < 2) return false;
+  let index = container.indexOf(term);
+  while (index >= 0) {
+    const before = container[index - 1] || "";
+    const after = container[index + term.length] || "";
+    if (!/[a-z0-9+#]/i.test(before) && !/[a-z0-9+#]/i.test(after)) return true;
+    index = container.indexOf(term, index + 1);
   }
+  return false;
+}
+
+function normalizeSkillName(value: string) {
+  const normalized = value.toLowerCase().replace(/[^a-z0-9+#ぁ-んァ-ヶ一-龠]/gu, "");
+  const aliases: Record<string, string> = {
+    ts: "typescript", js: "javascript", vuejs: "vue",
+    nuxtjs: "nuxt", nodejs: "node", reactjs: "react",
+  };
+  return aliases[normalized] || normalized;
+}
+
+function normalizeRate(value: number | null) {
+  if (!value) return 0;
+  return value >= 10_000 ? value / 10_000 : value;
+}
+
+function rateMatches(desiredRate: number | null, rateMin: number, rateMax: number) {
+  const desired = normalizeRate(desiredRate);
+  if (!desired) return false;
+  const maximum = normalizeRate(rateMax);
+  const minimum = normalizeRate(rateMin);
+  return maximum >= desired * 0.9 && (!minimum || minimum <= desired * 1.5);
+}
+
+function remoteMatches(profileRemote: string | null, jobRemote: string) {
+  if (!profileRemote) return false;
+  if (profileRemote === jobRemote) return true;
+  if (profileRemote === "hybrid") return jobRemote === "full_remote";
+  if (profileRemote === "onsite") return true;
+  return false;
+}
+
+function roleMatchesJob(
+  roleTitle: string,
+  job: Pick<ListedJob, "title" | "summary" | "skills">,
+) {
+  if (!roleTitle) return false;
+  const corpus = [job.title, job.summary || "", ...job.skills.map((item) => item.skill.name)]
+    .join(" ")
+    .toLowerCase();
+  const groups: Array<[RegExp, string[]]> = [
+    [/フロント|frontend/i, ["フロントエンド", "frontend", "react", "vue", "next.js", "nuxt"]],
+    [/バックエンド|backend/i, ["バックエンド", "backend", "サーバーサイド", "spring boot", "laravel"]],
+    [/インフラ|sre|クラウド|devops/i, ["インフラ", "sre", "aws", "gcp", "azure", "terraform", "kubernetes"]],
+    [/データ|機械学習|ai/i, ["データ", "機械学習", "ai", "llm", "生成ai"]],
+    [/qa|テスト/i, ["qa", "品質保証", "テスト設計"]],
+    [/セキュリティ/i, ["セキュリティ", "security"]],
+    [/pm|pl|プロジェクト/i, ["pmo", "プロジェクトマネージャ", "プロジェクト管理"]],
+  ];
+  const keywords = groups.find(([pattern]) => pattern.test(roleTitle))?.[1] || [];
+  return keywords.some((keyword) =>
+    /^[a-z]{1,2}$/i.test(keyword)
+      ? new RegExp(`\\b${keyword}\\b`, "i").test(corpus)
+      : corpus.includes(keyword),
+  );
 }
