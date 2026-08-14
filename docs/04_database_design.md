@@ -130,8 +130,8 @@ erDiagram
 | `external_received_at` | timestamptz | YES | 案件メール受信日時 |
 | `external_received_at_ms` | bigint | YES | 案件メール受信日時のUnixミリ秒 |
 | `unit_price` | varchar(255) | YES | 外部APIの単価表記 |
-| `settlement_lower` | varchar(100) | YES | 清算幅下限 |
-| `settlement_upper` | varchar(100) | YES | 清算幅上限 |
+| `settlement_lower` | varchar(100) | YES | 精算幅下限 |
+| `settlement_upper` | varchar(100) | YES | 精算幅上限 |
 | `location` | text | YES | 勤務地 |
 | `start_period` | varchar(255) | YES | 稼働開始時期 |
 | `remote_ratio` | varchar(255) | YES | リモート比率 |

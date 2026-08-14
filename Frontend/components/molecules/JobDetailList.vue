@@ -27,7 +27,7 @@ const details = computed(() => {
 
   return [
     { label: "単価", value: props.job.unitPrice || `${props.job.rateMin}-${props.job.rateMax}万円` },
-    { label: "清算幅", value: settlement },
+    { label: "精算幅", value: settlement },
     { label: "勤務地", value: props.job.location },
     { label: "開始時期", value: props.job.startPeriod },
     { label: "リモート", value: props.job.remoteRatio || props.job.remote },

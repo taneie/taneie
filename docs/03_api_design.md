@@ -166,7 +166,7 @@
 同一案件は `externalSource` と `externalId` で判定し、重複作成せず更新する。
 `limit` は1〜100件の範囲で任意指定できる。省略時は取得した全件を処理する。
 
-外部APIの `projectName`、必須・尚可スキル、単価、清算幅、勤務地、開始時期、リモート比率、外国籍可否、年齢制限、受信日時を個別フィールドとして保存する。`subject`、`email`、`salesRep`、`notes`、`sourceBody` は取り込み対象にせず、保存・Frichy API返却を行わない。
+外部APIの `projectName`、必須・尚可スキル、単価、精算幅、勤務地、開始時期、リモート比率、外国籍可否、年齢制限、受信日時を個別フィールドとして保存する。`subject`、`email`、`salesRep`、`notes`、`sourceBody` は取り込み対象にせず、保存・Frichy API返却を行わない。
 
 認証は以下のいずれか。
 
