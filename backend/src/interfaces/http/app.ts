@@ -16,7 +16,7 @@ import {
 import { AppError } from "../../domain/types.js";
 import { config } from "../../infrastructure/config.js";
 import { prisma } from "../../infrastructure/prisma.js";
-import { errorHandler, requireBasicAuth } from "./middleware.js";
+import { errorHandler } from "./middleware.js";
 import { registerAliveCheckRoutes } from "./routes/alive-checks.routes.js";
 import { registerApplicationRoutes } from "./routes/applications.routes.js";
 import { registerAuthRoutes } from "./routes/auth.routes.js";
@@ -47,8 +47,6 @@ export function createApp() {
     res.setHeader("Permissions-Policy", "unload=(self)");
     next();
   });
-  app.use(requireBasicAuth);
-
   app.use(
     cors({
       credentials: true,

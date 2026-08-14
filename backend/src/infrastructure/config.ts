@@ -31,8 +31,6 @@ export const config = {
   emailFrom: readEnv("EMAIL_FROM", ""),
   emailReplyTo: readEnv("EMAIL_REPLY_TO", ""),
   dataEncryptionKey: readEnv("DATA_ENCRYPTION_KEY", ""),
-  basicAuthUser: readEnv("BASIC_AUTH_USER", ""),
-  basicAuthPassword: readEnv("BASIC_AUTH_PASSWORD", ""),
   blobReadWriteToken: readEnv("BLOB_READ_WRITE_TOKEN", ""),
   blobUploadCallbackUrl: readEnv("BLOB_UPLOAD_CALLBACK_URL", ""),
   gcsBucketName: readEnv("GCS_BUCKET_NAME", ""),
