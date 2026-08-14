@@ -20,7 +20,7 @@ permissions:
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'frichy' }}
   GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast1' }}
-  GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER || '' }}
+  GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER || 'projects/322534405950/locations/global/workloadIdentityPools/github/providers/github' }}
   GCP_DEPLOY_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT || 'frichy-github-deployer@frichy.iam.gserviceaccount.com' }}
   GAR_REPOSITORY: ${{ vars.GAR_REPOSITORY || 'frichy' }}
   IMAGE_NAME: ${{ vars.IMAGE_NAME || 'web' }}
@@ -29,7 +29,7 @@ env:
   GCS_BUCKET_NAME: ${{ vars.GCS_BUCKET_NAME || 'frichy-322534405950-resumes' }}
   NUXT_PUBLIC_API_BASE: ${{ vars.NUXT_PUBLIC_API_BASE || '/api' }}
   NUXT_PUBLIC_SHOW_DEMO_LOGIN: ${{ vars.NUXT_PUBLIC_SHOW_DEMO_LOGIN || 'false' }}
-  APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL || 'https://frichy-322534405950.asia-northeast1.run.app' }}
+  APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL || 'https://frichy.jp' }}
   EMAIL_FROM: ${{ vars.EMAIL_FROM || '' }}
   EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO || '' }}
   EXTERNAL_PROJECTS_API_URL: ${{ vars.EXTERNAL_PROJECTS_API_URL || 'https://simpleprj-0305-489903.web.app/api/external/projectInfos' }}
