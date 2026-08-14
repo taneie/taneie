@@ -10,6 +10,7 @@ import {
 } from "../middleware.js";
 import {
   createJobSchema,
+  importExternalJobsQuerySchema,
   listJobsQuerySchema,
   listScoutableJobsQuerySchema,
   updateJobFlagsSchema,
@@ -21,7 +22,10 @@ export function registerJobRoutes(app: Express, jobService: JobService) {
     "/api/jobs/import/external",
     requireSalesOrImportSecret,
     asyncHandler<AuthedRequest>(async (req, res) => {
-      res.json(await jobService.importExternalProjects(req.auth?.userId));
+      const query = importExternalJobsQuerySchema.parse(req.query);
+      res.json(
+        await jobService.importExternalProjects(req.auth?.userId, query.limit),
+      );
     }),
   );
 

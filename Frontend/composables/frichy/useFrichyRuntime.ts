@@ -1581,7 +1581,6 @@ async function resetProfile() {
 async function createJob(values: JobInput) {
   const rateMin = Number(values.rateMin || 0);
   const rateMax = Number(values.rateMax || 0);
-  const marginRate = Number(values.marginRate || 0);
   if (!String(values.title || "").trim()) {
     showToast("案件概要を入力してください。");
     return false;
@@ -1598,11 +1597,6 @@ async function createJob(values: JobInput) {
     showToast("単価は下限・上限を入力し、上限が下限以上になるようにしてください。");
     return false;
   }
-  if (marginRate < 0 || marginRate > 100) {
-    showToast("マージン率は0〜100の範囲で入力してください。");
-    return false;
-  }
-
   try {
     const job = await apiRequest<Job>("/jobs", {
       method: "POST",
@@ -1614,7 +1608,6 @@ async function createJob(values: JobInput) {
         nice: splitCsv(values.nice),
         rateMin,
         rateMax,
-        marginRate,
         streamType: values.stream,
         remoteType: values.remote,
         isPinned: values.sortFlag,

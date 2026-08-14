@@ -48,13 +48,6 @@
             type="number"
             @update:model-value="markDirty"
           />
-          <FormInput
-            v-model="jobForm.marginRate"
-            label="マージン率（%）"
-            name="marginRate"
-            type="number"
-            @update:model-value="markDirty"
-          />
           <FormSelect
             v-model="jobForm.stream"
             label="商流"
@@ -198,7 +191,6 @@ const initialJobForm = (): JobInput => ({
   client: "",
   rateMin: "70",
   rateMax: "90",
-  marginRate: "12",
   stream: "エンド直",
   remote: "フルリモート",
   required: "",

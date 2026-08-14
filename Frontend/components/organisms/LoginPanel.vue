@@ -133,7 +133,7 @@
             <div :class="$style.heroContent">
               <p :class="$style.eyebrow">フリーランスエンジニア向け案件マッチング</p>
               <h1>
-                <span>マージン開示で高単価。</span>
+                <span>案件条件を明確に開示。</span>
                 <span>あなたのスキルに最適な条件を最速提案。</span>
               </h1>
 

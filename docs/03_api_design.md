@@ -142,7 +142,6 @@
   "nice": ["AWS"],
   "rateMin": 80,
   "rateMax": 100,
-  "marginRate": 12,
   "streamType": "end_direct",
   "remoteType": "hybrid",
   "isPinned": true
@@ -162,10 +161,13 @@
 
 ### 4.5 外部案件API取り込み
 
-`POST /api/jobs/import/external`
+`POST /api/jobs/import/external?limit=10`
 
 外部案件APIから直近30日分の案件を取得し、Frichyの案件形式へ変換して登録/更新する。
 同一案件は `externalSource` と `externalId` で判定し、重複作成せず更新する。
+`limit` は1〜100件の範囲で任意指定できる。省略時は取得した全件を処理する。
+
+外部APIの `projectName`、必須・尚可スキル、単価、清算幅、勤務地、開始時期、リモート比率、外国籍可否、年齢制限、受信日時を個別フィールドとして保存する。`subject`、`email`、`salesRep`、`notes`、`sourceBody` は取り込み対象にせず、保存・Frichy API返却を行わない。
 
 認証は以下のいずれか。
 
@@ -176,10 +178,10 @@
 
 ```json
 {
-  "fetched": 3492,
-  "imported": 3492,
-  "created": 100,
-  "updated": 3392,
+  "fetched": 10,
+  "imported": 10,
+  "created": 10,
+  "updated": 0,
   "skipped": 0,
   "failed": 0
 }

@@ -14,14 +14,14 @@
           <div>
             <h3>{{ job.title }}</h3>
             <p :class="$style.metaLine">
-              {{ job.client }} / {{ job.rateMin }}-{{ job.rateMax }}万円 /
-              マージン{{ job.marginRate ?? 12 }}%（{{ marginAmountLabel }}） /
-              {{ job.remote }}
+              {{ job.client }} / {{ job.unitPrice || `${job.rateMin}-${job.rateMax}万円` }} /
+              {{ job.remoteRatio || job.remote }}
             </p>
           </div>
         </div>
 
         <JobSummaryText :summary="job.summary" :reset-key="job.id" />
+        <JobDetailList :job="job" />
 
         <div :class="$style.tags">
           <TagBadge
@@ -70,9 +70,8 @@
           <span :class="$style.mobileChevron" aria-hidden="true">⌄</span>
         </span>
         <p :class="$style.metaLine">
-          {{ job.client }} / {{ job.rateMin }}-{{ job.rateMax }}万円 /
-          マージン{{ job.marginRate ?? 12 }}%（{{ marginAmountLabel }}） /
-          {{ job.remote }}
+          {{ job.client }} / {{ job.unitPrice || `${job.rateMin}-${job.rateMax}万円` }} /
+          {{ job.remoteRatio || job.remote }}
         </p>
         <span :class="$style.mobileBadges">
           <StreamBadge :value="job.stream" />
@@ -82,6 +81,7 @@
 
       <div :class="$style.mobileDetail">
         <JobSummaryText :summary="job.summary" :reset-key="job.id" compact />
+        <JobDetailList :job="job" compact />
         <span :class="$style.mobileTags">
           <TagBadge
             v-for="skill in job.required"
@@ -150,16 +150,6 @@ const applyButtonLabel = computed(() => {
   return "応募する";
 });
 
-const marginAmountLabel = computed(() => {
-  const marginRate = Number(props.job.marginRate ?? 12);
-  const min = formatMarginAmount((props.job.rateMin * marginRate) / 100);
-  const max = formatMarginAmount((props.job.rateMax * marginRate) / 100);
-  return `${min}-${max}万円`;
-});
-
-function formatMarginAmount(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
 </script>
 
 <style module>

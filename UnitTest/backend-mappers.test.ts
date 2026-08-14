@@ -32,8 +32,8 @@ describe("Mapperの表示ラベル変換", () => {
 
 describe("案件Mapper", () => {
   /**
-   * @testData client未設定、必須/尚可スキル、Decimal相当のmarginRate、保存値の商流/リモートを持つ案件record。
-   * @expected client未設定は「未設定」になり、スキル配列・marginRate数値・表示ラベルがUI向けに変換される。
+   * @testData client未設定、必須/尚可スキル、外部案件の分離項目、保存値の商流/リモートを持つ案件record。
+   * @expected client未設定、スキル配列、案件条件、表示ラベルがUI向けに変換される。
    */
   it("mapJob maps relations, enum labels, and default client names", () => {
     const job = mapJob({
@@ -44,6 +44,16 @@ describe("案件Mapper", () => {
       rateMin: 700000,
       rateMax: 900000,
       marginRate: "12.5",
+      unitPrice: "70〜90万円",
+      settlementLower: "140",
+      settlementUpper: "180",
+      location: "東京",
+      startPeriod: "即日",
+      remoteRatio: "週3リモート",
+      foreignerAvailability: "可",
+      ageLimit: "45歳まで",
+      externalReceivedAt: new Date("2026-07-31T15:00:00.000Z"),
+      externalReceivedAtMs: 1_754_060_400_000n,
       streamType: "end_direct",
       remoteType: "full_remote",
       isPinned: true,
@@ -83,7 +93,10 @@ describe("案件Mapper", () => {
     assert.equal(job.client, "未設定");
     assert.deepEqual(job.required, ["TypeScript"]);
     assert.deepEqual(job.nice, ["GCP"]);
-    assert.equal(job.marginRate, 12.5);
+    assert.equal(job.unitPrice, "70〜90万円");
+    assert.equal(job.settlementLower, "140");
+    assert.equal(job.location, "東京");
+    assert.equal(job.receivedAtMs, 1_754_060_400_000);
     assert.equal(job.stream, "エンド直");
     assert.equal(job.remote, "フルリモート");
   });

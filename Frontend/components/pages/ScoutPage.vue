@@ -112,6 +112,7 @@
             <StreamBadge :value="job.stream" />
           </span>
           <JobSummaryText :summary="job.summary" :reset-key="job.id" compact />
+          <JobDetailList :job="job" compact />
           <span :class="$style.jobOptionMeta">
             {{ job.client }} / {{ job.rateMin }}-{{ job.rateMax }}万円 / {{ job.remote }}
           </span>

@@ -26,7 +26,7 @@ export interface JobInput {
   nice?: string[];
   rateMin: number;
   rateMax: number;
-  marginRate: number;
+  marginRate?: number;
   streamType: "end_direct" | "prime" | "secondary" | "other";
   remoteType: "full_remote" | "hybrid" | "onsite";
   isPinned: boolean;

@@ -177,7 +177,7 @@ export class JobService {
         summary: input.summary || "",
         rateMin: input.rateMin,
         rateMax: input.rateMax,
-        marginRate: input.marginRate,
+        marginRate: input.marginRate ?? 0,
         streamType: input.streamType,
         remoteType: input.remoteType,
         isPinned: input.isPinned,
@@ -213,8 +213,8 @@ export class JobService {
     return mapJob(job);
   }
 
-  async importExternalProjects(createdBy?: string | null) {
-    return this.externalProjectImportService.importProjects(createdBy);
+  async importExternalProjects(createdBy?: string | null, limit?: number) {
+    return this.externalProjectImportService.importProjects(createdBy, limit);
   }
 
   private buildScoutableJobWhere(
@@ -243,6 +243,9 @@ export class JobService {
         OR: [
           { title: { contains: input.keyword, mode: "insensitive" } },
           { summary: { contains: input.keyword, mode: "insensitive" } },
+          { location: { contains: input.keyword, mode: "insensitive" } },
+          { startPeriod: { contains: input.keyword, mode: "insensitive" } },
+          { remoteRatio: { contains: input.keyword, mode: "insensitive" } },
           {
             client: {
               name: { contains: input.keyword, mode: "insensitive" },
@@ -306,6 +309,9 @@ export class JobService {
         OR: [
           { title: { contains: input.keyword, mode: "insensitive" } },
           { summary: { contains: input.keyword, mode: "insensitive" } },
+          { location: { contains: input.keyword, mode: "insensitive" } },
+          { startPeriod: { contains: input.keyword, mode: "insensitive" } },
+          { remoteRatio: { contains: input.keyword, mode: "insensitive" } },
           {
             client: {
               name: { contains: input.keyword, mode: "insensitive" },

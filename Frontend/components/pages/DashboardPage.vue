@@ -162,11 +162,6 @@
             tone="rose"
           />
           <CoverageCard
-            title="マージン率"
-            body="案件カードと営業管理一覧で明記"
-            tone="teal"
-          />
-          <CoverageCard
             title="稼働状況確認"
             :body="`${summaryAliveChecks.length}回確認 / 最新 ${latestAliveCheckAt || '未実施'}`"
             tone="blue"

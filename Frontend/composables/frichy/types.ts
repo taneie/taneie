@@ -107,7 +107,16 @@ export interface Job {
   nice: string[];
   rateMin: number;
   rateMax: number;
-  marginRate: number;
+  unitPrice: string;
+  settlementLower: string;
+  settlementUpper: string;
+  location: string;
+  startPeriod: string;
+  remoteRatio: string;
+  foreignerAvailability: string;
+  ageLimit: string;
+  receivedAt: string | null;
+  receivedAtMs: number | null;
   stream: string;
   remote: string;
   sortFlag: boolean;
@@ -290,7 +299,6 @@ export interface JobInput {
   nice: string;
   rateMin: string | number;
   rateMax: string | number;
-  marginRate: string | number;
   stream: string;
   remote: string;
   sortFlag: boolean;

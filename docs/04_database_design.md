@@ -119,13 +119,26 @@ erDiagram
 | `summary`     | text         |  YES | 案件概要         |
 | `rate_min`    | int          |   NO | 単価下限         |
 | `rate_max`    | int          |   NO | 単価上限         |
-| `margin_rate` | decimal(5,2) |   NO | マージン率       |
+| `margin_rate` | decimal(5,2) |   NO | 互換用。画面・APIでは使用しない |
 | `stream_type` | StreamType   |   NO | 商流             |
 | `remote_type` | RemoteType   |   NO | リモート条件     |
 | `is_pinned`   | boolean      |   NO | 優先表示         |
 | `is_active`   | boolean      |   NO | 公開状態         |
 | `external_source` | varchar(100) | YES | 外部取り込み元 |
 | `external_id` | varchar(255) | YES | 外部案件ID。`external_source` と組み合わせて一意 |
+| `external_dedupe_key` | varchar(255) | YES | 外部APIの重複判定キー |
+| `external_received_at` | timestamptz | YES | 案件メール受信日時 |
+| `external_received_at_ms` | bigint | YES | 案件メール受信日時のUnixミリ秒 |
+| `unit_price` | varchar(255) | YES | 外部APIの単価表記 |
+| `settlement_lower` | varchar(100) | YES | 清算幅下限 |
+| `settlement_upper` | varchar(100) | YES | 清算幅上限 |
+| `location` | text | YES | 勤務地 |
+| `start_period` | varchar(255) | YES | 稼働開始時期 |
+| `remote_ratio` | varchar(255) | YES | リモート比率 |
+| `foreigner_availability` | varchar(255) | YES | 外国籍可否 |
+| `age_limit` | varchar(100) | YES | 年齢制限 |
+| `external_created_at` | timestamptz | YES | 外部データ登録日時 |
+| `external_updated_at` | timestamptz | YES | 外部データ更新日時 |
 | `created_by`  | UUID         |  YES | 作成営業ユーザー |
 
 ### 5.4 applications

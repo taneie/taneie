@@ -616,7 +616,7 @@ TOKEN="$(curl -s -X POST 'https://frichy-322534405950.asia-northeast1.run.app/ap
   -H 'Content-Type: application/json' \
   -d '{"email":"sales@frichy.jp","password":"sales123"}' | jq -r '.token')"
 
-curl -s -X POST 'https://frichy-322534405950.asia-northeast1.run.app/api/jobs/import/external' \
+curl -s -X POST 'https://frichy-322534405950.asia-northeast1.run.app/api/jobs/import/external?limit=10' \
   -H "Authorization: Bearer ${TOKEN}"
 ```
 

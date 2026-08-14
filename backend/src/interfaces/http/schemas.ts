@@ -183,6 +183,10 @@ export const listScoutableJobsQuerySchema = z.object({
   keyword: z.string().trim().optional(),
 });
 
+export const importExternalJobsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+
 export const createJobSchema = z
   .object({
     title: z.string().trim().min(1).max(255),
@@ -192,7 +196,7 @@ export const createJobSchema = z
     nice: z.array(z.string().trim().min(1)).default([]),
     rateMin: z.coerce.number().int().min(0),
     rateMax: z.coerce.number().int().min(0),
-    marginRate: z.coerce.number().min(0).max(100),
+    marginRate: z.coerce.number().min(0).max(100).default(0),
     streamType,
     remoteType,
     isPinned: z.boolean().default(false),

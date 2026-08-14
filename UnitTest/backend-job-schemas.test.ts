@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   createJobSchema,
+  importExternalJobsQuerySchema,
   listJobsQuerySchema,
   listScoutableJobsQuerySchema,
   updateJobFlagsSchema,
@@ -39,6 +40,12 @@ describe("案件API入力スキーマ", () => {
     assert.equal(parsed.keyword, "TypeScript");
   });
 
+  it("importExternalJobsQuerySchema accepts a bounded import limit", () => {
+    assert.equal(expectValid(importExternalJobsQuerySchema, { limit: "10" }).limit, 10);
+    expectInvalid(importExternalJobsQuerySchema, { limit: "0" });
+    expectInvalid(importExternalJobsQuerySchema, { limit: "101" });
+  });
+
   /**
    * @testData 日本語ラベルの商流/リモート種別、単価範囲、必須/尚可スキル、逆転した単価範囲、空title。
    * @expected 日本語ラベルと数値文字列は保存値へ正規化され、単価逆転や空titleは拒否される。
@@ -60,6 +67,15 @@ describe("案件API入力スキーマ", () => {
     assert.equal(parsed.streamType, "end_direct");
     assert.equal(parsed.remoteType, "full_remote");
     assert.equal(parsed.rateMin, 700000);
+    assert.equal(parsed.marginRate, 12.5);
+    const withoutMargin = expectValid(createJobSchema, {
+      title: "案件",
+      rateMin: 700000,
+      rateMax: 900000,
+      streamType: "end_direct",
+      remoteType: "full_remote",
+    });
+    assert.equal(withoutMargin.marginRate, 0);
     expectInvalid(createJobSchema, {
       title: "案件",
       rateMin: 900000,
