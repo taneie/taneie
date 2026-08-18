@@ -186,6 +186,22 @@ describe("UI可読性・レスポンシブスタイル", () => {
 
     assert.doesNotMatch(source, /StreamBadge|job\.stream|project\.stream|filters\.stream|商流/);
   });
+
+  /**
+   * @testData 求職者の案件ページ、応募済み案件computed、検索結果一覧。
+   * @expected 応募済み案件は検索結果とは別セクションで表示され、検索条件に依存しない。
+   */
+  it("freelancers can see applied jobs without searching", () => {
+    const jobsPage = read("Frontend/components/pages/JobsPage.vue");
+    const runtime = read("Frontend/composables/frichy/useFrichyRuntime.ts");
+
+    assert.match(jobsPage, /応募済み案件/);
+    assert.match(jobsPage, /v-for="item in appliedJobCards"/);
+    assert.match(jobsPage, /{{ item\.application\.appliedAt }} 応募/);
+    assert.match(jobsPage, /{{ item\.application\.status }}/);
+    assert.match(runtime, /const appliedJobCards = computed/);
+    assert.match(runtime, /application\.freelancerId === currentFreelancerId\.value/);
+  });
 });
 
 describe("UIアクセシビリティ・ローディング体験", () => {

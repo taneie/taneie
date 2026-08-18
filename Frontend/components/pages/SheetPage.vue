@@ -37,9 +37,9 @@
               {{ profile.startDate }}開始 / {{ profile.workRate }} /
               {{ profile.remote }}
             </div>
-            <div>ステータス</div>
+            <div>稼働開始可能日</div>
             <div>{{ profile.availability }}</div>
-            <div>人物確認</div>
+            <div>ステータス</div>
             <div>Frichy営業による初回面談調整中</div>
           </div>
         </article>

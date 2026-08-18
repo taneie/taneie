@@ -37,84 +37,121 @@
     >
   </section>
 
-  <div v-else :class="[$style.grid, $style.two]">
-    <section :class="$style.panel">
+  <template v-else>
+    <section
+      v-if="currentRole === 'freelancer'"
+      :class="[$style.panel, $style.appliedPanel]"
+    >
       <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">{{ filterTitle }}</h2>
+        <h2 :class="$style.panelTitle">応募済み案件</h2>
+        <span :class="$style.resultCount">{{ appliedJobCards.length }}件</span>
       </div>
-      <div :class="$style.panelBody">
-        <form :class="[$style.formGrid, $style.one]" @submit.prevent="searchJobs">
-          <FormInput
-            v-model="filters.keyword"
-            label="キーワード"
-            name="keyword"
-          />
-          <FormInput v-model="filters.skill" label="スキル" name="skill" />
-          <FormInput
-            v-model="filters.rate"
-            label="下限単価（万円）"
-            name="rate"
-            type="number"
-          />
-          <FormSelect
-            v-model="filters.remote"
-            label="リモート"
-            name="remote"
-            :options="['', ...remoteOptions]"
-          />
-          <div :class="$style.actions">
-            <BaseButton type="submit" icon="search">検索</BaseButton>
-            <BaseButton variant="secondary" @click="clearJobFilter"
-              >クリア</BaseButton
-            >
+      <div :class="[$style.panelBody, $style.cardList]">
+        <div
+          v-for="item in appliedJobCards"
+          :key="item.application.id"
+          :class="$style.appliedItem"
+        >
+          <div :class="$style.applicationMeta">
+            <TagBadge tone="blue">{{ item.application.status }}</TagBadge>
+            <span>{{ item.application.appliedAt }} 応募</span>
           </div>
-        </form>
+          <JobCard
+            :job="item.job"
+            :role="currentRole"
+            applied
+            can-apply-more
+            :selected="selectedJobId === item.job.id"
+            @select="selectJob"
+            @apply="applyJob"
+            @open-admin="setView('admin')"
+          />
+        </div>
+        <div v-if="appliedJobCards.length === 0" :class="$style.empty">
+          <p>応募済み案件はまだありません。</p>
+        </div>
       </div>
     </section>
 
-    <section :class="$style.panel">
-      <div :class="$style.panelHeader">
-        <h2 :class="$style.panelTitle">案件一覧 {{ jobPagination.total }}件</h2>
-        <span v-if="filteredJobs.length" :class="$style.resultCount">
-          {{ filteredJobs.length }}件表示中
-        </span>
-      </div>
-      <div :class="[$style.panelBody, $style.cardList]">
-        <JobCard
-          v-for="job in filteredJobs"
-          :key="job.id"
-          :job="job"
-          :role="currentRole"
-          :applied="hasApplied(job.id)"
-          :can-apply-more="canApplyMoreJobs"
-          :selected="selectedJobId === job.id"
-          @select="selectJob"
-          @apply="applyJob"
-          @open-admin="setView('admin')"
-        />
-        <div v-if="filteredJobs.length === 0 && !jobsLoading" :class="$style.empty">
-          <p>条件に合う案件がありません。</p>
-          <div :class="$style.emptyActions">
-            <BaseButton variant="secondary" @click="clearJobFilter">
-              条件をクリア
-            </BaseButton>
+    <div :class="[$style.grid, $style.two]">
+      <section :class="$style.panel">
+        <div :class="$style.panelHeader">
+          <h2 :class="$style.panelTitle">{{ filterTitle }}</h2>
+        </div>
+        <div :class="$style.panelBody">
+          <form :class="[$style.formGrid, $style.one]" @submit.prevent="searchJobs">
+            <FormInput
+              v-model="filters.keyword"
+              label="キーワード"
+              name="keyword"
+            />
+            <FormInput v-model="filters.skill" label="スキル" name="skill" />
+            <FormInput
+              v-model="filters.rate"
+              label="下限単価（万円）"
+              name="rate"
+              type="number"
+            />
+            <FormSelect
+              v-model="filters.remote"
+              label="リモート"
+              name="remote"
+              :options="['', ...remoteOptions]"
+            />
+            <div :class="$style.actions">
+              <BaseButton type="submit" icon="search">検索</BaseButton>
+              <BaseButton variant="secondary" @click="clearJobFilter"
+                >クリア</BaseButton
+              >
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section :class="$style.panel">
+        <div :class="$style.panelHeader">
+          <h2 :class="$style.panelTitle">案件一覧 {{ jobPagination.total }}件</h2>
+          <span v-if="filteredJobs.length" :class="$style.resultCount">
+            {{ filteredJobs.length }}件表示中
+          </span>
+        </div>
+        <div :class="[$style.panelBody, $style.cardList]">
+          <JobCard
+            v-for="job in filteredJobs"
+            :key="job.id"
+            :job="job"
+            :role="currentRole"
+            :applied="hasApplied(job.id)"
+            :can-apply-more="canApplyMoreJobs"
+            :selected="selectedJobId === job.id"
+            @select="selectJob"
+            @apply="applyJob"
+            @open-admin="setView('admin')"
+          />
+          <div v-if="filteredJobs.length === 0 && !jobsLoading" :class="$style.empty">
+            <p>条件に合う案件がありません。</p>
+            <div :class="$style.emptyActions">
+              <BaseButton variant="secondary" @click="clearJobFilter">
+                条件をクリア
+              </BaseButton>
+            </div>
           </div>
+          <div ref="loadMoreTrigger" :class="$style.loadMoreSentinel" aria-hidden="true" />
+          <div v-if="jobsLoading" :class="$style.loadingMore">
+            案件を読み込んでいます...
+          </div>
+          <BaseButton
+            v-else-if="jobPagination.hasMore"
+            :class="$style.loadMoreButton"
+            variant="secondary"
+            @click="loadMoreJobs"
+          >
+            さらに10件表示
+          </BaseButton>
         </div>
-        <div ref="loadMoreTrigger" :class="$style.loadMoreSentinel" aria-hidden="true" />
-        <div v-if="jobsLoading" :class="$style.loadingMore">
-          案件を読み込んでいます...
-        </div>
-        <BaseButton
-          v-else-if="jobPagination.hasMore"
-          :class="$style.loadMoreButton"
-          variant="secondary"
-          @click="loadMoreJobs"
-        >
-          さらに10件表示
-        </BaseButton>
-      </div>
-    </section>
-  </div>
+      </section>
+    </div>
+  </template>
 </template>
 
 <script setup lang="ts">
@@ -124,6 +161,7 @@ import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 const {
   filters,
   filteredJobs,
+  appliedJobCards,
   jobPagination,
   jobsLoading,
   selectedJobId,
@@ -198,6 +236,10 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
 }
 
+.appliedPanel {
+  margin-bottom: 16px;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -248,6 +290,22 @@ onBeforeUnmount(() => {
 .cardList {
   display: grid;
   gap: 12px;
+}
+
+.appliedItem {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.applicationMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .one {

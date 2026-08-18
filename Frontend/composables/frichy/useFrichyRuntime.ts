@@ -767,7 +767,20 @@ const canViewJobs = computed(
     profileRequirementItems.value.every((item) => item.done),
 );
 
-const appliedJobCount = computed(() => state.value.applications.length);
+const appliedJobCards = computed(() =>
+  state.value.applications
+    .filter((application) => application.freelancerId === currentFreelancerId.value)
+    .map((application) => ({
+      application,
+      job: getJob(application.jobId) || application.job,
+    }))
+    .filter(
+      (item): item is { application: Application; job: Job } =>
+        Boolean(item.job),
+    ),
+);
+
+const appliedJobCount = computed(() => appliedJobCards.value.length);
 
 const canApplyMoreJobs = computed(
   () => appliedJobCount.value < JOB_APPLICATION_LIMIT,
@@ -3029,6 +3042,7 @@ export function useFrichyRuntime() {
     currentRole,
     availableNavItems,
     filteredJobs,
+    appliedJobCards,
     profileRequirementItems,
     canViewJobs,
     filteredFreelancers,
