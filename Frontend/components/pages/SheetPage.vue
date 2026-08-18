@@ -8,7 +8,7 @@
         <BaseButton
           variant="secondary"
           icon="print"
-          @click="downloadSheetPdf(publicId, mainSkills)"
+          @click="downloadSheetPdf(mainSkills)"
           >PDF出力</BaseButton
         >
       </div>
@@ -19,7 +19,7 @@
     <section :class="$style.panel">
       <div :class="$style.panelBody">
         <article id="anonymous-sheet" :class="$style.sheet">
-          <h2>匿名スキルシート / {{ publicId }}</h2>
+          <h2>匿名スキルシート</h2>
           <p>
             氏名・連絡先・固有社名を伏せた、クライアント提案用プロフィールです。
           </p>
@@ -74,10 +74,6 @@ const { state, splitCsv, maskName, downloadSheetPdf } =
   useFrichyRuntime();
 
 const profile = computed(() => state.value.profile);
-const publicId = computed(
-  () =>
-    `tf-${profile.value.id.slice(-3)}-${splitCsv(profile.value.languages)[0]?.toLowerCase() || "engineer"}`,
-);
 const mainSkills = computed(() =>
   [
     profile.value.languages,

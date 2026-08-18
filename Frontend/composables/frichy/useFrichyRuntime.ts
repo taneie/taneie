@@ -2403,11 +2403,10 @@ async function aliveCheck() {
   }
 }
 
-function downloadSheetPdf(publicId: string, mainSkills: string) {
+function downloadSheetPdf(mainSkills: string) {
   if (!import.meta.client) return;
   const canvas = renderAnonymousSheetCanvas(
     state.value.profile,
-    publicId,
     mainSkills,
   );
   const jpeg = canvas.toDataURL("image/jpeg", 0.92);
@@ -2416,7 +2415,7 @@ function downloadSheetPdf(publicId: string, mainSkills: string) {
   const url = URL.createObjectURL(pdf);
   const link = document.createElement("a");
   link.href = url;
-  link.download = buildResumeSheetFilename(state.value.profile, publicId);
+  link.download = buildResumeSheetFilename(state.value.profile);
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -2426,7 +2425,6 @@ function downloadSheetPdf(publicId: string, mainSkills: string) {
 
 function renderAnonymousSheetCanvas(
   profile: Profile,
-  publicId: string,
   mainSkills: string,
 ) {
   const canvas = document.createElement("canvas");
@@ -2440,7 +2438,7 @@ function renderAnonymousSheetCanvas(
   const labelWidth = 230;
   const bodyWidth = page.width - margin * 2;
   const valueWidth = bodyWidth - labelWidth;
-  const candidateInitial = buildCandidateInitials(profile.name) || publicId;
+  const candidateInitial = buildCandidateInitials(profile.name) || "候補者";
 
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, page.width, page.height);
@@ -2561,8 +2559,8 @@ function renderAnonymousSheetCanvas(
   return canvas;
 }
 
-function buildResumeSheetFilename(profile: Profile, publicId: string) {
-  const initial = buildCandidateInitials(profile.name) || publicId || "候補者";
+function buildResumeSheetFilename(profile: Profile) {
+  const initial = buildCandidateInitials(profile.name) || "候補者";
   return `職務経歴書_${sanitizeFilenamePart(initial)}.pdf`;
 }
 

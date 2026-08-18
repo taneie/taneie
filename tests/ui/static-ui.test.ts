@@ -345,14 +345,18 @@ describe("UIアクセシビリティ・ローディング体験", () => {
    */
   it("anonymous sheet PDF output is formatted as a resume document", () => {
     const runtime = read("Frontend/composables/frichy/useFrichyRuntime.ts");
+    const sheetPage = read("Frontend/components/pages/SheetPage.vue");
     const start = runtime.indexOf("function downloadSheetPdf");
     const end = runtime.indexOf("function drawPdfRow");
     const pdfBlock = runtime.slice(start, end);
 
     assert.match(pdfBlock, /link\.download = buildResumeSheetFilename/);
+    assert.match(sheetPage, /<h2>匿名スキルシート<\/h2>/);
+    assert.doesNotMatch(sheetPage, /publicId|匿名スキルシート\s*\//);
     assert.match(pdfBlock, /職務経歴書/);
     assert.match(pdfBlock, /作成日/);
     assert.match(pdfBlock, /function buildCandidateInitials/);
+    assert.doesNotMatch(pdfBlock, /publicId/);
     assert.doesNotMatch(pdfBlock, /Frichy/);
     assert.doesNotMatch(pdfBlock, /匿名スキルシート/);
     assert.doesNotMatch(pdfBlock, /Public ID/);
