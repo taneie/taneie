@@ -159,6 +159,9 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(source, /:error="validationErrors\.phone"/);
     assert.match(source, /\$style\.invalidControl/);
     assert.match(source, /\$style\.errorText/);
+    assert.match(source, /@media \(max-width: 620px\)[\s\S]*\.headerActions\s*\{[\s\S]*position:\s*fixed/);
+    assert.match(source, /\.headerActions\s*\{[\s\S]*bottom:\s*0/);
+    assert.match(source, /\.headerActions button\s*\{[\s\S]*width:\s*100%/);
   });
 
   /**

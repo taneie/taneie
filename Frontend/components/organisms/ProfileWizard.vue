@@ -1046,6 +1046,10 @@ textarea.control {
 }
 
 @media (max-width: 620px) {
+  .grid {
+    padding-bottom: calc(150px + env(safe-area-inset-bottom));
+  }
+
   .panelBody,
   .panelHeader {
     padding: 12px;
@@ -1055,7 +1059,22 @@ textarea.control {
     align-items: stretch;
   }
 
-  .panelHeader button {
+  .headerActions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -10px 28px rgba(16, 41, 79, 0.12);
+  }
+
+  .headerActions button {
     width: 100%;
   }
 
