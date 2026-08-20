@@ -27,6 +27,7 @@
 | GET      | `/jobs/:id`                    | 必要 | freelancer / sales | 案件詳細取得                 |
 | POST     | `/jobs`                        | 必要 | sales              | 案件登録                     |
 | POST     | `/jobs/import/external`        | 必要 | sales / import secret | 外部案件API取り込み       |
+| POST     | `/jobs/cleanup-expired`        | 必要 | sales / cleanup secret | 期限切れ案件・応募削除   |
 | PATCH    | `/jobs/:id`                    | 必要 | sales              | 案件の優先表示・公開状態更新 |
 | GET      | `/freelancers`                 | 必要 | sales              | 求職者一覧取得               |
 | GET      | `/profile/me`                  | 必要 | freelancer         | 自分のプロフィール取得       |

@@ -20,12 +20,28 @@ import { routeParam } from "./helpers.js";
 export function registerJobRoutes(app: Express, jobService: JobService) {
   app.post(
     "/api/jobs/import/external",
-    requireSalesOrImportSecret,
+    requireSalesOrSecret("X-Job-Import-Secret", () =>
+      config.externalProjectsImportSecret.trim(),
+    ),
     asyncHandler<AuthedRequest>(async (req, res) => {
       const query = importExternalJobsQuerySchema.parse(req.query);
       res.json(
-        await jobService.importExternalProjects(req.auth?.userId, query.limit, query.onlyNew),
+        await jobService.importExternalProjects(
+          req.auth?.userId,
+          query.limit,
+          query.onlyNew,
+        ),
       );
+    }),
+  );
+
+  app.post(
+    "/api/jobs/cleanup-expired",
+    requireSalesOrSecret("X-Job-Cleanup-Secret", () =>
+      config.jobCleanupSecret.trim(),
+    ),
+    asyncHandler(async (_req, res) => {
+      res.json(await jobService.cleanupExpiredJobs());
     }),
   );
 
@@ -85,23 +101,24 @@ export function registerJobRoutes(app: Express, jobService: JobService) {
   );
 }
 
-function requireSalesOrImportSecret(
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction,
+function requireSalesOrSecret(
+  headerName: string,
+  getSecret: () => string,
 ) {
-  const importSecret = config.externalProjectsImportSecret.trim();
-  const requestSecret = req.get("X-Job-Import-Secret")?.trim();
-  if (importSecret && requestSecret === importSecret) {
-    next();
-    return;
-  }
-
-  requireAuth(req, res, (authError) => {
-    if (authError) {
-      next(authError);
+  return (req: AuthedRequest, res: Response, next: NextFunction) => {
+    const secret = getSecret();
+    const requestSecret = req.get(headerName)?.trim();
+    if (secret && requestSecret === secret) {
+      next();
       return;
     }
-    requireRole("sales")(req, res, next);
-  });
+
+    requireAuth(req, res, (authError) => {
+      if (authError) {
+        next(authError);
+        return;
+      }
+      requireRole("sales")(req, res, next);
+    });
+  };
 }

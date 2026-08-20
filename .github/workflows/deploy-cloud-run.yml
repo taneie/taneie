@@ -40,6 +40,11 @@ env:
   SECRET_RESEND_API_KEY: ${{ vars.SECRET_RESEND_API_KEY || '' }}
   SECRET_EXTERNAL_PROJECTS_API_KEY: ${{ vars.SECRET_EXTERNAL_PROJECTS_API_KEY || 'frichy-prod-external-projects-api-key' }}
   SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET: ${{ vars.SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET || 'frichy-prod-external-projects-import-secret' }}
+  SECRET_JOB_CLEANUP_SECRET: ${{ vars.SECRET_JOB_CLEANUP_SECRET || 'frichy-prod-job-cleanup-secret' }}
+  JOB_CLEANUP_SCHEDULER_JOB: ${{ vars.JOB_CLEANUP_SCHEDULER_JOB || 'frichy-job-cleanup-expired' }}
+  JOB_CLEANUP_SCHEDULE: ${{ vars.JOB_CLEANUP_SCHEDULE || '0 21 * * *' }}
+  JOB_CLEANUP_TIME_ZONE: ${{ vars.JOB_CLEANUP_TIME_ZONE || 'Asia/Tokyo' }}
+  JOB_CLEANUP_API_URL: ${{ vars.JOB_CLEANUP_API_URL || 'https://frichy-322534405950.asia-northeast1.run.app/api/jobs/cleanup-expired' }}
 
 jobs:
   deploy:
@@ -158,6 +163,7 @@ jobs:
             "CORS_ORIGIN=${SECRET_CORS_ORIGIN}:latest"
             "EXTERNAL_PROJECTS_API_KEY=${SECRET_EXTERNAL_PROJECTS_API_KEY}:latest"
             "EXTERNAL_PROJECTS_IMPORT_SECRET=${SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET}:latest"
+            "JOB_CLEANUP_SECRET=${SECRET_JOB_CLEANUP_SECRET}:latest"
           )
           if [ -n "${SECRET_RESEND_API_KEY}" ]; then
             SECRETS+=("RESEND_API_KEY=${SECRET_RESEND_API_KEY}:latest")
@@ -175,3 +181,29 @@ jobs:
             --port 8080 \
             --set-env-vars "${ENV_VARS_ARG}" \
             --set-secrets "${SECRETS_ARG}"
+
+      - name: Configure job cleanup scheduler
+        run: |
+          CLEANUP_SECRET="$(gcloud secrets versions access latest \
+            --project "${GCP_PROJECT_ID}" \
+            --secret "${SECRET_JOB_CLEANUP_SECRET}")"
+
+          SCHEDULER_ARGS=(
+            --project "${GCP_PROJECT_ID}"
+            --location "${GCP_REGION}"
+            --schedule "${JOB_CLEANUP_SCHEDULE}"
+            --time-zone "${JOB_CLEANUP_TIME_ZONE}"
+            --uri "${JOB_CLEANUP_API_URL}"
+            --http-method POST
+            --headers "X-Job-Cleanup-Secret=${CLEANUP_SECRET}"
+          )
+
+          if gcloud scheduler jobs describe "${JOB_CLEANUP_SCHEDULER_JOB}" \
+            --project "${GCP_PROJECT_ID}" \
+            --location "${GCP_REGION}" >/dev/null 2>&1; then
+            gcloud scheduler jobs update http "${JOB_CLEANUP_SCHEDULER_JOB}" \
+              "${SCHEDULER_ARGS[@]}"
+          else
+            gcloud scheduler jobs create http "${JOB_CLEANUP_SCHEDULER_JOB}" \
+              "${SCHEDULER_ARGS[@]}"
+          fi

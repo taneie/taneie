@@ -13,6 +13,7 @@ import {
 } from "./shared.js";
 
 const DEFAULT_JOB_LIMIT = 10;
+const JOB_RETENTION_DAYS = 30;
 type FreelancerMatchProfile = {
   roleTitle: string | null;
   desiredRate: number | null;
@@ -219,6 +220,26 @@ export class JobService {
 
   async importExternalProjects(createdBy?: string | null, limit?: number, onlyNew = false) {
     return this.externalProjectImportService.importProjects(createdBy, limit, onlyNew);
+  }
+
+  async cleanupExpiredJobs(now = new Date()) {
+    const cutoff = new Date(now.getTime() - JOB_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+
+    const [applications, jobs] = await this.db.$transaction([
+      this.db.application.deleteMany({
+        where: { appliedAt: { lt: cutoff } },
+      }),
+      this.db.job.deleteMany({
+        where: { createdAt: { lt: cutoff } },
+      }),
+    ]);
+
+    return {
+      cutoff: cutoff.toISOString(),
+      retentionDays: JOB_RETENTION_DAYS,
+      deletedApplications: applications.count,
+      deletedJobs: jobs.count,
+    };
   }
 
   private buildScoutableJobWhere(

@@ -506,6 +506,74 @@ describe("APIプロフィール・案件フロー", () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  /**
+   * @testData 31日前のcreatedAtを持つ案件と、31日前のappliedAtを持つ応募。
+   * @expected 営業tokenで期限切れ削除APIを実行すると、30日経過した案件と応募が削除される。
+   */
+  it("sales can cleanup jobs and applications older than 30 days", async () => {
+    const sales = await login(server, "sales@frichy.jp", "sales123");
+    const freelancer = await login(
+      server,
+      "freelancer@example.com",
+      "freelance123",
+    );
+    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+
+    const job = await server.request<{ id: string }>(
+      "/jobs",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          title: `期限切れ削除テスト ${Date.now()}`,
+          client: "Cleanup Test Client",
+          rateMin: 700000,
+          rateMax: 900000,
+          remoteType: "フルリモート",
+          isPinned: false,
+        }),
+      },
+      sales.token,
+    );
+    created.jobIds.add(job.data.id);
+    assert.equal(job.status, 201);
+
+    const application = await server.request<{ id: string }>(
+      "/applications",
+      {
+        method: "POST",
+        body: JSON.stringify({ jobId: job.data.id }),
+      },
+      freelancer.token,
+    );
+    created.applicationIds.add(application.data.id);
+    assert.equal(application.status, 201);
+
+    await prisma.application.update({
+      where: { id: application.data.id },
+      data: { appliedAt: oldDate },
+    });
+    await prisma.job.update({
+      where: { id: job.data.id },
+      data: { createdAt: oldDate },
+    });
+
+    const cleanup = await server.request<{
+      deletedApplications: number;
+      deletedJobs: number;
+      retentionDays: number;
+    }>("/jobs/cleanup-expired", { method: "POST" }, sales.token);
+
+    assert.equal(cleanup.status, 200);
+    assert.equal(cleanup.data.retentionDays, 30);
+    assert.ok(cleanup.data.deletedApplications >= 1);
+    assert.ok(cleanup.data.deletedJobs >= 1);
+    assert.equal(
+      await prisma.application.findUnique({ where: { id: application.data.id } }),
+      null,
+    );
+    assert.equal(await prisma.job.findUnique({ where: { id: job.data.id } }), null);
+  });
 });
 
 describe("APIレジュメ確認フロー", () => {

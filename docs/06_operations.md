@@ -591,13 +591,14 @@ Cloud Runへ反映せず、imageだけをArtifact Registryへ置く場合はGitH
 
 | 変更対象 | 反映方法 |
 | -------- | -------- |
-| `DATABASE_URL` / `JWT_SECRET` / `DATA_ENCRYPTION_KEY` / `CORS_ORIGIN` / `RESEND_API_KEY` / `EXTERNAL_PROJECTS_API_KEY` / `EXTERNAL_PROJECTS_IMPORT_SECRET` | GCP Secret Managerの新versionを追加し、`Deploy Cloud Run` を再実行する |
+| `DATABASE_URL` / `JWT_SECRET` / `DATA_ENCRYPTION_KEY` / `CORS_ORIGIN` / `RESEND_API_KEY` / `EXTERNAL_PROJECTS_API_KEY` / `EXTERNAL_PROJECTS_IMPORT_SECRET` / `JOB_CLEANUP_SECRET` | GCP Secret Managerの新versionを追加し、`Deploy Cloud Run` を再実行する |
 | `NUXT_PUBLIC_API_BASE` / `NUXT_PUBLIC_SHOW_DEMO_LOGIN` / `GCS_BUCKET_NAME` / `APP_PUBLIC_URL` / `EMAIL_FROM` / `EMAIL_REPLY_TO` / `EXTERNAL_PROJECTS_API_URL` | GitHub Actions Variablesを更新し、`Deploy Cloud Run` を再実行する |
 | Vercel開発環境の値 | Vercel Project SettingsのEnvironment Variablesを更新し、Vercelで再デプロイする |
 
 秘密値はGitHub repositoryへcommitしない。
 `RESEND_API_KEY` をCloud Runへ渡す場合は、GitHub Actions Variable `SECRET_RESEND_API_KEY` にGCP Secret Manager上のsecret名を設定する。
 外部案件APIキーは既定で Secret Manager の `frichy-prod-external-projects-api-key`、取り込み用共有secretは `frichy-prod-external-projects-import-secret` をCloud Runへ渡す。
+期限切れ案件削除用secretは既定で Secret Manager の `frichy-prod-job-cleanup-secret` をCloud Runへ渡す。
 
 ### 12.7 外部案件API取り込み
 
@@ -654,7 +655,31 @@ gcloud scheduler jobs run frichy-external-project-import \
   --location asia-northeast1
 ```
 
-### 12.8 rollback手順
+### 12.8 期限切れ案件・応募の自動削除
+
+`POST /api/jobs/cleanup-expired` は、実行時点から30日より前の `applications.applied_at` と `jobs.created_at` を削除する。
+Cloud Scheduler job `frichy-job-cleanup-expired` は、GitHub Actions `Deploy Cloud Run` のデプロイ後に作成または更新され、JST 21:00 に毎日実行される。
+
+手動実行する場合:
+
+```bash
+CLEANUP_SECRET="$(gcloud secrets versions access latest \
+  --project frichy \
+  --secret frichy-prod-job-cleanup-secret)"
+
+curl -s -X POST 'https://frichy-322534405950.asia-northeast1.run.app/api/jobs/cleanup-expired' \
+  -H "X-Job-Cleanup-Secret=${CLEANUP_SECRET}"
+```
+
+Schedulerを手動実行する場合:
+
+```bash
+gcloud scheduler jobs run frichy-job-cleanup-expired \
+  --project frichy \
+  --location asia-northeast1
+```
+
+### 12.9 rollback手順
 
 本番デプロイ後に重大な問題が出た場合は、Cloud Runの直前の正常revisionへtrafficを戻す。
 

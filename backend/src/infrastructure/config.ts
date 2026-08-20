@@ -41,6 +41,7 @@ export const config = {
   ),
   externalProjectsApiKey: readEnv("EXTERNAL_PROJECTS_API_KEY", ""),
   externalProjectsImportSecret: readEnv("EXTERNAL_PROJECTS_IMPORT_SECRET", ""),
+  jobCleanupSecret: readEnv("JOB_CLEANUP_SECRET", ""),
   resumeUploadMaxBytes: Number(
     readEnv("RESUME_UPLOAD_MAX_BYTES", String(10 * 1024 * 1024)),
   ),

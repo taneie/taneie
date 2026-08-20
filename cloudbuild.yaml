@@ -10,6 +10,7 @@ substitutions:
   _JWT_SECRET_SECRET: frichy-prod-jwt-secret
   _DATA_ENCRYPTION_KEY_SECRET: frichy-prod-data-encryption-key
   _CORS_ORIGIN_SECRET: frichy-prod-cors-origin
+  _JOB_CLEANUP_SECRET_SECRET: frichy-prod-job-cleanup-secret
 
 steps:
   - name: gcr.io/cloud-builders/docker
@@ -46,7 +47,7 @@ steps:
       - --set-env-vars
       - NODE_ENV=production,NUXT_PUBLIC_API_BASE=${_NUXT_PUBLIC_API_BASE},NUXT_PUBLIC_SHOW_DEMO_LOGIN=${_NUXT_PUBLIC_SHOW_DEMO_LOGIN},GCS_BUCKET_NAME=${_GCS_BUCKET_NAME}
       - --set-secrets
-      - DATABASE_URL=${_DATABASE_URL_SECRET}:latest,JWT_SECRET=${_JWT_SECRET_SECRET}:latest,DATA_ENCRYPTION_KEY=${_DATA_ENCRYPTION_KEY_SECRET}:latest,CORS_ORIGIN=${_CORS_ORIGIN_SECRET}:latest
+      - DATABASE_URL=${_DATABASE_URL_SECRET}:latest,JWT_SECRET=${_JWT_SECRET_SECRET}:latest,DATA_ENCRYPTION_KEY=${_DATA_ENCRYPTION_KEY_SECRET}:latest,CORS_ORIGIN=${_CORS_ORIGIN_SECRET}:latest,JOB_CLEANUP_SECRET=${_JOB_CLEANUP_SECRET_SECRET}:latest
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:$SHORT_SHA
