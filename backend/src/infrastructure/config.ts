@@ -19,6 +19,7 @@ const corsOrigins = readEnv(
 
 export const config = {
   apiPort: Number(process.env.PORT || readEnv("API_PORT", "8787")),
+  apiHost: readEnv("API_HOST", "0.0.0.0"),
   jwtSecret: readEnv("JWT_SECRET", "local-development-secret-change-me"),
   jwtExpiresIn: readEnv("JWT_EXPIRES_IN", "7d"),
   corsOrigins,
