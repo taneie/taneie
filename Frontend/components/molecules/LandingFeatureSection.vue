@@ -79,8 +79,9 @@ const features = [
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: flex-start;
+  gap: 14px;
+  align-content: center;
+  align-items: center;
   min-width: 0;
   min-height: 104px;
   overflow: hidden;
@@ -128,15 +129,15 @@ const features = [
 .featureIcon {
   position: relative;
   z-index: 1;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   display: grid;
   place-items: center;
   border: 1px solid #a9c5ed;
   border-radius: 8px;
   background: #f4f8fe;
   color: var(--primary-strong);
-  font-size: 17px;
+  font-size: 21px;
   font-weight: 900;
   line-height: 1;
   box-shadow: 0 8px 18px rgba(29, 95, 211, 0.08);
@@ -145,7 +146,10 @@ const features = [
 .featureBody {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
   min-width: 0;
+  min-height: 42px;
 }
 
 .featureBody strong {
@@ -207,22 +211,26 @@ const features = [
   }
 
   .featureGrid article {
-    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-columns: 40px minmax(0, 1fr);
     gap: 12px;
     min-height: 92px;
     padding: 16px;
   }
 
   .featureIcon {
-    width: 34px;
-    height: 34px;
-    font-size: 17px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
     margin: 0;
   }
 
   .featureBody strong {
     font-size: 16px;
     line-height: 1.55;
+  }
+
+  .featureBody {
+    min-height: 40px;
   }
 }
 
