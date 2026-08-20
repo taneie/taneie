@@ -278,7 +278,7 @@ const emptyMeetingText = computed(() =>
     : "この求職者の初回面談候補はまだありません。",
 );
 const emptyChatText = computed(
-  () => "この求職者とのメッセージはまだありません。",
+  () => "メッセージはまだありません。",
 );
 const activeInitialMeetingRequests = computed(() => {
   const freelancerId = activeChatFreelancerId.value;
