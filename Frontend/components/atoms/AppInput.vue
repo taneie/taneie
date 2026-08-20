@@ -7,6 +7,8 @@
     :autocomplete="autocomplete"
     :required="required"
     :readonly="readonly"
+    :min="min"
+    :max="max"
     :placeholder="placeholder"
     @input="onInput"
   />
@@ -22,6 +24,8 @@ withDefaults(
     placeholder?: string;
     required?: boolean;
     readonly?: boolean;
+    min?: number;
+    max?: number;
     error?: boolean;
   }>(),
   {
@@ -30,6 +34,8 @@ withDefaults(
     placeholder: undefined,
     required: false,
     readonly: false,
+    min: undefined,
+    max: undefined,
     error: false,
   },
 );
@@ -60,6 +66,12 @@ function onInput(event: Event) {
 .control:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(29, 95, 211, 0.14);
+}
+
+.control:read-only {
+  background: #f1f5f9;
+  color: var(--muted);
+  cursor: default;
 }
 
 .invalid {

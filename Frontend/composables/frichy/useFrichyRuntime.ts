@@ -63,6 +63,9 @@ import {
 } from "./utils";
 import { freelancerToProfile, profileToApi } from "./profileMapping";
 import {
+  MAX_PROFILE_DESIRED_RATE,
+  MAX_PROFILE_EXPERIENCE_YEARS,
+  MIN_PROFILE_DESIRED_RATE,
   isValidProfileEmail,
   isValidProfileNameKana,
   isValidProfilePhoneNumber,
@@ -1526,6 +1529,41 @@ function validateProfileRegistration(
   }
   if (!String(values.skills.years || "").trim()) {
     return showProfileRegistrationError("経験年数を入力してください。", 2);
+  }
+  const experienceYears = Number(values.skills.years);
+  const hasInvalidSkillExperience = Object.values(
+    values.skills.skillExperiences,
+  ).some((years) => {
+    if (!years.trim()) return false;
+    const number = Number(years);
+    return (
+      !Number.isFinite(number) ||
+      number < 0 ||
+      number > MAX_PROFILE_EXPERIENCE_YEARS
+    );
+  });
+  if (
+    !Number.isFinite(experienceYears) ||
+    experienceYears < 0 ||
+    experienceYears > MAX_PROFILE_EXPERIENCE_YEARS ||
+    hasInvalidSkillExperience
+  ) {
+    return showProfileRegistrationError(
+      `経験年数は0〜${MAX_PROFILE_EXPERIENCE_YEARS}年で入力してください。`,
+      2,
+    );
+  }
+  const desiredRate = Number(values.terms.desiredRate);
+  if (
+    values.terms.desiredRate &&
+    (!Number.isInteger(desiredRate) ||
+      desiredRate < MIN_PROFILE_DESIRED_RATE ||
+      desiredRate > MAX_PROFILE_DESIRED_RATE)
+  ) {
+    return showProfileRegistrationError(
+      `希望単価は${MIN_PROFILE_DESIRED_RATE}〜${MAX_PROFILE_DESIRED_RATE}万円で入力してください。`,
+      3,
+    );
   }
   if (
     !values.terms.desiredRate ||

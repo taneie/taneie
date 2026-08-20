@@ -32,6 +32,7 @@ describe("フロントエンドのプロフィール変換", () => {
     assert.equal(profile.cloud, "GCP");
     assert.equal(profile.otherSkills, "GraphQL");
     assert.equal(profile.skillExperiences.TypeScript, "5");
+    assert.equal(profile.desiredRate, "80");
     assert.equal(profile.resumeId, "resume-test");
     assert.equal(profile.pledgeAccepted, true);
   });
@@ -59,7 +60,7 @@ describe("フロントエンドのプロフィール変換", () => {
     assert.equal(payload.name, "山田 太郎");
     assert.equal(payload.phone, "09011112222");
     assert.equal(payload.yearsExperience, 6);
-    assert.equal(payload.desiredRate, 850000);
+    assert.equal(payload.desiredRate, 85);
     assert.equal(payload.startDate, "2026-09-01");
     assert.deepEqual(payload.skills, [
       "TypeScript",

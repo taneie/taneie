@@ -74,12 +74,13 @@
             @update:model-value="markProfileFieldDirty('nameKana')"
           />
           <FormInput
-            v-model="basic.email"
-            label="メール"
+            :model-value="registeredEmail"
+            label="メールアドレス"
             name="email"
             type="email"
+            autocomplete="email"
+            readonly
             :error="validationErrors.email"
-            @update:model-value="markProfileFieldDirty('email')"
           />
           <FormInput
             v-model="basic.phone"
@@ -190,6 +191,8 @@
             label="経験年数"
             name="years"
             type="number"
+            :min="0"
+            :max="MAX_PROFILE_EXPERIENCE_YEARS"
             :error="validationErrors.years"
             @update:model-value="markProfileFieldDirty('years')"
           />
@@ -205,7 +208,9 @@
               :label="skillName"
               :name="`skillExperience-${skillName}`"
               type="number"
-              @update:model-value="markDirty"
+              :min="0"
+              :max="MAX_PROFILE_EXPERIENCE_YEARS"
+              @update:model-value="markProfileFieldDirty('years')"
             />
           </fieldset>
         </div>
@@ -219,6 +224,8 @@
             label="希望単価（万円）"
             name="desiredRate"
             type="number"
+            :min="MIN_PROFILE_DESIRED_RATE"
+            :max="MAX_PROFILE_DESIRED_RATE"
             :error="validationErrors.desiredRate"
             @update:model-value="markProfileFieldDirty('desiredRate')"
           />
@@ -413,6 +420,9 @@
 import { computed, reactive, ref, watch } from "vue";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 import {
+  MAX_PROFILE_DESIRED_RATE,
+  MAX_PROFILE_EXPERIENCE_YEARS,
+  MIN_PROFILE_DESIRED_RATE,
   firstProfileRegistrationErrorKey,
   hasProfileRegistrationValidationErrors,
   profileRegistrationErrorKeys,
@@ -445,6 +455,9 @@ const {
 
 const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候補"];
 const profile = computed(() => state.value.profile);
+const registeredEmail = computed(
+  () => state.value.auth?.email || profile.value.email || "",
+);
 
 const basic = reactive({
   name: "",
@@ -521,7 +534,7 @@ function hydrateForms() {
   Object.assign(basic, {
     name: p.name,
     nameKana: p.nameKana,
-    email: p.email,
+    email: registeredEmail.value,
     phone: p.phone,
     role: p.role,
   });
@@ -620,7 +633,7 @@ function buildProfileRegistrationInput(): ProfileRegistrationInput {
     basic: {
       name: basic.name,
       nameKana: basic.nameKana,
-      email: basic.email,
+      email: registeredEmail.value,
       phone: basic.phone,
       role: basic.role,
     },

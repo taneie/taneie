@@ -198,8 +198,8 @@ export const updateProfileSchema = z.object({
   nameKana: emptyStringAsUndefined(profileNameKana),
   phone: emptyStringAsUndefined(profilePhone),
   roleTitle: emptyStringAsUndefined(roleTitle),
-  yearsExperience: emptyStringAsUndefined(z.coerce.number().min(0).max(99)),
-  desiredRate: emptyStringAsUndefined(z.coerce.number().int().min(0)),
+  yearsExperience: emptyStringAsUndefined(z.coerce.number().min(0).max(50)),
+  desiredRate: emptyStringAsUndefined(z.coerce.number().int().min(30).max(300)),
   startDate: emptyStringAsUndefined(z.string().trim()),
   workRate: emptyStringAsUndefined(z.string().trim().max(50)),
   remoteType: emptyStringAsUndefined(remoteType),
@@ -211,7 +211,7 @@ export const updateProfileSchema = z.object({
     .array(
       z.object({
         name: z.string().trim().min(1).max(100),
-        yearsExperience: z.coerce.number().min(0).max(99).optional(),
+        yearsExperience: z.coerce.number().min(0).max(50).optional(),
       }),
     )
     .optional(),

@@ -7,6 +7,8 @@
       :autocomplete="autocomplete"
       :required="required"
       :readonly="readonly"
+      :min="min"
+      :max="max"
       :placeholder="placeholder"
       :error="Boolean(error)"
       @update:model-value="emit('update:modelValue', $event)"
@@ -26,6 +28,8 @@ withDefaults(
     placeholder?: string;
     required?: boolean;
     readonly?: boolean;
+    min?: number;
+    max?: number;
     error?: string;
   }>(),
   {
@@ -34,6 +38,8 @@ withDefaults(
     placeholder: undefined,
     required: false,
     readonly: false,
+    min: undefined,
+    max: undefined,
     error: "",
   },
 );

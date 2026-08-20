@@ -18,7 +18,7 @@ describe("プロフィールAPI入力スキーマ", () => {
       phone: "090-1111-2222",
       roleTitle: "フルスタックエンジニア",
       yearsExperience: "6",
-      desiredRate: "850000",
+      desiredRate: "85",
       startDate: "2026-09-01",
       workRate: "週5",
       remoteType: "フルリモート",
@@ -66,11 +66,16 @@ describe("プロフィールAPI入力スキーマ", () => {
   });
 
   /**
-   * @testData 範囲外の経験年数、空スキル名を含むskillExperiences、未定義の職種。
-   * @expected 経験年数範囲、スキル名必須、職種enumの制約に反する入力は拒否される。
+   * @testData 範囲外の経験年数・希望単価、空スキル名を含むskillExperiences、未定義の職種。
+   * @expected 経験年数・希望単価の範囲、スキル名必須、職種enumの制約に反する入力は拒否される。
    */
   it("updateProfileSchema rejects out-of-range experience and empty skills", () => {
-    expectInvalid(updateProfileSchema, { yearsExperience: 100 });
+    expectInvalid(updateProfileSchema, { yearsExperience: 51 });
+    expectInvalid(updateProfileSchema, {
+      skillExperiences: [{ name: "TypeScript", yearsExperience: 51 }],
+    });
+    expectInvalid(updateProfileSchema, { desiredRate: 29 });
+    expectInvalid(updateProfileSchema, { desiredRate: 301 });
     expectInvalid(updateProfileSchema, {
       skillExperiences: [{ name: "", yearsExperience: 1 }],
     });

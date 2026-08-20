@@ -186,4 +186,66 @@ describe("プロフィール登録バリデーション", () => {
     assert.equal(isValidProfileNameKana("ヤマダ タロウ"), false);
     assert.equal(isValidProfileNameKana("山田 たろう"), false);
   });
+
+  /**
+   * @testData 全体・スキル別の経験年数が50年を超えた入力と、希望単価が30〜300万円を外れた入力。
+   * @expected 各項目に範囲エラーが返り、上限・下限ちょうどの値は許容される。
+   */
+  it("経験年数と希望単価の入力範囲を検証する", () => {
+    const excessiveYears = validateProfileRegistrationInput(
+      registrationInput({
+        skills: {
+          languages: "TypeScript",
+          db: "",
+          frameworks: "",
+          cloud: "",
+          otherSkills: "",
+          years: "51",
+          skillExperiences: { TypeScript: "51" },
+        },
+      }),
+      { hasExistingResume: true },
+    );
+    assert.equal(excessiveYears.years, "経験年数は0〜50年で入力してください。");
+
+    const lowRate = validateProfileRegistrationInput(
+      registrationInput({
+        terms: {
+          desiredRate: "29",
+          startDate: "2026-09-01",
+          workRate: "週5",
+          remote: "フルリモート",
+          availability: "即稼働可",
+          resume: null,
+        },
+      }),
+      { hasExistingResume: true },
+    );
+    assert.equal(lowRate.desiredRate, "希望単価は30〜300万円で入力してください。");
+
+    const boundaryValues = validateProfileRegistrationInput(
+      registrationInput({
+        skills: {
+          languages: "TypeScript",
+          db: "",
+          frameworks: "",
+          cloud: "",
+          otherSkills: "",
+          years: "50",
+          skillExperiences: { TypeScript: "50" },
+        },
+        terms: {
+          desiredRate: "300",
+          startDate: "2026-09-01",
+          workRate: "週5",
+          remote: "フルリモート",
+          availability: "即稼働可",
+          resume: null,
+        },
+      }),
+      { hasExistingResume: true },
+    );
+    assert.equal(boundaryValues.years, undefined);
+    assert.equal(boundaryValues.desiredRate, undefined);
+  });
 });

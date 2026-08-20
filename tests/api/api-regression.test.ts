@@ -271,7 +271,7 @@ describe("APIプロフィール・案件フロー", () => {
           phone: profile.data.phone || "090-1111-2222",
           roleTitle: "フルスタックエンジニア",
           yearsExperience: 6,
-          desiredRate: 850000,
+          desiredRate: 85,
           startDate: "2026-09-01",
           workRate: "週5",
           remoteType: "フルリモート",
@@ -291,7 +291,7 @@ describe("APIプロフィール・案件フロー", () => {
       "/profile/me",
       {
         method: "PUT",
-        body: JSON.stringify({ yearsExperience: 100 }),
+          body: JSON.stringify({ yearsExperience: 51 }),
       },
       freelancer.token,
     );

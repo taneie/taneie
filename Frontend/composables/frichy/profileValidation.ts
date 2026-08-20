@@ -5,6 +5,10 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HIRAGANA_PATTERN = /^[ぁ-ゖー\s　]+$/u;
 const PHONE_INPUT_PATTERN = /^\d{2,4}-?\d{2,4}-?\d{3,4}$/;
 
+export const MAX_PROFILE_EXPERIENCE_YEARS = 50;
+export const MIN_PROFILE_DESIRED_RATE = 30;
+export const MAX_PROFILE_DESIRED_RATE = 300;
+
 export const profileRegistrationErrorKeys = [
   "name",
   "nameKana",
@@ -81,10 +85,36 @@ export function validateProfileRegistrationInput(
     errors.skills =
       "スキルはチェックまたはその他を1つ以上入力してください。";
   }
-  if (!String(values.skills.years || "").trim())
+  if (!String(values.skills.years || "").trim()) {
     errors.years = "経験年数を入力してください。";
-  if (!values.terms.desiredRate.trim())
+  } else if (
+    !isNumberInRange(
+      values.skills.years,
+      0,
+      MAX_PROFILE_EXPERIENCE_YEARS,
+    )
+  ) {
+    errors.years = `経験年数は0〜${MAX_PROFILE_EXPERIENCE_YEARS}年で入力してください。`;
+  } else if (
+    Object.values(values.skills.skillExperiences).some(
+      (years) =>
+        years.trim() &&
+        !isNumberInRange(years, 0, MAX_PROFILE_EXPERIENCE_YEARS),
+    )
+  ) {
+    errors.years = `スキルごとの経験年数は0〜${MAX_PROFILE_EXPERIENCE_YEARS}年で入力してください。`;
+  }
+  if (!values.terms.desiredRate.trim()) {
     errors.desiredRate = "希望単価を入力してください。";
+  } else if (
+    !isIntegerInRange(
+      values.terms.desiredRate,
+      MIN_PROFILE_DESIRED_RATE,
+      MAX_PROFILE_DESIRED_RATE,
+    )
+  ) {
+    errors.desiredRate = `希望単価は${MIN_PROFILE_DESIRED_RATE}〜${MAX_PROFILE_DESIRED_RATE}万円で入力してください。`;
+  }
   if (!values.terms.startDate.trim())
     errors.startDate = "稼働開始可能日を入力してください。";
   if (!values.terms.workRate.trim())
@@ -137,6 +167,16 @@ export function isValidProfilePhoneNumber(value: string) {
     /^\d+$/.test(normalized) &&
     (normalized.length === 10 || normalized.length === 11)
   );
+}
+
+function isNumberInRange(value: string, min: number, max: number) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= min && number <= max;
+}
+
+function isIntegerInRange(value: string, min: number, max: number) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= min && number <= max;
 }
 
 function profileRegistrationCandidates(values: ProfileRegistrationInput) {

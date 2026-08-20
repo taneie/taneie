@@ -54,7 +54,7 @@ export function freelancerToProfile(
         item.yearsExperience ? String(item.yearsExperience) : "",
       ]),
     ),
-    desiredRate: freelancer.desiredRate ? String(freelancer.desiredRate) : "",
+    desiredRate: normalizeDesiredRate(freelancer.desiredRate),
     startDate: freelancer.startDate || "",
     workRate: freelancer.workRate || "",
     remote: freelancer.remote,
@@ -77,7 +77,7 @@ export function profileToApi(profile: Profile): ProfileApiPayload {
     phone: nonEmpty(normalizeProfilePhoneNumber(profile.phone)),
     roleTitle: nonEmpty(profile.role),
     yearsExperience: optionalNumber(profile.years),
-    desiredRate: optionalNumber(profile.desiredRate),
+    desiredRate: optionalDesiredRate(profile.desiredRate),
     startDate: nonEmpty(profile.startDate),
     workRate: nonEmpty(profile.workRate),
     remoteType: nonEmpty(profile.remote),
@@ -106,4 +106,16 @@ function nonEmpty(value: string) {
 function optionalNumber(value: string) {
   const trimmed = value.trim();
   return trimmed ? Number(trimmed) : undefined;
+}
+
+function optionalDesiredRate(value: string) {
+  const normalized = normalizeDesiredRate(value);
+  return normalized ? Number(normalized) : undefined;
+}
+
+function normalizeDesiredRate(value: string | number | undefined) {
+  if (value === undefined || value === "") return "";
+  const number = Number(value);
+  if (!Number.isFinite(number)) return String(value);
+  return String(number >= 10_000 ? number / 10_000 : number);
 }
