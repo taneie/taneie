@@ -3,6 +3,7 @@
     <LoginPanel v-if="!state.auth" />
     <AppShell v-else />
     <UnsavedChangesModal />
+    <JobAccessAlertDialog />
     <AppLoadingOverlay :visible="isLoading" />
 
     <template #fallback>

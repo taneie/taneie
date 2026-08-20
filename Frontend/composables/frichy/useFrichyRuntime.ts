@@ -125,6 +125,7 @@ const hasUnsavedChanges = ref(false);
 const toastMessage = ref("");
 const toastVisible = ref(false);
 const unsavedConfirmVisible = ref(false);
+const jobAccessAlertVisible = ref(false);
 const loadingCount = ref(0);
 const loadingVisible = ref(false);
 const chatBannerVisible = ref(false);
@@ -947,7 +948,7 @@ async function setView(view: ViewKey) {
       !canViewJobs.value
     ) {
       state.value.activeView = "jobs";
-      showToast("案件閲覧にはプロフィール詳細の入力と誓約同意が必要です。");
+      jobAccessAlertVisible.value = true;
       persist();
       scrollToPageTop();
       await sleep(180);
@@ -1238,6 +1239,7 @@ async function logout() {
   localStorage.removeItem(TOKEN_KEY);
   stopChatPolling();
   state.value.auth = null;
+  jobAccessAlertVisible.value = false;
   state.value.activeView = previousRole
     ? defaultViewByRole[previousRole]
     : "jobs";
@@ -3033,6 +3035,10 @@ function showToast(message: string) {
   displayToast(message);
 }
 
+function closeJobAccessAlert() {
+  jobAccessAlertVisible.value = false;
+}
+
 function saveAndNotify(message: string) {
   clearUnsavedChanges();
   persist();
@@ -3057,6 +3063,7 @@ export function useFrichyRuntime() {
     toastMessage,
     toastVisible,
     unsavedConfirmVisible,
+    jobAccessAlertVisible,
     chatBannerVisible,
     chatBannerTitle,
     chatBannerBody,
@@ -3166,6 +3173,7 @@ export function useFrichyRuntime() {
     clearUnsavedChanges,
     confirmDiscardChanges,
     resolveUnsavedConfirm,
+    closeJobAccessAlert,
     showToast,
     openChatBanner,
     dismissChatBanner,
