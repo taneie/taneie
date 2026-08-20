@@ -8,6 +8,7 @@
 
         <nav :class="$style.headerNav" aria-label="トップページ">
           <a href="#features" @click="handleLandingAnchorClick($event, 'features')">特徴</a>
+          <a href="#pricing" @click="handleLandingAnchorClick($event, 'pricing')">料金</a>
           <a href="#projects" @click="handleLandingAnchorClick($event, 'projects')">案件例</a>
           <a href="#flow" @click="handleLandingAnchorClick($event, 'flow')">ご利用の流れ</a>
         </nav>
@@ -181,6 +182,43 @@
 
           <LandingFeatureSection />
 
+          <section id="pricing" :class="$style.freeSection">
+            <div :class="$style.freeContent">
+              <p :class="$style.freeEyebrow">FREE TO USE</p>
+              <h2>
+                <span>登録から案件応募まで、</span>
+                <span>利用料金はずっと0円。</span>
+              </h2>
+              <p :class="$style.freeLead">
+                登録後も月額費用や案件の閲覧・応募に料金はかかりません。費用を気にせず、あなたに合う案件探しを始められます。
+              </p>
+              <button type="button" :class="$style.primaryCta" @click="scrollToRegister">
+                無料で登録する
+              </button>
+            </div>
+
+            <div :class="$style.freePrice" aria-label="登録後の利用料金は0円">
+              <span>登録後の利用料金</span>
+              <strong><b>0</b>&nbsp;円</strong>
+              <small>追加費用なし</small>
+            </div>
+
+            <ul :class="$style.freePoints">
+              <li>
+                <span aria-hidden="true">✓</span>
+                <div><strong>登録料</strong><b>0円</b></div>
+              </li>
+              <li>
+                <span aria-hidden="true">✓</span>
+                <div><strong>月額利用料</strong><b>0円</b></div>
+              </li>
+              <li>
+                <span aria-hidden="true">✓</span>
+                <div><strong>案件検索・応募</strong><b>0円</b></div>
+              </li>
+            </ul>
+          </section>
+
           <section :class="$style.visualSection">
             <img
               :src="flowImageSrc"
@@ -248,7 +286,7 @@
             <span>30秒で開始</span>
             <h2>無料会員登録</h2>
             <p>登録後、プロフィール入力画面へ進みます。</p>
-            <p>30秒で完了。登録後も費用は一切かかりません。</p>
+            <p>30秒で完了。</p>
           </div>
 
           <form
@@ -661,6 +699,7 @@ onBeforeUnmount(() => {
 }
 
 :global(#features),
+:global(#pricing),
 :global(#projects),
 :global(#flow),
 :global(#register-panel) {
@@ -1222,10 +1261,167 @@ onBeforeUnmount(() => {
   margin: 10px 0;
 }
 
+.freeSection,
 .visualSection,
 .projectsSection,
 .flowSection {
   margin-top: 42px;
+}
+
+.freeSection {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(220px, 0.7fr);
+  gap: 24px;
+  align-items: center;
+  overflow: hidden;
+  padding: 30px;
+  border: 1px solid rgba(169, 197, 237, 0.9);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(72, 190, 216, 0.2), transparent 34%),
+    linear-gradient(135deg, #f7fbff 0%, #eaf3ff 100%);
+  box-shadow: 0 16px 34px rgba(29, 78, 137, 0.09);
+  animation: fadeSlideUp 0.48s ease-out 0.28s both;
+}
+
+.freeSection::before {
+  content: "0";
+  position: absolute;
+  right: -20px;
+  top: -96px;
+  color: rgba(29, 95, 211, 0.045);
+  font-size: 360px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.freeContent,
+.freePrice,
+.freePoints {
+  position: relative;
+  z-index: 1;
+}
+
+.freeEyebrow {
+  width: fit-content;
+  margin: 0 0 8px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.freeContent h2 {
+  margin: 0;
+  color: #0d2749;
+  font-size: 36px;
+  line-height: 1.25;
+}
+
+.freeContent h2 span {
+  display: block;
+}
+
+.freeLead {
+  max-width: 680px;
+  margin: 12px 0 20px;
+  color: #4f6279;
+  line-height: 1.8;
+}
+
+.freePrice {
+  display: grid;
+  justify-items: center;
+  padding: 22px 18px;
+  border: 1px solid rgba(169, 197, 237, 0.95);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 30px rgba(29, 78, 137, 0.1);
+}
+
+.freePrice > span {
+  color: var(--primary-strong);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.freePrice strong {
+  display: flex;
+  align-items: baseline;
+  color: #10294f;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.freePrice strong b {
+  color: var(--primary);
+  font-size: 80px;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+}
+
+.freePrice small {
+  margin-top: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--primary-weak);
+  color: var(--primary-strong);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.freePoints {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.freePoints li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid rgba(185, 207, 235, 0.9);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.freePoints li > span {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.freePoints div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.freePoints strong {
+  color: #263f63;
+  font-size: 13px;
+}
+
+.freePoints b {
+  color: var(--primary-strong);
+  font-size: 16px;
+  white-space: nowrap;
 }
 
 .visualSection {
@@ -1913,6 +2109,29 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
 
+  .freeSection {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 22px 18px;
+  }
+
+  .freeContent h2 {
+    font-size: 26px;
+  }
+
+  .freeContent .primaryCta {
+    width: 100%;
+  }
+
+  .freePrice strong b {
+    font-size: 68px;
+  }
+
+  .freePoints {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+  }
+
   .heroVisual img,
   .visualSection img {
     aspect-ratio: 4 / 3;
@@ -1944,6 +2163,7 @@ onBeforeUnmount(() => {
   .stats div,
   .stats div::before,
   .stats div::after,
+  .freeSection,
   .visualSection,
   .projectsSection,
   .flowSection,
