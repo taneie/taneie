@@ -181,8 +181,8 @@ describe("求職者Mapper", () => {
 
 describe("応募・メッセージMapper", () => {
   /**
-   * @testData 応募record、関連案件、暗号化済み求職者user、営業senderの暗号化メッセージrecord。
-   * @expected 応募status/案件/求職者名と、メッセージ送信者名/body/channel/readAtがUI向けに整形される。
+   * @testData 初回面談未完了の応募record、関連案件、暗号化済み求職者user、営業senderの暗号化メッセージrecord。
+   * @expected 応募statusは「初回面談前」になり、案件/求職者名と、メッセージ送信者名/body/channel/readAtがUI向けに整形される。
    */
   it("mapApplication and mapMessage map relations to UI-friendly labels", () => {
     const application = mapApplication({
@@ -249,7 +249,7 @@ describe("応募・メッセージMapper", () => {
       },
     } as never);
 
-    assert.equal(application.status, "面談待ち");
+    assert.equal(application.status, "初回面談前");
     assert.equal(application.job.title, "案件");
     assert.equal(application.freelancer.name, "山田 太郎");
 

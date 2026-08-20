@@ -1,4 +1,10 @@
-import type { Account, ApplicationStatus, NavItem, Role, ViewKey } from "./types";
+import type {
+  Account,
+  EditableApplicationStatus,
+  NavItem,
+  Role,
+  ViewKey,
+} from "./types";
 
 export const STORAGE_KEY = "frichy-state-v1";
 export const TOKEN_KEY = "frichy-token";
@@ -70,7 +76,7 @@ export const defaultViewByRole: Record<Role, ViewKey> = {
   sales: "dashboard",
 };
 
-export const statuses: ApplicationStatus[] = [
+export const statuses: EditableApplicationStatus[] = [
   "選考中",
   "面談待ち",
   "成約",

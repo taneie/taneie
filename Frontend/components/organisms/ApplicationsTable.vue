@@ -30,6 +30,13 @@
             :value="application.status"
             @change="onStatusChange(application.id, $event)"
           >
+            <option
+              v-if="!isEditableApplicationStatus(application.status)"
+              :value="application.status"
+              disabled
+            >
+              {{ application.status }}
+            </option>
             <option v-for="status in statuses" :key="status" :value="status">
               {{ status }}
             </option>
@@ -104,6 +111,10 @@ const applicationGroups = computed(() =>
 
 function onStatusChange(applicationId: string, event: Event) {
   changeApplicationStatus(applicationId, (event.target as HTMLSelectElement).value);
+}
+
+function isEditableApplicationStatus(status: Application["status"]) {
+  return statuses.some((item) => item === status);
 }
 </script>
 

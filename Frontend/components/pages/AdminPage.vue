@@ -97,7 +97,11 @@
           ステータス
           <select v-model="applicationStatusFilter" :class="$style.filterControl">
             <option value="">すべて</option>
-            <option v-for="status in statuses" :key="status" :value="status">
+            <option
+              v-for="status in applicationStatusFilterOptions"
+              :key="status"
+              :value="status"
+            >
               {{ status }}
             </option>
           </select>
@@ -192,6 +196,10 @@ const initialJobForm = (): JobInput => ({
 
 const jobForm = reactive<JobInput>(initialJobForm());
 const applicationStatusFilter = ref<ApplicationStatus | "">("");
+const applicationStatusFilterOptions: ApplicationStatus[] = [
+  "初回面談前",
+  ...statuses,
+];
 const completedApplicationStatuses: ApplicationStatus[] = ["成約", "見送り"];
 
 const closedApplications = computed(

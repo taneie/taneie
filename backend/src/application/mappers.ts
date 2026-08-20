@@ -82,6 +82,15 @@ export function toApplicationStatusLabel(value: string) {
   return getKeyByValue(labelToApplicationStatus, value);
 }
 
+export function toApplicationDisplayStatusLabel(
+  value: string,
+  initialMeetingCompleted: boolean,
+) {
+  return initialMeetingCompleted
+    ? toApplicationStatusLabel(value)
+    : "初回面談前";
+}
+
 export function mapJob(job: JobWithRelations) {
   const required = job.skills
     .filter((item) => item.requirementType === "required")
@@ -169,7 +178,10 @@ export function mapApplication(application: ApplicationWithRelations) {
     id: application.id,
     jobId: application.sourceJobId,
     freelancerId: application.freelancerProfileId,
-    status: toApplicationStatusLabel(application.status),
+    status: toApplicationDisplayStatusLabel(
+      application.status,
+      application.freelancerProfile.initialMeetingCompleted,
+    ),
     appliedAt: application.appliedAt.toISOString().slice(0, 10),
     job,
     freelancer: mapFreelancer(application.freelancerProfile),

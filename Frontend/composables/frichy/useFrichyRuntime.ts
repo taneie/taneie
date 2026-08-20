@@ -27,6 +27,7 @@ import type {
   AuthMode,
   ContactInquiry,
   ContactInquiryInput,
+  EditableApplicationStatus,
   Freelancer,
   Job,
   JobFilters,
@@ -2046,7 +2047,7 @@ async function changeApplicationStatus(applicationId: string, status: string) {
   const item = state.value.applications.find(
     (application) => application.id === applicationId,
   );
-  if (!item || !statuses.includes(status as ApplicationStatus)) return;
+  if (!item || !statuses.includes(status as EditableApplicationStatus)) return;
   try {
     const updated = await apiRequest<Application>(
       `/applications/${applicationId}/status`,
