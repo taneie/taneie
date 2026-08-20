@@ -600,6 +600,7 @@ Cloud Runへ反映せず、imageだけをArtifact Registryへ置く場合はGitH
 外部案件APIキーは既定で Secret Manager の `frichy-prod-external-projects-api-key`、取り込み用共有secretは `frichy-prod-external-projects-import-secret` をCloud Runへ渡す。
 期限切れ案件削除用secretは既定で Secret Manager の `frichy-prod-job-cleanup-secret` をCloud Runへ渡す。
 `Deploy Cloud Run` workflowはCloud SchedulerのHTTPヘッダー更新時に `frichy-prod-job-cleanup-secret` を読むため、deploy service account `frichy-github-deployer@frichy.iam.gserviceaccount.com` に同secretの `roles/secretmanager.secretAccessor` を付与しておく。
+同workflowは `frichy-job-cleanup-expired` を作成/更新するため、deploy service accountにproject `frichy` の `roles/cloudscheduler.admin` も付与しておく。
 
 ### 12.7 外部案件API取り込み
 

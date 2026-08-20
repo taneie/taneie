@@ -187,6 +187,7 @@ jobs:
           CLEANUP_SECRET="$(gcloud secrets versions access latest \
             --project "${GCP_PROJECT_ID}" \
             --secret "${SECRET_JOB_CLEANUP_SECRET}")"
+          echo "::add-mask::${CLEANUP_SECRET}"
 
           SCHEDULER_ARGS=(
             --project "${GCP_PROJECT_ID}"
@@ -195,15 +196,18 @@ jobs:
             --time-zone "${JOB_CLEANUP_TIME_ZONE}"
             --uri "${JOB_CLEANUP_API_URL}"
             --http-method POST
-            --headers "X-Job-Cleanup-Secret=${CLEANUP_SECRET}"
           )
 
           if gcloud scheduler jobs describe "${JOB_CLEANUP_SCHEDULER_JOB}" \
             --project "${GCP_PROJECT_ID}" \
             --location "${GCP_REGION}" >/dev/null 2>&1; then
             gcloud scheduler jobs update http "${JOB_CLEANUP_SCHEDULER_JOB}" \
-              "${SCHEDULER_ARGS[@]}"
+              "${SCHEDULER_ARGS[@]}" \
+              --update-headers "X-Job-Cleanup-Secret=${CLEANUP_SECRET}" \
+              --format "value(name)"
           else
             gcloud scheduler jobs create http "${JOB_CLEANUP_SCHEDULER_JOB}" \
-              "${SCHEDULER_ARGS[@]}"
+              "${SCHEDULER_ARGS[@]}" \
+              --headers "X-Job-Cleanup-Secret=${CLEANUP_SECRET}" \
+              --format "value(name)"
           fi
