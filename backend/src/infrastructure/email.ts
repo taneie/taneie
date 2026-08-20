@@ -103,7 +103,7 @@ export function buildAliveCheckEmail(input: {
   const text = [
     `${name} 様`,
     "",
-    "Frichy営業チームです。",
+    "Frichyチームです。",
     "現在の稼働状況や案件へのご希望に変更がないか確認しています。",
     "",
     "以下のURLからFrichyへログインし、プロフィールまたはチャットで現在の状況をお知らせください。",
@@ -113,7 +113,7 @@ export function buildAliveCheckEmail(input: {
   ].join("\n");
   const html = `
     <p>${escapeHtml(name)} 様</p>
-    <p>Frichy営業チームです。</p>
+    <p>Frichyチームです。</p>
     <p>現在の稼働状況や案件へのご希望に変更がないか確認しています。</p>
     <p>
       <a href="${escapeHtml(appUrl)}">Frichyへログイン</a>し、

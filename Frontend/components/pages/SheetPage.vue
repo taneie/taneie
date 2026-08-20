@@ -40,7 +40,7 @@
             <div>稼働開始可能日</div>
             <div>{{ profile.availability }}</div>
             <div>ステータス</div>
-            <div>Frichy営業による初回面談調整中</div>
+            <div>初回面談調整中</div>
           </div>
         </article>
       </div>
