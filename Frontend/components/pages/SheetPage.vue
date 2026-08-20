@@ -79,7 +79,8 @@ const mainSkills = computed(() =>
     profile.value.languages,
     profile.value.frameworks,
     profile.value.db,
-    profile.value.cloud,
+    profile.value.operatingSystems,
+    profile.value.industries,
     profile.value.otherSkills,
   ]
     .filter(Boolean)

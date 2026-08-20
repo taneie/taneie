@@ -55,7 +55,8 @@ export interface Profile {
   languages: string;
   db: string;
   frameworks: string;
-  cloud: string;
+  operatingSystems: string;
+  industries: string;
   otherSkills: string;
   years: string;
   skillExperiences: Record<string, string>;
@@ -257,7 +258,8 @@ export interface ProfileRegistrationInput {
     | "languages"
     | "db"
     | "frameworks"
-    | "cloud"
+    | "operatingSystems"
+    | "industries"
     | "otherSkills"
     | "years"
     | "skillExperiences"

@@ -78,12 +78,12 @@ export function validateProfileRegistrationInput(
       values.skills.languages,
       values.skills.db,
       values.skills.frameworks,
-      values.skills.cloud,
+      values.skills.operatingSystems,
+      values.skills.industries,
       values.skills.otherSkills,
     ].some((value) => splitCsv(value).length)
   ) {
-    errors.skills =
-      "スキルはチェックまたはその他を1つ以上入力してください。";
+    errors.skills = "スキルまたは業種を1つ以上選択してください。";
   }
   if (!String(values.skills.years || "").trim()) {
     errors.years = "経験年数を入力してください。";

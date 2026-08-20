@@ -6,13 +6,14 @@ import {
   STORAGE_KEY,
   TOKEN_KEY,
   availabilityOptions,
-  cloudSkillOptions,
   dbSkillOptions,
   defaultViewByRole,
   demoAccounts,
   frameworkSkillOptions,
+  industrySkillOptions,
   languageSkillOptions,
   navItems,
+  osSkillOptions,
   remoteOptions,
   roleTitleOptions,
   statuses,
@@ -49,6 +50,7 @@ import type {
 } from "./types";
 import {
   availabilityClass,
+  categorizeSkills,
   clone,
   filterNewMeetingCandidates,
   formatJstDateTime,
@@ -228,10 +230,37 @@ function mergeState(
   base: FrichyState,
   saved: Partial<FrichyState>,
 ): FrichyState {
+  const savedProfile = saved.profile as
+    | (Partial<Profile> & { cloud?: string })
+    | undefined;
+  const savedProfileFields = { ...(savedProfile || {}) };
+  delete savedProfileFields.cloud;
+  delete savedProfileFields.otherSkills;
+  const mergedProfile = { ...base.profile, ...savedProfileFields };
+  const categorizedSkills = categorizeSkills(
+    [
+      mergedProfile.languages,
+      mergedProfile.db,
+      mergedProfile.frameworks,
+      mergedProfile.operatingSystems,
+      mergedProfile.industries,
+      savedProfile?.cloud,
+      savedProfile?.otherSkills,
+    ].flatMap(splitCsv),
+  );
+
   return {
     ...clone(base),
     ...saved,
-    profile: { ...base.profile, ...(saved.profile || {}) },
+    profile: {
+      ...mergedProfile,
+      languages: categorizedSkills.languages.join(", "),
+      db: categorizedSkills.db.join(", "),
+      frameworks: categorizedSkills.frameworks.join(", "),
+      operatingSystems: categorizedSkills.operatingSystems.join(", "),
+      industries: categorizedSkills.industries.join(", "),
+      otherSkills: categorizedSkills.other.join(", "),
+    },
     accounts: saved.accounts || base.accounts,
     freelancers: saved.freelancers || base.freelancers,
     jobs: saved.jobs || base.jobs,
@@ -739,7 +768,8 @@ const profileRequirementItems = computed(() => {
           p.languages,
           p.db,
           p.frameworks,
-          p.cloud,
+          p.operatingSystems,
+          p.industries,
           p.otherSkills,
         ].some((value) => splitCsv(value).length) && p.years,
       ),
@@ -1261,14 +1291,15 @@ async function saveProfileSkills(
     | "languages"
     | "db"
     | "frameworks"
-    | "cloud"
+    | "operatingSystems"
+    | "industries"
     | "otherSkills"
     | "years"
     | "skillExperiences"
   >,
 ) {
   if (!hasProfileSkill(values)) {
-    showToast("スキルはチェックまたはその他を1つ以上入力してください。");
+    showToast("スキルまたは業種を1つ以上選択してください。");
     return;
   }
   if (!String(values.years || "").trim()) {
@@ -1496,14 +1527,20 @@ function normalizedProfileBasic(values: ProfileRegistrationInput) {
 function hasProfileSkill(
   values: Pick<
     Profile,
-    "languages" | "db" | "frameworks" | "cloud" | "otherSkills"
+    | "languages"
+    | "db"
+    | "frameworks"
+    | "operatingSystems"
+    | "industries"
+    | "otherSkills"
   >,
 ) {
   return [
     values.languages,
     values.db,
     values.frameworks,
-    values.cloud,
+    values.operatingSystems,
+    values.industries,
     values.otherSkills,
   ].some((value) => splitCsv(value).length);
 }
@@ -1525,7 +1562,7 @@ function validateProfileRegistration(
   }
   if (!hasProfileSkill(values.skills)) {
     return showProfileRegistrationError(
-      "スキルはチェックまたはその他を1つ以上入力してください。",
+      "スキルまたは業種を1つ以上選択してください。",
       2,
     );
   }
@@ -2551,6 +2588,8 @@ function renderAnonymousSheetCanvas(
 
   const skillRows: Array<{ label: string; value: string }> = [
     { label: "主要スキル", value: mainSkills || "未登録" },
+    { label: "OS", value: profile.operatingSystems || "未登録" },
+    { label: "業種", value: profile.industries || "未登録" },
     { label: "その他", value: profile.otherSkills || "未登録" },
   ];
 
@@ -2876,7 +2915,8 @@ function hasProfileContent(profile: Profile) {
       profile?.languages ||
       profile?.db ||
       profile?.frameworks ||
-      profile?.cloud ||
+      profile?.operatingSystems ||
+      profile?.industries ||
       profile?.otherSkills ||
       profile?.years ||
       profile?.desiredRate ||
@@ -2964,7 +3004,8 @@ function estimateRate() {
     state.value.profile.languages,
     state.value.profile.frameworks,
     state.value.profile.db,
-    state.value.profile.cloud,
+    state.value.profile.operatingSystems,
+    state.value.profile.industries,
     state.value.profile.otherSkills,
   ].join(" ");
   const premium =
@@ -3081,7 +3122,8 @@ export function useFrichyRuntime() {
     languageSkillOptions,
     dbSkillOptions,
     frameworkSkillOptions,
-    cloudSkillOptions,
+    osSkillOptions,
+    industrySkillOptions,
     authAccounts,
     currentUser,
     currentRole,

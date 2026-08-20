@@ -45,7 +45,8 @@ export function freelancerToProfile(
     languages: categorizedSkills.languages.join(", "),
     db: categorizedSkills.db.join(", "),
     frameworks: categorizedSkills.frameworks.join(", "),
-    cloud: categorizedSkills.cloud.join(", "),
+    operatingSystems: categorizedSkills.operatingSystems.join(", "),
+    industries: categorizedSkills.industries.join(", "),
     otherSkills: categorizedSkills.other.join(", "),
     years: freelancer.yearsExperience ? String(freelancer.yearsExperience) : "",
     skillExperiences: Object.fromEntries(

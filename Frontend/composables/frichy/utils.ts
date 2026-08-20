@@ -1,4 +1,11 @@
 import type { Freelancer, Profile } from "./types";
+import {
+  dbSkillOptions,
+  frameworkSkillOptions,
+  industrySkillOptions,
+  languageSkillOptions,
+  osSkillOptions,
+} from "./constants";
 
 export const JOB_SUMMARY_PREVIEW_LIMIT = 200;
 
@@ -111,13 +118,19 @@ function isHiddenJobSummaryLine(line: string) {
 
 export function profileSkillList(profile: Pick<
   Profile,
-  "languages" | "frameworks" | "db" | "cloud" | "otherSkills"
+  | "languages"
+  | "frameworks"
+  | "db"
+  | "operatingSystems"
+  | "industries"
+  | "otherSkills"
 >) {
   return [
     ...splitCsv(profile.languages),
     ...splitCsv(profile.frameworks),
     ...splitCsv(profile.db),
-    ...splitCsv(profile.cloud),
+    ...splitCsv(profile.operatingSystems),
+    ...splitCsv(profile.industries),
     ...splitCsv(profile.otherSkills),
   ];
 }
@@ -127,57 +140,18 @@ export function categorizeSkills(skills: string[]) {
     languages: [] as string[],
     db: [] as string[],
     frameworks: [] as string[],
-    cloud: [] as string[],
+    operatingSystems: [] as string[],
+    industries: [] as string[],
     other: [] as string[],
   };
-  const languageSkillOptions = [
-    "Java",
-    "TypeScript",
-    "JavaScript",
-    "Python",
-    "PHP",
-    "Ruby",
-    "Go",
-    "C#",
-    "Kotlin",
-    "Swift",
-  ];
-  const dbSkillOptions = [
-    "PostgreSQL",
-    "MySQL",
-    "Oracle",
-    "SQL Server",
-    "MongoDB",
-    "Redis",
-    "DynamoDB",
-  ];
-  const frameworkSkillOptions = [
-    "Spring Boot",
-    "React",
-    "Vue.js",
-    "Nuxt.js",
-    "Next.js",
-    "Laravel",
-    "Ruby on Rails",
-    "Django",
-    "Express",
-  ];
-  const cloudSkillOptions = [
-    "AWS",
-    "GCP",
-    "Azure",
-    "Firebase",
-    "Cloudflare",
-    "Vercel",
-    "Heroku",
-  ];
 
-  skills.forEach((skill) => {
+  [...new Set(skills)].forEach((skill) => {
     if (languageSkillOptions.includes(skill)) result.languages.push(skill);
     else if (dbSkillOptions.includes(skill)) result.db.push(skill);
     else if (frameworkSkillOptions.includes(skill))
       result.frameworks.push(skill);
-    else if (cloudSkillOptions.includes(skill)) result.cloud.push(skill);
+    else if (osSkillOptions.includes(skill)) result.operatingSystems.push(skill);
+    else if (industrySkillOptions.includes(skill)) result.industries.push(skill);
     else result.other.push(skill);
   });
   return result;

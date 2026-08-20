@@ -15,7 +15,14 @@ describe("フロントエンドのプロフィール変換", () => {
     const profile = freelancerToProfile(
       freelancerFixture({
         email: "mapped@example.com",
-        skills: ["TypeScript", "React", "PostgreSQL", "GCP", "GraphQL"],
+        skills: [
+          "TypeScript",
+          "React",
+          "PostgreSQL",
+          "Linux",
+          "金融",
+          "GraphQL",
+        ],
         skillExperiences: [
           { name: "TypeScript", yearsExperience: 5 },
           { name: "React", yearsExperience: 4 },
@@ -29,7 +36,8 @@ describe("フロントエンドのプロフィール変換", () => {
     assert.equal(profile.languages, "TypeScript");
     assert.equal(profile.frameworks, "React");
     assert.equal(profile.db, "PostgreSQL");
-    assert.equal(profile.cloud, "GCP");
+    assert.equal(profile.operatingSystems, "Linux");
+    assert.equal(profile.industries, "金融");
     assert.equal(profile.otherSkills, "GraphQL");
     assert.equal(profile.skillExperiences.TypeScript, "5");
     assert.equal(profile.desiredRate, "80");
@@ -67,7 +75,8 @@ describe("フロントエンドのプロフィール変換", () => {
       "Go",
       "React",
       "PostgreSQL",
-      "GCP",
+      "Linux",
+      "金融",
       "GraphQL",
     ]);
     assert.deepEqual(payload.skillExperiences[0], {

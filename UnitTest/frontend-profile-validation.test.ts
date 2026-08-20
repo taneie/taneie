@@ -26,7 +26,8 @@ function registrationInput(
       languages: "TypeScript",
       db: "PostgreSQL",
       frameworks: "React",
-      cloud: "GCP",
+      operatingSystems: "Linux",
+      industries: "金融",
       otherSkills: "",
       years: "5",
       skillExperiences: { TypeScript: "5" },
@@ -64,7 +65,8 @@ describe("プロフィール登録バリデーション", () => {
           languages: "",
           db: "",
           frameworks: "",
-          cloud: "",
+          operatingSystems: "",
+          industries: "",
           otherSkills: "",
           years: "",
           skillExperiences: {},
@@ -87,7 +89,7 @@ describe("プロフィール登録バリデーション", () => {
     assert.equal(errors.nameKana, "お名前（ふりがな）を入力してください。");
     assert.equal(errors.email, "メールアドレスを入力してください。");
     assert.equal(errors.phone, "電話番号を入力してください。");
-    assert.equal(errors.skills, "スキルはチェックまたはその他を1つ以上入力してください。");
+    assert.equal(errors.skills, "スキルまたは業種を1つ以上選択してください。");
     assert.equal(firstProfileRegistrationErrorKey(errors), "name");
     assert.equal(
       profileRegistrationErrorSteps[firstProfileRegistrationErrorKey(errors)!],
@@ -198,7 +200,8 @@ describe("プロフィール登録バリデーション", () => {
           languages: "TypeScript",
           db: "",
           frameworks: "",
-          cloud: "",
+          operatingSystems: "",
+          industries: "",
           otherSkills: "",
           years: "51",
           skillExperiences: { TypeScript: "51" },
@@ -229,7 +232,8 @@ describe("プロフィール登録バリデーション", () => {
           languages: "TypeScript",
           db: "",
           frameworks: "",
-          cloud: "",
+          operatingSystems: "",
+          industries: "",
           otherSkills: "",
           years: "50",
           skillExperiences: { TypeScript: "50" },

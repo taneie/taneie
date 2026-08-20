@@ -21,8 +21,41 @@ import {
   freelancerFixture,
   profileFixture,
 } from "../tests/helpers/fixtures";
+import {
+  dbSkillOptions,
+  frameworkSkillOptions,
+  industrySkillOptions,
+  languageSkillOptions,
+  osSkillOptions,
+} from "../Frontend/composables/frichy/constants";
 
 describe("フロントエンド共通ユーティリティ", () => {
+  /**
+   * @testData 人気ランキングに基づく言語・DB・フレームワーク・OS・業種の候補。
+   * @expected 各分類は指定された候補と順位順に一致する。
+   */
+  it("プロフィールのスキル候補を人気ランキングに限定する", () => {
+    assert.deepEqual(languageSkillOptions, [
+      "JavaScript", "Java", "Python", "SQL", "PHP",
+      "TypeScript", "C#", "Go", "PowerShell", "Perl",
+    ]);
+    assert.deepEqual(dbSkillOptions, [
+      "MySQL", "Oracle", "PostgreSQL", "SQL Server", "PL/SQL",
+      "MongoDB", "DynamoDB", "BigQuery", "Firebase", "SQLServer",
+    ]);
+    assert.deepEqual(frameworkSkillOptions, [
+      "Spring Boot", "React", "Laravel", "Vue.js", "Next.js",
+      "Angular", "Node.js", "FastAPI", "Spring", "jQuery",
+    ]);
+    assert.deepEqual(osSkillOptions, [
+      "Linux", "Windows", "Windows Server", "Android", "iOS",
+      "Windows 10", "CentOS", "Windows 11", "Solaris", "macOS",
+    ]);
+    assert.deepEqual(industrySkillOptions, [
+      "金融", "IT・ソフトウェア開発", "ゲーム", "通信", "製造業",
+      "IT・SaaS", "医療", "情報通信業", "IT・情報通信",
+    ]);
+  });
   /**
    * @testData nested objectを持つsource object。
    * @expected clone後のnested値を変更してもsource objectは変更されない。
@@ -118,7 +151,7 @@ describe("フロントエンド共通ユーティリティ", () => {
   });
 
   /**
-   * @testData languages/frameworks/db/cloud/otherSkillsを持つprofile fixture。
+   * @testData 言語・フレームワーク・DB・OS・業種を持つprofile fixture。
    * @expected プロフィールのスキルは表示順に1つの配列へ結合される。
    */
   it("profileSkillList combines all skill buckets in display order", () => {
@@ -127,7 +160,8 @@ describe("フロントエンド共通ユーティリティ", () => {
         languages: "TypeScript",
         frameworks: "React",
         db: "PostgreSQL",
-        cloud: "GCP",
+        operatingSystems: "Linux",
+        industries: "金融",
         otherSkills: "GraphQL",
       }),
     );
@@ -136,23 +170,32 @@ describe("フロントエンド共通ユーティリティ", () => {
       "TypeScript",
       "React",
       "PostgreSQL",
-      "GCP",
+      "Linux",
+      "金融",
       "GraphQL",
     ]);
   });
 
   /**
-   * @testData TypeScript、PostgreSQL、React、GCP、GraphQLのスキル配列。
+   * @testData TypeScript、PostgreSQL、React、Linux、金融と未知スキルの配列。
    * @expected 既知スキルは各カテゴリへ分類され、未知スキルはotherへ入る。
    */
   it("categorizeSkills places known skills into their buckets and unknown skills into other", () => {
     assert.deepEqual(
-      categorizeSkills(["TypeScript", "PostgreSQL", "React", "GCP", "GraphQL"]),
+      categorizeSkills([
+        "TypeScript",
+        "PostgreSQL",
+        "React",
+        "Linux",
+        "金融",
+        "GraphQL",
+      ]),
       {
         languages: ["TypeScript"],
         db: ["PostgreSQL"],
         frameworks: ["React"],
-        cloud: ["GCP"],
+        operatingSystems: ["Linux"],
+        industries: ["金融"],
         other: ["GraphQL"],
       },
     );

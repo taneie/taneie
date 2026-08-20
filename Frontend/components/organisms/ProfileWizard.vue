@@ -110,7 +110,7 @@
               { [$style.invalidBox]: validationErrors.skills },
             ]"
           >
-            <legend>開発言語</legend>
+            <legend>言語</legend>
             <AppCheckboxPill
               v-for="option in languageOptions"
               :key="option"
@@ -161,11 +161,28 @@
               { [$style.invalidBox]: validationErrors.skills },
             ]"
           >
-            <legend>クラウド</legend>
+            <legend>OS</legend>
             <AppCheckboxPill
-              v-for="option in cloudOptions"
+              v-for="option in osOptions"
               :key="option"
-              v-model="skills.cloud"
+              v-model="skills.operatingSystems"
+              :value="option"
+              @change="markProfileFieldDirty('skills')"
+            >
+              {{ option }}
+            </AppCheckboxPill>
+          </fieldset>
+          <fieldset
+            :class="[
+              $style.skillGroup,
+              { [$style.invalidBox]: validationErrors.skills },
+            ]"
+          >
+            <legend>業種</legend>
+            <AppCheckboxPill
+              v-for="option in industryOptions"
+              :key="option"
+              v-model="skills.industries"
               :value="option"
               @change="markProfileFieldDirty('skills')"
             >
@@ -176,7 +193,7 @@
             <AppTextarea
               v-model="skills.other"
               name="otherSkills"
-              placeholder="Docker, Kubernetes, GitHub Actions など"
+              placeholder="その他のスキルを入力してください"
               @update:model-value="markProfileFieldDirty('skills')"
             />
           </FieldLabel>
@@ -186,16 +203,18 @@
           >
             {{ validationErrors.skills }}
           </p>
-          <FormInput
-            v-model="skills.years"
-            label="経験年数"
-            name="years"
-            type="number"
-            :min="0"
-            :max="MAX_PROFILE_EXPERIENCE_YEARS"
-            :error="validationErrors.years"
-            @update:model-value="markProfileFieldDirty('years')"
-          />
+          <div :class="$style.compactField">
+            <FormInput
+              v-model="skills.years"
+              label="経験年数"
+              name="years"
+              type="number"
+              :min="0"
+              :max="MAX_PROFILE_EXPERIENCE_YEARS"
+              :error="validationErrors.years"
+              @update:model-value="markProfileFieldDirty('years')"
+            />
+          </div>
           <fieldset
             v-if="selectedSkillNames.length"
             :class="[$style.skillGroup, $style.skillExperienceGroup]"
@@ -449,7 +468,8 @@ const {
   languageSkillOptions,
   dbSkillOptions,
   frameworkSkillOptions,
-  cloudSkillOptions,
+  osSkillOptions,
+  industrySkillOptions,
   roleTitleOptions,
 } = useFrichyRuntime();
 
@@ -470,7 +490,8 @@ const skills = reactive({
   languages: [] as string[],
   db: [] as string[],
   frameworks: [] as string[],
-  cloud: [] as string[],
+  operatingSystems: [] as string[],
+  industries: [] as string[],
   other: "",
   years: "",
   skillExperiences: {} as Record<string, string>,
@@ -496,14 +517,16 @@ const validationErrors = reactive<ProfileRegistrationValidationErrors>({});
 const languageOptions = languageSkillOptions;
 const dbOptions = dbSkillOptions;
 const frameworkOptions = frameworkSkillOptions;
-const cloudOptions = cloudSkillOptions;
+const osOptions = osSkillOptions;
+const industryOptions = industrySkillOptions;
 
 const visibleProfileSkills = computed(() => {
   return splitCsv(profile.value.languages)
     .concat(
       splitCsv(profile.value.frameworks),
       splitCsv(profile.value.db),
-      splitCsv(profile.value.cloud),
+      splitCsv(profile.value.operatingSystems),
+      splitCsv(profile.value.industries),
       splitCsv(profile.value.otherSkills),
     )
     .slice(0, 7);
@@ -514,7 +537,8 @@ const selectedSkillNames = computed(() => {
     ...skills.languages,
     ...skills.db,
     ...skills.frameworks,
-    ...skills.cloud,
+    ...skills.operatingSystems,
+    ...skills.industries,
     ...splitCsv(skills.other),
   ])];
 });
@@ -538,27 +562,34 @@ function hydrateForms() {
     phone: p.phone,
     role: p.role,
   });
-  const savedLanguages = splitCsv(p.languages);
-  const savedDb = splitCsv(p.db);
-  const savedFrameworks = splitCsv(p.frameworks);
-  const savedCloud = splitCsv(p.cloud);
-  const savedOther = splitCsv(p.otherSkills);
+  const legacyProfile = p as typeof p & { cloud?: string };
+  const savedSkills = [
+    p.languages,
+    p.db,
+    p.frameworks,
+    p.operatingSystems,
+    p.industries,
+    legacyProfile.cloud,
+    p.otherSkills,
+  ].flatMap(splitCsv);
   Object.assign(skills, {
-    languages: savedLanguages.filter((skill) =>
-      languageOptions.includes(skill),
-    ),
-    db: savedDb.filter((skill) => dbOptions.includes(skill)),
-    frameworks: savedFrameworks.filter((skill) =>
+    languages: savedSkills.filter((skill) => languageOptions.includes(skill)),
+    db: savedSkills.filter((skill) => dbOptions.includes(skill)),
+    frameworks: savedSkills.filter((skill) =>
       frameworkOptions.includes(skill),
     ),
-    cloud: savedCloud.filter((skill) => cloudOptions.includes(skill)),
-    other: [
-      ...savedLanguages.filter((skill) => !languageOptions.includes(skill)),
-      ...savedDb.filter((skill) => !dbOptions.includes(skill)),
-      ...savedFrameworks.filter((skill) => !frameworkOptions.includes(skill)),
-      ...savedCloud.filter((skill) => !cloudOptions.includes(skill)),
-      ...savedOther,
-    ].join(", "),
+    operatingSystems: savedSkills.filter((skill) => osOptions.includes(skill)),
+    industries: savedSkills.filter((skill) => industryOptions.includes(skill)),
+    other: savedSkills
+      .filter(
+        (skill) =>
+          !languageOptions.includes(skill) &&
+          !dbOptions.includes(skill) &&
+          !frameworkOptions.includes(skill) &&
+          !osOptions.includes(skill) &&
+          !industryOptions.includes(skill),
+      )
+      .join(", "),
     years: p.years,
     skillExperiences: { ...p.skillExperiences },
   });
@@ -641,7 +672,8 @@ function buildProfileRegistrationInput(): ProfileRegistrationInput {
       languages: skills.languages.join(", "),
       db: skills.db.join(", "),
       frameworks: skills.frameworks.join(", "),
-      cloud: skills.cloud.join(", "),
+      operatingSystems: skills.operatingSystems.join(", "),
+      industries: skills.industries.join(", "),
       otherSkills: otherSkills.join(", "),
       years: skills.years,
       skillExperiences: Object.fromEntries(
@@ -765,6 +797,10 @@ function formatFileSize(bytes: number) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.compactField {
+  align-self: start;
 }
 
 .one {
