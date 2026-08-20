@@ -153,7 +153,7 @@
 
               <dl :class="$style.stats">
                 <div>
-                  <dt>3step</dt>
+                  <dt>4step</dt>
                   <dd>登録から案件応募まで</dd>
                 </div>
                 <div>
