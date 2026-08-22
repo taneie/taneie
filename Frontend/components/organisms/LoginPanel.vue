@@ -1314,7 +1314,7 @@ onBeforeUnmount(() => {
   color: var(--primary);
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
 }
 
 .freeContent h2 {
@@ -1363,7 +1363,7 @@ onBeforeUnmount(() => {
   color: var(--primary);
   font-size: 80px;
   font-weight: 900;
-  letter-spacing: -0.06em;
+  letter-spacing: 0;
 }
 
 .freePrice small {

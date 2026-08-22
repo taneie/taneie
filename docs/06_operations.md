@@ -393,8 +393,12 @@ docker compose down -v
 | `WEB_PUSH_PUBLIC_KEY`    | 通知利用時○ | 空                                                                               | VAPID公開鍵                           |
 | `WEB_PUSH_PRIVATE_KEY`   | 通知利用時○ | 空                                                                               | VAPID秘密鍵                           |
 | `WEB_PUSH_SUBJECT`       | 通知利用時○ | `mailto:admin@example.com`                                                       | VAPID subject                         |
-| `RESEND_API_KEY`         | メール利用時○ | 空                                                                             | 生存確認メール送信用のResend API key  |
-| `EMAIL_FROM`             | メール利用時○ | `Frichy <noreply@example.com>`                                                  | 生存確認メールの送信元。Resendで検証済みのドメインを使う |
+| `SMTP_HOST`              | メール利用時○ | `<initial-domain>.sakura.ne.jp`                                                 | さくらSMTPサーバー                    |
+| `SMTP_PORT`              | メール利用時○ | `587`                                                                           | SMTPポート。465を使う場合は `SMTP_SECURE=true` |
+| `SMTP_SECURE`            |           - | `false`                                                                         | 465は `true`、587は `false`           |
+| `SMTP_USER`              | メール利用時○ | `noreply@example.com`                                                           | SMTP認証ユーザー。さくらのメールアドレス |
+| `SMTP_PASSWORD`          | メール利用時○ | 空                                                                               | SMTP認証パスワード。Secret Managerで管理 |
+| `EMAIL_FROM`             | メール利用時○ | `Frichy <noreply@example.com>`                                                  | 生存確認メールの送信元                |
 | `EMAIL_REPLY_TO`         |           - | `sales@example.com`                                                              | 生存確認メールの返信先                |
 | `DATA_ENCRYPTION_KEY`    |       本番○ | 空                                                                               | 個人情報暗号化鍵                      |
 | `GCS_BUCKET_NAME`          |       本番○ | 空                                                                               | 本番レジュメ保存用のGoogle Cloud Storage bucket名 |
@@ -572,7 +576,7 @@ curl -i https://frichy-322534405950.asia-northeast1.run.app/api/health
 | 認証 | 営業ユーザーまたは検証用ユーザーでログインできる |
 | 主要API | プロフィール、案件情報、チャットの取得でエラーが出ない |
 | レジュメ | 本番ではGCS保存が有効で、アップロード/閲覧導線が想定通り動く |
-| 生存確認メール | `RESEND_API_KEY` / `EMAIL_FROM` 設定済み環境では営業画面から送信できる |
+| 生存確認メール | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASSWORD` / `EMAIL_FROM` 設定済み環境では営業画面から送信できる |
 | 外部案件取り込み | `EXTERNAL_PROJECTS_API_KEY` 設定済み環境では手動取り込みAPIが実行できる |
 
 ### 12.5 Artifact Registryへimageだけpushする手順
@@ -591,12 +595,12 @@ Cloud Runへ反映せず、imageだけをArtifact Registryへ置く場合はGitH
 
 | 変更対象 | 反映方法 |
 | -------- | -------- |
-| `DATABASE_URL` / `JWT_SECRET` / `DATA_ENCRYPTION_KEY` / `CORS_ORIGIN` / `RESEND_API_KEY` / `EXTERNAL_PROJECTS_API_KEY` / `EXTERNAL_PROJECTS_IMPORT_SECRET` / `JOB_CLEANUP_SECRET` | GCP Secret Managerの新versionを追加し、`Deploy Cloud Run` を再実行する |
-| `NUXT_PUBLIC_API_BASE` / `NUXT_PUBLIC_SHOW_DEMO_LOGIN` / `GCS_BUCKET_NAME` / `APP_PUBLIC_URL` / `EMAIL_FROM` / `EMAIL_REPLY_TO` / `EXTERNAL_PROJECTS_API_URL` | GitHub Actions Variablesを更新し、`Deploy Cloud Run` を再実行する |
+| `DATABASE_URL` / `JWT_SECRET` / `DATA_ENCRYPTION_KEY` / `CORS_ORIGIN` / `SMTP_PASSWORD` / `EXTERNAL_PROJECTS_API_KEY` / `EXTERNAL_PROJECTS_IMPORT_SECRET` / `JOB_CLEANUP_SECRET` | GCP Secret Managerの新versionを追加し、`Deploy Cloud Run` を再実行する |
+| `NUXT_PUBLIC_API_BASE` / `NUXT_PUBLIC_SHOW_DEMO_LOGIN` / `GCS_BUCKET_NAME` / `APP_PUBLIC_URL` / `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `EMAIL_FROM` / `EMAIL_REPLY_TO` / `EXTERNAL_PROJECTS_API_URL` | GitHub Actions Variablesを更新し、`Deploy Cloud Run` を再実行する |
 | Vercel開発環境の値 | Vercel Project SettingsのEnvironment Variablesを更新し、Vercelで再デプロイする |
 
 秘密値はGitHub repositoryへcommitしない。
-`RESEND_API_KEY` をCloud Runへ渡す場合は、GitHub Actions Variable `SECRET_RESEND_API_KEY` にGCP Secret Manager上のsecret名を設定する。
+`SMTP_PASSWORD` をCloud Runへ渡す場合は、GitHub Actions Variable `SECRET_SMTP_PASSWORD` にGCP Secret Manager上のsecret名を設定する。
 外部案件APIキーは既定で Secret Manager の `frichy-prod-external-projects-api-key`、取り込み用共有secretは `frichy-prod-external-projects-import-secret` をCloud Runへ渡す。
 期限切れ案件削除用secretは既定で Secret Manager の `frichy-prod-job-cleanup-secret` をCloud Runへ渡す。
 `Deploy Cloud Run` workflowはCloud SchedulerのHTTPヘッダー更新時に `frichy-prod-job-cleanup-secret` を読むため、deploy service account `frichy-github-deployer@frichy.iam.gserviceaccount.com` に同secretの `roles/secretmanager.secretAccessor` を付与しておく。

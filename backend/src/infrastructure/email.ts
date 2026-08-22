@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer";
 import { AppError } from "../domain/types.js";
 import { config } from "./config.js";
 
@@ -13,44 +14,76 @@ export interface EmailSender {
   send(message: EmailMessage): Promise<void>;
 }
 
-type FetchLike = (
-  input: string,
-  init: {
-    method: string;
-    headers: Record<string, string>;
-    body: string;
-  },
-) => Promise<{
-  ok: boolean;
-  status: number;
-  text(): Promise<string>;
-}>;
+type MailPayload = {
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  replyTo?: string;
+};
 
-interface ResendEmailSenderOptions {
-  apiKey?: string;
+type MailTransporter = {
+  sendMail(message: MailPayload): Promise<unknown>;
+};
+
+interface SmtpEmailSenderOptions {
+  host?: string;
+  port?: number;
+  secure?: boolean;
+  user?: string;
+  password?: string;
   from?: string;
   replyTo?: string;
-  fetchFn?: FetchLike;
+  transporter?: MailTransporter;
 }
 
-export class ResendEmailSender implements EmailSender {
-  private readonly apiKey: string;
+export class SmtpEmailSender implements EmailSender {
+  private readonly host: string;
+  private readonly port: number;
+  private readonly secure: boolean;
+  private readonly user: string;
+  private readonly password: string;
   private readonly from: string;
   private readonly replyTo: string;
-  private readonly fetchFn: FetchLike;
+  private readonly transporter: MailTransporter;
 
-  constructor(options: ResendEmailSenderOptions = {}) {
-    this.apiKey = (options.apiKey ?? config.resendApiKey).trim();
+  constructor(options: SmtpEmailSenderOptions = {}) {
+    this.host = (options.host ?? config.smtpHost).trim();
+    this.port = options.port ?? config.smtpPort;
+    this.secure = options.secure ?? config.smtpSecure ?? this.port === 465;
+    this.user = (options.user ?? config.smtpUser).trim();
+    this.password = (options.password ?? config.smtpPassword).trim();
     this.from = (options.from ?? config.emailFrom).trim();
     this.replyTo = (options.replyTo ?? config.emailReplyTo).trim();
-    this.fetchFn = options.fetchFn ?? fetch;
+    this.transporter =
+      options.transporter ??
+      nodemailer.createTransport({
+        host: this.host,
+        port: this.port,
+        secure: this.secure,
+        requireTLS: !this.secure,
+        auth: {
+          user: this.user,
+          pass: this.password,
+        },
+      });
   }
 
   assertReady() {
-    if (this.apiKey && this.from) return;
+    if (
+      this.host &&
+      Number.isFinite(this.port) &&
+      this.port > 0 &&
+      this.user &&
+      this.password &&
+      this.from
+    )
+      return;
+
     throw new AppError(
       503,
-      "メール送信設定が未設定です。RESEND_API_KEY と EMAIL_FROM を設定してください。",
+      "メール送信設定が未設定です。SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASSWORD / EMAIL_FROM を設定してください。",
       "EMAIL_NOT_CONFIGURED",
     );
   }
@@ -58,39 +91,32 @@ export class ResendEmailSender implements EmailSender {
   async send(message: EmailMessage) {
     this.assertReady();
 
-    const response = await this.fetchFn("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      await this.transporter.sendMail({
         from: this.from,
         to: message.to,
         subject: message.subject,
         text: message.text,
         html: message.html,
-        ...(this.replyTo ? { reply_to: this.replyTo } : {}),
-      }),
-    });
+        ...(this.replyTo ? { replyTo: this.replyTo } : {}),
+      });
 
-    if (response.ok) return;
-
-    const body = await response.text().catch(() => "");
-    console.error("Email delivery failed", {
-      status: response.status,
-      body: body.slice(0, 500),
-    });
-    throw new AppError(
-      502,
-      "メール送信に失敗しました。送信サービスの設定を確認してください。",
-      "EMAIL_DELIVERY_FAILED",
-    );
+      return;
+    } catch (error) {
+      console.error("Email delivery failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new AppError(
+        502,
+        "メール送信に失敗しました。SMTP設定を確認してください。",
+        "EMAIL_DELIVERY_FAILED",
+      );
+    }
   }
 }
 
 export function createEmailSender(): EmailSender {
-  return new ResendEmailSender();
+  return new SmtpEmailSender();
 }
 
 export function buildAliveCheckEmail(input: {

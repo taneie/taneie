@@ -3,16 +3,22 @@ import { describe, it } from "node:test";
 import { AppError } from "../backend/src/domain/types";
 import {
   buildAliveCheckEmail,
-  ResendEmailSender,
+  SmtpEmailSender,
 } from "../backend/src/infrastructure/email";
 
 describe("メール送信基盤", () => {
   /**
-   * @testData API key/fromが空のResendEmailSender。
+   * @testData SMTP接続情報/fromが空のSmtpEmailSender。
    * @expected メール送信設定未完了として503 `EMAIL_NOT_CONFIGURED` を投げる。
    */
-  it("ResendEmailSender rejects sending when required config is missing", () => {
-    const sender = new ResendEmailSender({ apiKey: "", from: "" });
+  it("SmtpEmailSender rejects sending when required config is missing", () => {
+    const sender = new SmtpEmailSender({
+      host: "",
+      port: 587,
+      user: "",
+      password: "",
+      from: "",
+    });
 
     assert.throws(
       () => sender.assertReady(),
@@ -24,30 +30,31 @@ describe("メール送信基盤", () => {
   });
 
   /**
-   * @testData Resend API key/from/replyTo、送信先、件名、本文、HTML。
-   * @expected Resend HTTP APIへAuthorization付きでfrom/to/subject/text/html/reply_toをPOSTする。
+   * @testData SMTP接続情報/from/replyTo、送信先、件名、本文、HTML。
+   * @expected SMTP transportへfrom/to/subject/text/html/replyToを渡す。
    */
-  it("ResendEmailSender posts email payload to Resend API", async () => {
-    let request: {
-      input: string;
-      body: Record<string, unknown>;
-      headers: Record<string, string>;
+  it("SmtpEmailSender sends email payload through SMTP transport", async () => {
+    let sent: {
+      from: string;
+      to: string;
+      subject: string;
+      text: string;
+      html?: string;
+      replyTo?: string;
     } | null = null;
-    const sender = new ResendEmailSender({
-      apiKey: "resend-key",
+    const sender = new SmtpEmailSender({
+      host: "example.sakura.ne.jp",
+      port: 587,
+      secure: false,
+      user: "noreply@example.com",
+      password: "mail-password",
       from: "Frichy <noreply@example.com>",
       replyTo: "sales@example.com",
-      fetchFn: async (input, init) => {
-        request = {
-          input,
-          body: JSON.parse(init.body),
-          headers: init.headers,
-        };
-        return {
-          ok: true,
-          status: 200,
-          text: async () => "",
-        };
+      transporter: {
+        sendMail: async (message) => {
+          sent = message;
+          return {};
+        },
       },
     });
 
@@ -58,12 +65,13 @@ describe("メール送信基盤", () => {
       html: "<p>html</p>",
     });
 
-    assert.ok(request);
-    assert.equal(request.input, "https://api.resend.com/emails");
-    assert.equal(request.headers.Authorization, "Bearer resend-key");
-    assert.equal(request.body.from, "Frichy <noreply@example.com>");
-    assert.equal(request.body.to, "freelancer@example.com");
-    assert.equal(request.body.reply_to, "sales@example.com");
+    assert.ok(sent);
+    assert.equal(sent.from, "Frichy <noreply@example.com>");
+    assert.equal(sent.to, "freelancer@example.com");
+    assert.equal(sent.subject, "subject");
+    assert.equal(sent.text, "text");
+    assert.equal(sent.html, "<p>html</p>");
+    assert.equal(sent.replyTo, "sales@example.com");
   });
 
   /**

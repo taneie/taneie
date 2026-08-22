@@ -14,6 +14,7 @@
 | `05_auth_security_design.md` | 認証・認可、暗号化、個人情報保護、エラー設計    |
 | `06_operations.md`           | 起動手順、環境変数、DB運用、デプロイ、確認コマンド |
 | `07_open_items.md`           | 実装から見える未決事項・改善候補                |
+| `08_email_setup_sakura.md`   | さくらSMTPを使ったメール送信設定手順            |
 
 ## 前提
 

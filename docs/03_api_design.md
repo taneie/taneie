@@ -372,7 +372,7 @@ salesは `freelancerProfileId` クエリで対象者を指定できる。
 - `availabilityStatus` が `ready` ではない
 - `lastUpdatedOn` が14日以上前
 
-メール送信には `RESEND_API_KEY` と `EMAIL_FROM` が必要。未設定の場合は `EMAIL_NOT_CONFIGURED` を返し、送信済み扱いにはしない。
+メール送信には `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `EMAIL_FROM` が必要。未設定の場合は `EMAIL_NOT_CONFIGURED` を返し、送信済み扱いにはしない。
 
 レスポンスには `targetCount` に加えて `mailSentCount` と `mailFailedCount` を含める。
 

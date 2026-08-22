@@ -30,6 +30,10 @@ env:
   NUXT_PUBLIC_API_BASE: ${{ vars.NUXT_PUBLIC_API_BASE || '/api' }}
   NUXT_PUBLIC_SHOW_DEMO_LOGIN: ${{ vars.NUXT_PUBLIC_SHOW_DEMO_LOGIN || 'false' }}
   APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL || 'https://frichy.jp' }}
+  SMTP_HOST: ${{ vars.SMTP_HOST || '' }}
+  SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
+  SMTP_SECURE: ${{ vars.SMTP_SECURE || 'false' }}
+  SMTP_USER: ${{ vars.SMTP_USER || '' }}
   EMAIL_FROM: ${{ vars.EMAIL_FROM || '' }}
   EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO || '' }}
   EXTERNAL_PROJECTS_API_URL: ${{ vars.EXTERNAL_PROJECTS_API_URL || 'https://simpleprj-0305-489903.web.app/api/external/projectInfos' }}
@@ -37,7 +41,7 @@ env:
   SECRET_JWT_SECRET: ${{ vars.SECRET_JWT_SECRET || 'frichy-prod-jwt-secret' }}
   SECRET_DATA_ENCRYPTION_KEY: ${{ vars.SECRET_DATA_ENCRYPTION_KEY || 'frichy-prod-data-encryption-key' }}
   SECRET_CORS_ORIGIN: ${{ vars.SECRET_CORS_ORIGIN || 'frichy-prod-cors-origin' }}
-  SECRET_RESEND_API_KEY: ${{ vars.SECRET_RESEND_API_KEY || '' }}
+  SECRET_SMTP_PASSWORD: ${{ vars.SECRET_SMTP_PASSWORD || '' }}
   SECRET_EXTERNAL_PROJECTS_API_KEY: ${{ vars.SECRET_EXTERNAL_PROJECTS_API_KEY || 'frichy-prod-external-projects-api-key' }}
   SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET: ${{ vars.SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET || 'frichy-prod-external-projects-import-secret' }}
   SECRET_JOB_CLEANUP_SECRET: ${{ vars.SECRET_JOB_CLEANUP_SECRET || 'frichy-prod-job-cleanup-secret' }}
@@ -149,6 +153,14 @@ jobs:
             "APP_PUBLIC_URL=${APP_PUBLIC_URL}"
             "EXTERNAL_PROJECTS_API_URL=${EXTERNAL_PROJECTS_API_URL}"
           )
+          if [ -n "${SMTP_HOST}" ]; then
+            ENV_VARS+=("SMTP_HOST=${SMTP_HOST}")
+            ENV_VARS+=("SMTP_PORT=${SMTP_PORT}")
+            ENV_VARS+=("SMTP_SECURE=${SMTP_SECURE}")
+          fi
+          if [ -n "${SMTP_USER}" ]; then
+            ENV_VARS+=("SMTP_USER=${SMTP_USER}")
+          fi
           if [ -n "${EMAIL_FROM}" ]; then
             ENV_VARS+=("EMAIL_FROM=${EMAIL_FROM}")
           fi
@@ -165,8 +177,8 @@ jobs:
             "EXTERNAL_PROJECTS_IMPORT_SECRET=${SECRET_EXTERNAL_PROJECTS_IMPORT_SECRET}:latest"
             "JOB_CLEANUP_SECRET=${SECRET_JOB_CLEANUP_SECRET}:latest"
           )
-          if [ -n "${SECRET_RESEND_API_KEY}" ]; then
-            SECRETS+=("RESEND_API_KEY=${SECRET_RESEND_API_KEY}:latest")
+          if [ -n "${SECRET_SMTP_PASSWORD}" ]; then
+            SECRETS+=("SMTP_PASSWORD=${SECRET_SMTP_PASSWORD}:latest")
           fi
 
           ENV_VARS_ARG="$(IFS=,; echo "${ENV_VARS[*]}")"

@@ -9,6 +9,18 @@ function readEnv(name: string, fallback: string) {
   return value.trim().replace(/^["']|["']$/g, "");
 }
 
+function readNumberEnv(name: string, fallback: number) {
+  const value = Number(readEnv(name, String(fallback)));
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function readOptionalBooleanEnv(name: string) {
+  const value = readEnv(name, "").toLowerCase();
+  if (!value) return undefined;
+
+  return ["1", "true", "yes", "on"].includes(value);
+}
+
 const corsOrigins = readEnv(
   "CORS_ORIGIN",
   "http://127.0.0.1:5173,http://localhost:5173",
@@ -28,7 +40,11 @@ export const config = {
   webPushPublicKey: readEnv("WEB_PUSH_PUBLIC_KEY", ""),
   webPushPrivateKey: readEnv("WEB_PUSH_PRIVATE_KEY", ""),
   webPushSubject: readEnv("WEB_PUSH_SUBJECT", "mailto:admin@example.com"),
-  resendApiKey: readEnv("RESEND_API_KEY", ""),
+  smtpHost: readEnv("SMTP_HOST", ""),
+  smtpPort: readNumberEnv("SMTP_PORT", 587),
+  smtpSecure: readOptionalBooleanEnv("SMTP_SECURE"),
+  smtpUser: readEnv("SMTP_USER", ""),
+  smtpPassword: readEnv("SMTP_PASSWORD", ""),
   emailFrom: readEnv("EMAIL_FROM", ""),
   emailReplyTo: readEnv("EMAIL_REPLY_TO", ""),
   dataEncryptionKey: readEnv("DATA_ENCRYPTION_KEY", ""),
