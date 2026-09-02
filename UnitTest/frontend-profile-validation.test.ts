@@ -34,13 +34,13 @@ function registrationInput(
     },
     terms: {
       desiredRate: "80",
-      startDate: "2026-09-01",
+      startDate: "2099-09-01",
       workRate: "週5",
       remote: "フルリモート",
       availability: "即稼働可",
       resume: null,
     },
-    meetingCandidates: ["2026-09-02T10:00"],
+    meetingCandidates: ["2099-09-02T10:00"],
     pledgeAccepted: true,
     ...overrides,
   };
@@ -119,7 +119,7 @@ describe("プロフィール登録バリデーション", () => {
       registrationInput({
         terms: {
           desiredRate: "80",
-          startDate: "2026-09-01",
+          startDate: "2099-09-01",
           workRate: "週5",
           remote: "フルリモート",
           availability: "即稼働可",
@@ -215,7 +215,7 @@ describe("プロフィール登録バリデーション", () => {
       registrationInput({
         terms: {
           desiredRate: "29",
-          startDate: "2026-09-01",
+          startDate: "2099-09-01",
           workRate: "週5",
           remote: "フルリモート",
           availability: "即稼働可",
@@ -240,7 +240,7 @@ describe("プロフィール登録バリデーション", () => {
         },
         terms: {
           desiredRate: "300",
-          startDate: "2026-09-01",
+          startDate: "2099-09-01",
           workRate: "週5",
           remote: "フルリモート",
           availability: "即稼働可",
@@ -251,5 +251,58 @@ describe("プロフィール登録バリデーション", () => {
     );
     assert.equal(boundaryValues.years, undefined);
     assert.equal(boundaryValues.desiredRate, undefined);
+  });
+
+  /**
+   * @testData 異様に長い希望単価、指数表記の希望単価、過去日の初回面談候補。
+   * @expected 希望単価は3桁までの整数として扱われ、初回面談候補は現在以降だけ許容される。
+   */
+  it("希望単価の桁数と面談候補の過去日を検証する", () => {
+    const tooLongRate = validateProfileRegistrationInput(
+      registrationInput({
+        terms: {
+          desiredRate: "222222222222222222222222222222",
+          startDate: "2099-09-01",
+          workRate: "週5",
+          remote: "フルリモート",
+          availability: "即稼働可",
+          resume: null,
+        },
+      }),
+      { hasExistingResume: true },
+    );
+    assert.equal(
+      tooLongRate.desiredRate,
+      "希望単価は30〜300万円で入力してください。",
+    );
+
+    const exponentialRate = validateProfileRegistrationInput(
+      registrationInput({
+        terms: {
+          desiredRate: "1e2",
+          startDate: "2099-09-01",
+          workRate: "週5",
+          remote: "フルリモート",
+          availability: "即稼働可",
+          resume: null,
+        },
+      }),
+      { hasExistingResume: true },
+    );
+    assert.equal(
+      exponentialRate.desiredRate,
+      "希望単価は30〜300万円で入力してください。",
+    );
+
+    const pastCandidate = validateProfileRegistrationInput(
+      registrationInput({
+        meetingCandidates: ["2000-01-01T10:00"],
+      }),
+      { hasExistingResume: true },
+    );
+    assert.equal(
+      pastCandidate.meetingCandidates,
+      "初回面談の候補日は現在以降の日時を入力してください。",
+    );
   });
 });

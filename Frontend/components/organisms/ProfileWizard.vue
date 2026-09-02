@@ -308,24 +308,59 @@
           v-else-if="state.wizardStep === 3"
           :class="$style.formGrid"
         >
-          <FormInput
-            v-model="terms.desiredRate"
-            label="希望単価（万円）"
-            name="desiredRate"
-            type="number"
-            :min="MIN_PROFILE_DESIRED_RATE"
-            :max="MAX_PROFILE_DESIRED_RATE"
-            :error="validationErrors.desiredRate"
-            @update:model-value="markProfileFieldDirty('desiredRate')"
-          />
-          <FormInput
-            v-model="terms.startDate"
-            label="稼働開始可能日"
-            name="startDate"
-            type="date"
-            :error="validationErrors.startDate"
-            @update:model-value="markProfileFieldDirty('startDate')"
-          />
+          <div
+            :class="[
+              $style.field,
+              { [$style.invalidField]: validationErrors.desiredRate },
+            ]"
+          >
+            <span>希望単価（万円）</span>
+            <input
+              v-model="terms.desiredRate"
+              :class="[
+                $style.control,
+                { [$style.invalidControl]: validationErrors.desiredRate },
+              ]"
+              name="desiredRate"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="3"
+              placeholder="例: 80"
+              @input="onDesiredRateInput"
+            />
+            <p :class="$style.helpText">
+              30〜300万円の範囲で、万円単位の整数を入力してください。
+            </p>
+            <p v-if="validationErrors.desiredRate" :class="$style.errorText">
+              {{ validationErrors.desiredRate }}
+            </p>
+          </div>
+          <div
+            :class="[
+              $style.field,
+              { [$style.invalidField]: validationErrors.startDate },
+            ]"
+          >
+            <span>最短稼働開始日</span>
+            <input
+              v-model="terms.startDate"
+              :class="[
+                $style.control,
+                { [$style.invalidControl]: validationErrors.startDate },
+              ]"
+              name="startDate"
+              type="date"
+              :min="minimumStartDate"
+              @input="markProfileFieldDirty('startDate')"
+            />
+            <p :class="$style.helpText">
+              最短で案件に参画できる日を入力してください。
+            </p>
+            <p v-if="validationErrors.startDate" :class="$style.errorText">
+              {{ validationErrors.startDate }}
+            </p>
+          </div>
           <FormSelect
             v-model="terms.workRate"
             label="稼働率"
@@ -342,21 +377,48 @@
             :error="validationErrors.remote"
             @update:model-value="markProfileFieldDirty('remote')"
           />
-          <FormSelect
-            v-model="terms.availability"
-            label="提案可能ステータス"
-            name="availability"
-            :options="['', ...availabilityOptions]"
-            :error="validationErrors.availability"
-            @update:model-value="markProfileFieldDirty('availability')"
-          />
+          <div
+            :class="[
+              $style.field,
+              { [$style.invalidField]: validationErrors.availability },
+            ]"
+          >
+            <span>案件提案の受付状況</span>
+            <AppSelect
+              v-model="terms.availability"
+              name="availability"
+              :options="['', ...availabilityOptions]"
+              :error="Boolean(validationErrors.availability)"
+              @update:model-value="markProfileFieldDirty('availability')"
+            />
+            <p :class="$style.helpText">
+              現在、案件紹介を受けられる状態かを選択してください。
+            </p>
+            <dl :class="$style.optionGuide">
+              <div>
+                <dt>即稼働可</dt>
+                <dd>すぐに案件提案・参画調整を進められる状態</dd>
+              </div>
+              <div>
+                <dt>稼働可能開始日</dt>
+                <dd>上の最短稼働開始日以降であれば提案可能な状態</dd>
+              </div>
+              <div>
+                <dt>営業停止中</dt>
+                <dd>今は案件提案を受けない状態</dd>
+              </div>
+            </dl>
+            <p v-if="validationErrors.availability" :class="$style.errorText">
+              {{ validationErrors.availability }}
+            </p>
+          </div>
           <div
             :class="[
               $style.field,
               { [$style.invalidField]: validationErrors.resume },
             ]"
           >
-            <span>レジュメ（PDF / Word / Excel）</span>
+            <span>レジュメ（職務経歴書・スキルシート）</span>
             <div :class="$style.filePicker">
               <BaseButton
                 type="button"
@@ -375,6 +437,9 @@
               accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               @change="onResumeChange"
             />
+            <p :class="$style.helpText">
+              職務経歴書、スキルシートなど、案件提案に使える経歴資料を添付してください。PDF / Word / Excelに対応しています。
+            </p>
             <p v-if="validationErrors.resume" :class="$style.errorText">
               {{ validationErrors.resume }}
             </p>
@@ -426,6 +491,9 @@
         >
           <div :class="$style.field">
             <span>初回面談の候補日</span>
+            <p :class="$style.helpText">
+              営業担当との初回面談が可能な、現在以降の日時を入力してください。
+            </p>
             <div :class="$style.dateRows">
               <div
                 v-for="(_, index) in meetingCandidates"
@@ -442,6 +510,7 @@
                     },
                   ]"
                   type="datetime-local"
+                  :min="minimumMeetingCandidateDateTime"
                   @input="markProfileFieldDirty('meetingCandidates')"
                 />
                 <BaseButton
@@ -563,7 +632,7 @@ const stepGuides = [
     title: "希望条件とレジュメを登録",
     summary: "単価・稼働条件・レジュメ",
     description:
-      "希望単価、開始可能日、稼働率、リモート条件、レジュメをそろえると提案精度が上がります。",
+      "希望単価、最短稼働開始日、案件提案の受付状況、レジュメをそろえると提案精度が上がります。",
   },
   {
     title: "初回面談候補と誓約同意",
@@ -725,6 +794,8 @@ const currentStepRequirements = computed(() =>
     (item) => item.step === state.value.wizardStep,
   ),
 );
+const minimumStartDate = currentDateInputValue();
+const minimumMeetingCandidateDateTime = currentDateTimeInputValue();
 
 watch(() => state.value.profile.id, hydrateForms, {
   immediate: true,
@@ -803,6 +874,13 @@ function onResumeChange(event: Event) {
   const [file] = Array.from((event.target as HTMLInputElement).files || []);
   terms.resume = file || null;
   markProfileFieldDirty("resume");
+}
+
+function onDesiredRateInput(event: Event) {
+  terms.desiredRate = (event.target as HTMLInputElement).value
+    .replace(/\D/g, "")
+    .slice(0, 3);
+  markProfileFieldDirty("desiredRate");
 }
 
 function requestResumeDeletion() {
@@ -916,6 +994,19 @@ function formatFileSize(bytes: number) {
   return `${Math.ceil(bytes / 1024)}KB`;
 }
 
+function currentDateInputValue(date = new Date()) {
+  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`;
+}
+
+function currentDateTimeInputValue() {
+  const date = new Date();
+  return `${currentDateInputValue(date)}T${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`;
+}
+
+function padDatePart(value: number) {
+  return String(value).padStart(2, "0");
+}
+
 function stepGuide(step: number) {
   return stepGuides[step - 1] || stepGuides[0];
 }
@@ -1027,6 +1118,8 @@ function stepStatusLabel(step: number) {
   padding: 10px 11px;
   background: #fff;
   color: var(--ink);
+  font-size: 16px;
+  line-height: 1.45;
   outline: none;
 }
 
@@ -1130,6 +1223,45 @@ textarea.control {
   border-radius: 8px;
   padding: 10px;
   background: #fff7f7;
+}
+
+.helpText {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.optionGuide {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 0;
+}
+
+.optionGuide div {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.36fr) minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.optionGuide dt,
+.optionGuide dd {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.optionGuide dt {
+  color: #10294f;
+  font-weight: 900;
+}
+
+.optionGuide dd {
+  color: var(--muted);
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .errorText {
@@ -1573,6 +1705,11 @@ textarea.control {
 
   .stepGuide {
     grid-template-columns: 1fr;
+  }
+
+  .optionGuide div {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
 
   .dateRow {

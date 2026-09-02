@@ -106,28 +106,28 @@ export function validateProfileRegistrationInput(
   }
   if (!values.terms.desiredRate.trim()) {
     errors.desiredRate = "希望単価を入力してください。";
-  } else if (
-    !isIntegerInRange(
-      values.terms.desiredRate,
-      MIN_PROFILE_DESIRED_RATE,
-      MAX_PROFILE_DESIRED_RATE,
-    )
-  ) {
+  } else if (!isValidProfileDesiredRate(values.terms.desiredRate)) {
     errors.desiredRate = `希望単価は${MIN_PROFILE_DESIRED_RATE}〜${MAX_PROFILE_DESIRED_RATE}万円で入力してください。`;
   }
   if (!values.terms.startDate.trim())
-    errors.startDate = "稼働開始可能日を入力してください。";
+    errors.startDate = "最短稼働開始日を入力してください。";
   if (!values.terms.workRate.trim())
     errors.workRate = "稼働率を選択してください。";
   if (!values.terms.remote.trim())
     errors.remote = "リモート可否を選択してください。";
   if (!values.terms.availability.trim())
-    errors.availability = "提案可能ステータスを選択してください。";
+    errors.availability = "案件提案の受付状況を選択してください。";
   if (!options.hasExistingResume && !values.terms.resume?.name)
     errors.resume = "レジュメを登録してください。";
-  if (!profileRegistrationCandidates(values).length)
+  const candidates = profileRegistrationCandidates(values);
+  if (!candidates.length)
     errors.meetingCandidates =
       "初回面談の候補日を1つ以上入力してください。";
+  else if (
+    candidates.some((candidate) => !isFutureProfileMeetingCandidate(candidate))
+  )
+    errors.meetingCandidates =
+      "初回面談の候補日は現在以降の日時を入力してください。";
   if (!values.pledgeAccepted)
     errors.pledgeAccepted = "誓約条件を確認し、同意してください。";
 
@@ -169,6 +169,28 @@ export function isValidProfilePhoneNumber(value: string) {
   );
 }
 
+export function isValidProfileDesiredRate(value: string) {
+  const trimmed = value.trim();
+  if (!/^\d{1,3}$/.test(trimmed)) return false;
+  return isIntegerInRange(
+    trimmed,
+    MIN_PROFILE_DESIRED_RATE,
+    MAX_PROFILE_DESIRED_RATE,
+  );
+}
+
+export function isFutureProfileMeetingCandidate(
+  value: string,
+  now = new Date(),
+) {
+  const date = parseProfileDateTime(value);
+  if (!date) return false;
+
+  const currentMinute = new Date(now);
+  currentMinute.setSeconds(0, 0);
+  return date.getTime() >= currentMinute.getTime();
+}
+
 function isNumberInRange(value: string, min: number, max: number) {
   const number = Number(value);
   return Number.isFinite(number) && number >= min && number <= max;
@@ -177,6 +199,14 @@ function isNumberInRange(value: string, min: number, max: number) {
 function isIntegerInRange(value: string, min: number, max: number) {
   const number = Number(value);
   return Number.isInteger(number) && number >= min && number <= max;
+}
+
+function parseProfileDateTime(value: string) {
+  const normalized = value.trim().replace(" ", "T");
+  if (!normalized) return null;
+
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function profileRegistrationCandidates(values: ProfileRegistrationInput) {

@@ -69,6 +69,8 @@ import {
   MAX_PROFILE_DESIRED_RATE,
   MAX_PROFILE_EXPERIENCE_YEARS,
   MIN_PROFILE_DESIRED_RATE,
+  isFutureProfileMeetingCandidate,
+  isValidProfileDesiredRate,
   isValidProfileEmail,
   isValidProfileNameKana,
   isValidProfilePhoneNumber,
@@ -1593,12 +1595,9 @@ function validateProfileRegistration(
       2,
     );
   }
-  const desiredRate = Number(values.terms.desiredRate);
   if (
     values.terms.desiredRate &&
-    (!Number.isInteger(desiredRate) ||
-      desiredRate < MIN_PROFILE_DESIRED_RATE ||
-      desiredRate > MAX_PROFILE_DESIRED_RATE)
+    !isValidProfileDesiredRate(values.terms.desiredRate)
   ) {
     return showProfileRegistrationError(
       `希望単価は${MIN_PROFILE_DESIRED_RATE}〜${MAX_PROFILE_DESIRED_RATE}万円で入力してください。`,
@@ -1626,6 +1625,14 @@ function validateProfileRegistration(
   if (!candidates.length) {
     return showProfileRegistrationError(
       "初回面談の候補日を1つ以上入力してください。",
+      4,
+    );
+  }
+  if (
+    candidates.some((candidate) => !isFutureProfileMeetingCandidate(candidate))
+  ) {
+    return showProfileRegistrationError(
+      "初回面談の候補日は現在以降の日時を入力してください。",
       4,
     );
   }
