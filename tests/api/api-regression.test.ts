@@ -386,7 +386,7 @@ describe("APIプロフィール・案件フロー", () => {
     );
     created.applicationIds.add(application.data.id);
     assert.equal(application.status, 201);
-    assert.equal(application.data.status, "初回面談前");
+    assert.equal(application.data.status, "初回面談待ち");
 
     const duplicate = await server.request(
       "/applications",
@@ -407,7 +407,7 @@ describe("APIプロフィール・案件フロー", () => {
       sales.token,
     );
     assert.equal(changed.status, 200);
-    assert.equal(changed.data.status, "初回面談前");
+    assert.equal(changed.data.status, "初回面談待ち");
 
     await prisma.job.delete({ where: { id: job.data.id } });
     const applicationsAfterJobDelete = await server.request<

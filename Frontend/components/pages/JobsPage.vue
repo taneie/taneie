@@ -53,8 +53,25 @@
           :class="$style.appliedItem"
         >
           <div :class="$style.applicationMeta">
-            <TagBadge tone="blue">{{ item.application.status }}</TagBadge>
+            <TagBadge :tone="applicationStatusTone(item.application.status)">
+              {{ applicationDisplayStatus(item.application.status) }}
+            </TagBadge>
             <span>{{ item.application.appliedAt }} 応募</span>
+          </div>
+          <div :class="$style.applicationProgress">
+            <ol>
+              <li
+                v-for="step in applicationFlowSteps(item.application.status)"
+                :key="step.label"
+                :class="[
+                  step.done ? $style.flowDone : '',
+                  step.current ? $style.flowCurrent : '',
+                ]"
+              >
+                <span>{{ step.label }}</span>
+              </li>
+            </ol>
+            <p>{{ applicationFlowNote(item.application.status) }}</p>
           </div>
           <JobCard
             :job="item.job"
@@ -159,6 +176,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 
 const {
+  state,
   filters,
   filteredJobs,
   appliedJobCards,
@@ -195,6 +213,13 @@ const pageKicker = computed(() =>
 const filterTitle = computed(() =>
   currentRole.value === "sales" ? "案件情報の絞り込み" : "検索条件",
 );
+const applicationFlowLabels = [
+  "初回面談",
+  "案件選考",
+  "案件面談",
+  "結果",
+] as const;
+type StatusTone = "" | "teal" | "blue" | "amber" | "rose";
 let observer: IntersectionObserver | null = null;
 
 onMounted(() => {
@@ -217,6 +242,68 @@ onMounted(() => {
 onBeforeUnmount(() => {
   observer?.disconnect();
 });
+
+function applicationDisplayStatus(status: string) {
+  if (
+    currentRole.value === "freelancer" &&
+    !state.value.profile.initialMeetingCompleted
+  ) {
+    return "初回面談待ち";
+  }
+
+  return isBeforeInitialMeetingStatus(status) ? "初回面談待ち" : status;
+}
+
+function applicationStatusTone(status: string): StatusTone {
+  const displayStatus = applicationDisplayStatus(status);
+  if (displayStatus === "成約") return "teal";
+  if (displayStatus === "見送り") return "rose";
+  if (displayStatus === "初回面談待ち") return "amber";
+  return "blue";
+}
+
+function applicationFlowSteps(status: string) {
+  const index = applicationFlowIndex(status);
+  return applicationFlowLabels.map((label, stepIndex) => ({
+    label,
+    done:
+      stepIndex < index ||
+      (stepIndex === index && isFinalApplicationStatus(status)),
+    current: stepIndex === index && !isFinalApplicationStatus(status),
+  }));
+}
+
+function applicationFlowIndex(status: string) {
+  const displayStatus = applicationDisplayStatus(status);
+  if (displayStatus === "初回面談待ち") return 0;
+  if (displayStatus === "選考中") return 1;
+  if (displayStatus === "面談待ち") return 2;
+  return 3;
+}
+
+function applicationFlowNote(status: string) {
+  const displayStatus = applicationDisplayStatus(status);
+  if (displayStatus === "初回面談待ち")
+    return "まず営業担当との初回面談を行い、希望条件を確認したあと案件選考へ進みます。";
+  if (displayStatus === "選考中")
+    return "営業担当が案件との条件一致を確認しています。次に案件面談の調整へ進みます。";
+  if (displayStatus === "面談待ち")
+    return "案件面談の日程調整または面談実施待ちです。";
+  if (displayStatus === "成約")
+    return "参画が決定した案件です。";
+  if (displayStatus === "見送り")
+    return "今回は見送りとなった案件です。";
+  return "営業担当が状況を確認しています。";
+}
+
+function isFinalApplicationStatus(status: string) {
+  const displayStatus = applicationDisplayStatus(status);
+  return displayStatus === "成約" || displayStatus === "見送り";
+}
+
+function isBeforeInitialMeetingStatus(status: string) {
+  return status === "初回面談前" || status === "初回面談待ち";
+}
 </script>
 
 <style module>
@@ -308,6 +395,60 @@ onBeforeUnmount(() => {
   font-weight: 800;
 }
 
+.applicationProgress {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #d2e0f1;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.applicationProgress ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.applicationProgress li {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 30px;
+  border: 1px solid #c6d5e8;
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: #fff;
+  color: #53657d;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.flowDone {
+  border-color: #b9ddc6;
+  background: #f1fbf5;
+  color: #236044;
+}
+
+.flowCurrent {
+  border-color: #e8c36e;
+  background: #fff9ed;
+  color: #80560d;
+}
+
+.applicationProgress p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
 .one {
   grid-template-columns: 1fr;
 }
@@ -360,6 +501,12 @@ onBeforeUnmount(() => {
 .loadMoreButton {
   justify-self: center;
   min-width: min(240px, 100%);
+}
+
+@media (max-width: 620px) {
+  .applicationProgress ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .lockPanel {

@@ -85,7 +85,7 @@
         </div>
 
         <div v-if="!canUseJobMeeting" :class="$style.notice">
-          初回面談が完了すると、案件ごとの面談候補を登録できます。案件チャットは初回面談前でも利用できます。
+          初回面談が完了すると、案件ごとの面談候補を登録できます。案件チャットは初回面談待ちの間も利用できます。
         </div>
         <div v-if="canCompleteInitialMeeting" :class="$style.statusPanel">
           <div>

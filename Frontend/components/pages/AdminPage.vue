@@ -197,7 +197,7 @@ const initialJobForm = (): JobInput => ({
 const jobForm = reactive<JobInput>(initialJobForm());
 const applicationStatusFilter = ref<ApplicationStatus | "">("");
 const applicationStatusFilterOptions: ApplicationStatus[] = [
-  "初回面談前",
+  "初回面談待ち",
   ...statuses,
 ];
 const completedApplicationStatuses: ApplicationStatus[] = ["成約", "見送り"];

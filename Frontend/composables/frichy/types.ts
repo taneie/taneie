@@ -10,12 +10,16 @@ export type ViewKey =
   | "contact";
 export type AuthMode = "login" | "register";
 export type ApplicationStatus =
+  | "初回面談待ち"
   | "初回面談前"
   | "選考中"
   | "面談待ち"
   | "成約"
   | "見送り";
-export type EditableApplicationStatus = Exclude<ApplicationStatus, "初回面談前">;
+export type EditableApplicationStatus = Exclude<
+  ApplicationStatus,
+  "初回面談待ち" | "初回面談前"
+>;
 export type IconName =
   | "briefcase"
   | "user"

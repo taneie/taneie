@@ -267,7 +267,7 @@ function mergeState(
     accounts: saved.accounts || base.accounts,
     freelancers: saved.freelancers || base.freelancers,
     jobs: saved.jobs || base.jobs,
-    applications: saved.applications || base.applications,
+    applications: normalizeApplications(saved.applications || base.applications),
     messages: saved.messages
       ? normalizeMessages(saved.messages, base)
       : base.messages,
@@ -320,6 +320,16 @@ function inferMessageFreelancerId(message: Message, base: FrichyState) {
   return message.channel === "freelancer"
     ? base.profile.id
     : base.freelancers[0]?.id || base.profile.id;
+}
+
+function normalizeApplications(applications: Application[]): Application[] {
+  return applications.map((application) => ({
+    ...application,
+    status:
+      application.status === "初回面談前"
+        ? "初回面談待ち"
+        : application.status,
+  }));
 }
 
 function persist() {

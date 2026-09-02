@@ -88,7 +88,7 @@ export function toApplicationDisplayStatusLabel(
 ) {
   return initialMeetingCompleted
     ? toApplicationStatusLabel(value)
-    : "初回面談前";
+    : "初回面談待ち";
 }
 
 export function mapJob(job: JobWithRelations) {

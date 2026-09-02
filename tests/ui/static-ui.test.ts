@@ -191,6 +191,22 @@ describe("UI可読性・レスポンシブスタイル", () => {
   });
 
   /**
+   * @testData 応募済み案件パネルのステータス表示と選考フロー。
+   * @expected 初回面談未完了時は初回面談待ちとして表示し、応募者が次の流れを読める。
+   */
+  it("applied job cards show initial meeting wait status and selection flow", () => {
+    const jobsPage = read("Frontend/components/pages/JobsPage.vue");
+
+    assert.match(jobsPage, /applicationDisplayStatus\(item\.application\.status\)/);
+    assert.match(jobsPage, /return "初回面談待ち"/);
+    assert.match(jobsPage, /初回面談/);
+    assert.match(jobsPage, /案件選考/);
+    assert.match(jobsPage, /案件面談/);
+    assert.match(jobsPage, /結果/);
+    assert.match(jobsPage, /applicationFlowNote\(item\.application\.status\)/);
+  });
+
+  /**
    * @testData 求職者の案件ページ、応募済み案件computed、検索結果一覧。
    * @expected 応募済み案件は検索結果とは別セクションで表示され、検索条件に依存しない。
    */
@@ -201,7 +217,7 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(jobsPage, /応募済み案件/);
     assert.match(jobsPage, /v-for="item in appliedJobCards"/);
     assert.match(jobsPage, /{{ item\.application\.appliedAt }} 応募/);
-    assert.match(jobsPage, /{{ item\.application\.status }}/);
+    assert.match(jobsPage, /applicationDisplayStatus\(item\.application\.status\)/);
     assert.match(runtime, /const appliedJobCards = computed/);
     assert.match(runtime, /application\.freelancerId === currentFreelancerId\.value/);
   });
