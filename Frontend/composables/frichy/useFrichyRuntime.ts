@@ -2249,6 +2249,10 @@ async function updateInitialMeetingCompleted(
       state.value.profile.initialMeetingCompletedAt =
         freelancer.initialMeetingCompletedAt || "";
     }
+    syncApplicationsAfterInitialMeetingChange(
+      freelancer.id,
+      Boolean(freelancer.initialMeetingCompleted),
+    );
     if (!freelancer.initialMeetingCompleted) {
       meetingThreadMode.value = "initial";
     }
@@ -2265,6 +2269,22 @@ async function updateInitialMeetingCompleted(
     );
     return false;
   }
+}
+
+function syncApplicationsAfterInitialMeetingChange(
+  freelancerId: string,
+  completed: boolean,
+) {
+  state.value.applications = state.value.applications.map((application) => {
+    if (application.freelancerId !== freelancerId) return application;
+    if (completed && application.status === "選考中") {
+      return { ...application, status: "初回面談完了" };
+    }
+    if (!completed && application.status === "初回面談完了") {
+      return { ...application, status: "選考中" };
+    }
+    return application;
+  });
 }
 
 async function sendMessage(body: string) {

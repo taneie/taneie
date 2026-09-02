@@ -11,6 +11,7 @@ export type ViewKey =
 export type AuthMode = "login" | "register";
 export type ApplicationStatus =
   | "初回面談待ち"
+  | "初回面談完了"
   | "初回面談前"
   | "選考中"
   | "面談待ち"

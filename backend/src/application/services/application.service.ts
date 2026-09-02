@@ -51,8 +51,17 @@ export class ApplicationService {
           jobId,
           sourceJobId: jobId,
           freelancerProfileId: profile.id,
-          status: "screening",
-          histories: { create: { toStatus: "screening", changedBy: userId } },
+          status: profile.initialMeetingCompleted
+            ? "initial_meeting_completed"
+            : "screening",
+          histories: {
+            create: {
+              toStatus: profile.initialMeetingCompleted
+                ? "initial_meeting_completed"
+                : "screening",
+              changedBy: userId,
+            },
+          },
           jobSnapshot: {
             create: {
               title: job.title,

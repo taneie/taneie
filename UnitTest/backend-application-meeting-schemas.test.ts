@@ -21,13 +21,14 @@ describe("応募API入力スキーマ", () => {
   });
 
   /**
-   * @testData 日本語ラベルの「面談待ち」、保存値の`contracted`、未定義ラベルの「不明」。
+   * @testData 日本語ラベルの「初回面談完了」、保存値の`contracted`、未定義ラベルの「不明」。
    * @expected 日本語ラベルと保存値は保存用statusへ正規化され、不明なstatusは拒否される。
    */
   it("changeApplicationStatusSchema accepts labels and stored values", () => {
     assert.equal(
-      expectValid(changeApplicationStatusSchema, { status: "面談待ち" }).status,
-      "meeting_pending",
+      expectValid(changeApplicationStatusSchema, { status: "初回面談完了" })
+        .status,
+      "initial_meeting_completed",
     );
     assert.equal(
       expectValid(changeApplicationStatusSchema, { status: "contracted" }).status,

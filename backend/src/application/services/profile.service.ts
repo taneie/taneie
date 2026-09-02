@@ -110,6 +110,7 @@ export class ProfileService {
   async updateInitialMeetingCompleted(
     freelancerProfileId: string,
     completed: boolean,
+    changedBy?: string,
   ) {
     const profile = await this.db.freelancerProfile.update({
       where: { id: freelancerProfileId },
@@ -119,7 +120,45 @@ export class ProfileService {
       },
       include: freelancerInclude,
     });
+    await this.syncApplicationStatusAfterInitialMeeting(
+      freelancerProfileId,
+      completed,
+      changedBy,
+    );
     return mapFreelancer(profile);
+  }
+
+  private async syncApplicationStatusAfterInitialMeeting(
+    freelancerProfileId: string,
+    completed: boolean,
+    changedBy?: string,
+  ) {
+    const fromStatus = completed ? "screening" : "initial_meeting_completed";
+    const toStatus = completed ? "initial_meeting_completed" : "screening";
+    const applications = await this.db.application.findMany({
+      where: {
+        freelancerProfileId,
+        status: fromStatus,
+      },
+      select: { id: true, status: true },
+    });
+    if (!applications.length) return;
+
+    await this.db.application.updateMany({
+      where: { id: { in: applications.map((application) => application.id) } },
+      data: { status: toStatus },
+    });
+    await this.db.applicationStatusHistory.createMany({
+      data: applications.map((application) => ({
+        applicationId: application.id,
+        fromStatus: application.status,
+        toStatus,
+        changedBy,
+        note: completed
+          ? "初回面談完了に伴う自動更新"
+          : "初回面談完了解除に伴う自動更新",
+      })),
+    });
   }
 
 }

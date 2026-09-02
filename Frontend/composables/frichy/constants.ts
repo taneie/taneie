@@ -77,6 +77,7 @@ export const defaultViewByRole: Record<Role, ViewKey> = {
 };
 
 export const statuses: EditableApplicationStatus[] = [
+  "初回面談完了",
   "選考中",
   "面談待ち",
   "成約",

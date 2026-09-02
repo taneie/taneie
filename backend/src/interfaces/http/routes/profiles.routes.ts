@@ -55,11 +55,12 @@ export function registerProfileRoutes(
     requireAuth,
     requireRole("sales"),
     validateBody(updateInitialMeetingSchema),
-    asyncHandler(async (req, res) => {
+    asyncHandler<AuthedRequest>(async (req, res) => {
       res.json(
         await profileService.updateInitialMeetingCompleted(
           routeParam(req.params.id),
           req.body.completed,
+          req.auth!.userId,
         ),
       );
     }),

@@ -24,6 +24,10 @@ describe("Mapperの表示ラベル変換", () => {
       toAvailabilityLabel("scheduled", "2026年7月から空き予定"),
       "稼働可能開始日",
     );
+    assert.equal(
+      toApplicationStatusLabel("initial_meeting_completed"),
+      "初回面談完了",
+    );
     assert.equal(toApplicationStatusLabel("meeting_pending"), "面談待ち");
   });
 });
@@ -190,7 +194,7 @@ describe("応募・メッセージMapper", () => {
       jobId: "job-id",
       sourceJobId: "job-id",
       freelancerProfileId: "profile-id",
-      status: "meeting_pending",
+      status: "screening",
       appliedAt: new Date("2026-08-01T00:00:00.000Z"),
       updatedAt: new Date("2026-08-02T00:00:00.000Z"),
       job: {

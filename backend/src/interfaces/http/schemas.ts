@@ -102,7 +102,13 @@ const availabilityStatus = z
 
 const applicationStatus = z
   .union([
-    z.enum(["screening", "meeting_pending", "contracted", "rejected"]),
+    z.enum([
+      "initial_meeting_completed",
+      "screening",
+      "meeting_pending",
+      "contracted",
+      "rejected",
+    ]),
     z.enum(
       Object.keys(labelToApplicationStatus) as [
         keyof typeof labelToApplicationStatus,

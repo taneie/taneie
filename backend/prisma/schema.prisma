@@ -57,6 +57,7 @@ enum JobSkillRequirementType {
 }
 
 enum ApplicationStatus {
+  initial_meeting_completed
   screening
   meeting_pending
   contracted

@@ -33,10 +33,44 @@ describe("プロフィールサービス", () => {
       "2026-09-01",
     );
   });
+
+  /**
+   * @testData 初回面談完了にするプロフィールID、選考中の応募、更新者の営業ユーザーID。
+   * @expected 選考中の応募が初回面談完了へ自動更新され、ステータス履歴も残る。
+   */
+  it("updateInitialMeetingCompleted moves screening applications to initial meeting completed", async () => {
+    const {
+      service,
+      getApplicationUpdateManyArgs,
+      getStatusHistoryCreateManyArgs,
+    } = createProfileService();
+
+    await service.updateInitialMeetingCompleted(
+      "profile-test",
+      true,
+      "sales-test",
+    );
+
+    assert.equal(
+      getApplicationUpdateManyArgs().data.status,
+      "initial_meeting_completed",
+    );
+    assert.deepEqual(getStatusHistoryCreateManyArgs().data, [
+      {
+        applicationId: "application-test",
+        fromStatus: "screening",
+        toStatus: "initial_meeting_completed",
+        changedBy: "sales-test",
+        note: "初回面談完了に伴う自動更新",
+      },
+    ]);
+  });
 });
 
 function createProfileService() {
   let upsertArgs: any;
+  let applicationUpdateManyArgs: any;
+  let statusHistoryCreateManyArgs: any;
   const profileRecord = {
     id: "profile-test",
     userId: "user-test",
@@ -79,14 +113,34 @@ function createProfileService() {
         return profileRecord;
       },
       findUniqueOrThrow: async () => profileRecord,
+      update: async (args: any) => ({
+        ...profileRecord,
+        initialMeetingCompleted: args.data.initialMeetingCompleted,
+        initialMeetingCompletedAt: args.data.initialMeetingCompletedAt,
+      }),
     },
     user: {
       update: async () => ({}),
+    },
+    application: {
+      findMany: async () => [{ id: "application-test", status: "screening" }],
+      updateMany: async (args: any) => {
+        applicationUpdateManyArgs = args;
+        return { count: 1 };
+      },
+    },
+    applicationStatusHistory: {
+      createMany: async (args: any) => {
+        statusHistoryCreateManyArgs = args;
+        return { count: args.data.length };
+      },
     },
   };
 
   return {
     service: new ProfileService(db as never),
     getUpsertArgs: () => upsertArgs,
+    getApplicationUpdateManyArgs: () => applicationUpdateManyArgs,
+    getStatusHistoryCreateManyArgs: () => statusHistoryCreateManyArgs,
   };
 }

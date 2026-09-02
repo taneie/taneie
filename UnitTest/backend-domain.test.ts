@@ -20,6 +20,10 @@ describe("ドメインの表示ラベル変換", () => {
       getKeyByValue(labelToAvailabilityStatus, "scheduled"),
       "稼働可能開始日",
     );
+    assert.equal(
+      getKeyByValue(labelToApplicationStatus, "initial_meeting_completed"),
+      "初回面談完了",
+    );
     assert.equal(getKeyByValue(labelToApplicationStatus, "contracted"), "成約");
     assert.equal(getKeyByValue(labelToMeetingStatus, "confirmed"), "確定");
     assert.equal(getKeyByValue(labelToRemoteType, "unknown"), "unknown");

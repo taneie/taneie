@@ -214,7 +214,8 @@ const filterTitle = computed(() =>
   currentRole.value === "sales" ? "案件情報の絞り込み" : "検索条件",
 );
 const applicationFlowLabels = [
-  "初回面談",
+  "初回面談待ち",
+  "初回面談完了",
   "案件選考",
   "案件面談",
   "結果",
@@ -259,6 +260,7 @@ function applicationStatusTone(status: string): StatusTone {
   if (displayStatus === "成約") return "teal";
   if (displayStatus === "見送り") return "rose";
   if (displayStatus === "初回面談待ち") return "amber";
+  if (displayStatus === "初回面談完了") return "teal";
   return "blue";
 }
 
@@ -276,15 +278,18 @@ function applicationFlowSteps(status: string) {
 function applicationFlowIndex(status: string) {
   const displayStatus = applicationDisplayStatus(status);
   if (displayStatus === "初回面談待ち") return 0;
-  if (displayStatus === "選考中") return 1;
-  if (displayStatus === "面談待ち") return 2;
-  return 3;
+  if (displayStatus === "初回面談完了") return 1;
+  if (displayStatus === "選考中") return 2;
+  if (displayStatus === "面談待ち") return 3;
+  return 4;
 }
 
 function applicationFlowNote(status: string) {
   const displayStatus = applicationDisplayStatus(status);
   if (displayStatus === "初回面談待ち")
     return "まず営業担当との初回面談を行い、希望条件を確認したあと案件選考へ進みます。";
+  if (displayStatus === "初回面談完了")
+    return "初回面談は完了しています。営業担当が案件選考へ進めます。";
   if (displayStatus === "選考中")
     return "営業担当が案件との条件一致を確認しています。次に案件面談の調整へ進みます。";
   if (displayStatus === "面談待ち")
@@ -406,7 +411,7 @@ function isBeforeInitialMeetingStatus(status: string) {
 
 .applicationProgress ol {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   margin: 0;
   padding: 0;

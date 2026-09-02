@@ -199,7 +199,8 @@ describe("UI可読性・レスポンシブスタイル", () => {
 
     assert.match(jobsPage, /applicationDisplayStatus\(item\.application\.status\)/);
     assert.match(jobsPage, /return "初回面談待ち"/);
-    assert.match(jobsPage, /初回面談/);
+    assert.match(jobsPage, /初回面談待ち/);
+    assert.match(jobsPage, /初回面談完了/);
     assert.match(jobsPage, /案件選考/);
     assert.match(jobsPage, /案件面談/);
     assert.match(jobsPage, /結果/);

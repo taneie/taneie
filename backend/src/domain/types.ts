@@ -37,6 +37,7 @@ export const labelToAvailabilityStatus = {
 } as const;
 
 export const labelToApplicationStatus = {
+  初回面談完了: "initial_meeting_completed",
   選考中: "screening",
   面談待ち: "meeting_pending",
   成約: "contracted",
