@@ -1,7 +1,7 @@
 <template>
   <PageHead
-    title="プロフィール編集"
-    kicker="面談前の詳細プロフィールを完成させます。"
+    title="プロフィール入力"
+    kicker="4つのステップをそろえると、案件検索・応募が使えるようになります。"
   />
   <ProfileWizard />
 </template>

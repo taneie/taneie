@@ -5,6 +5,48 @@
         <h2 :class="$style.panelTitle">入力ステップ</h2>
       </div>
       <div :class="$style.panelBody">
+        <div
+          :class="[
+            $style.progressSummary,
+            { [$style.progressReady]: canViewJobs || draftCanApply },
+          ]"
+        >
+          <span :class="$style.progressKicker">
+            {{ progressKickerText }}
+          </span>
+          <strong>
+            {{ progressTitle }}
+          </strong>
+          <p>
+            {{ progressDescription }}
+          </p>
+          <div
+            :class="$style.progressTrack"
+            role="progressbar"
+            :aria-valuenow="progressPercent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <span :style="{ width: `${progressPercent}%` }" />
+          </div>
+          <BaseButton
+            v-if="canViewJobs"
+            type="button"
+            icon="search"
+            @click="goToJobs"
+          >
+            案件を探す
+          </BaseButton>
+          <button
+            v-else-if="!draftCanApply && firstPendingRequirement"
+            type="button"
+            :class="$style.nextAction"
+            @click="moveStep(firstPendingRequirement.step)"
+          >
+            次に入力: {{ firstPendingRequirement.label }}
+          </button>
+        </div>
+
         <div :class="$style.stepper">
           <button
             v-for="(label, index) in steps"
@@ -12,12 +54,22 @@
             type="button"
             :class="[
               $style.step,
-              { [$style.active]: state.wizardStep === index + 1 },
+              {
+                [$style.active]: state.wizardStep === index + 1,
+                [$style.completed]: isStepComplete(index + 1),
+                [$style.nextStep]: isNextStep(index + 1),
+              },
             ]"
             @click="moveStep(index + 1)"
           >
             <span :class="$style.stepIndex">{{ index + 1 }}</span>
-            <span>{{ label }}</span>
+            <span :class="$style.stepMain">
+              <span>{{ label }}</span>
+              <small>{{ stepGuide(index + 1).summary }}</small>
+            </span>
+            <span :class="$style.stepStatus">
+              {{ stepStatusLabel(index + 1) }}
+            </span>
           </button>
         </div>
 
@@ -54,6 +106,24 @@
       </div>
 
       <div :class="$style.panelBody">
+        <div :class="$style.stepGuide">
+          <div>
+            <span>STEP {{ state.wizardStep }} / {{ steps.length }}</span>
+            <h3>{{ activeStepGuide.title }}</h3>
+            <p>{{ activeStepGuide.description }}</p>
+          </div>
+          <ul :class="$style.stepChecklist">
+            <li
+              v-for="item in currentStepRequirements"
+              :key="item.label"
+              :class="item.done ? $style.checkDone : $style.checkPending"
+            >
+              <span>{{ item.done ? "完了" : "未入力" }}</span>
+              {{ item.label }}
+            </li>
+          </ul>
+        </div>
+
         <div
           v-if="state.wizardStep === 1"
           :class="$style.formGrid"
@@ -471,9 +541,37 @@ const {
   osSkillOptions,
   industrySkillOptions,
   roleTitleOptions,
+  canViewJobs,
+  setView,
 } = useFrichyRuntime();
 
 const steps = ["基本情報", "スキル", "条件・レジュメ", "面談候補"];
+const stepGuides = [
+  {
+    title: "連絡できる基本情報を入力",
+    summary: "氏名・連絡先・職種",
+    description:
+      "営業担当が本人確認と案件提案に使う情報です。メールアドレスは登録時の値を使います。",
+  },
+  {
+    title: "得意分野と経験年数を選択",
+    summary: "スキル・経験年数",
+    description:
+      "案件とのマッチングに使う情報です。該当するスキルを選び、経験年数を入力してください。",
+  },
+  {
+    title: "希望条件とレジュメを登録",
+    summary: "単価・稼働条件・レジュメ",
+    description:
+      "希望単価、開始可能日、稼働率、リモート条件、レジュメをそろえると提案精度が上がります。",
+  },
+  {
+    title: "初回面談候補と誓約同意",
+    summary: "候補日・誓約同意",
+    description:
+      "候補日と誓約同意までそろうと、案件検索・応募に進めます。",
+  },
+];
 const profile = computed(() => state.value.profile);
 const registeredEmail = computed(
   () => state.value.auth?.email || profile.value.email || "",
@@ -548,6 +646,85 @@ const selectedResumeFileLabel = computed(() => {
 
   return `${terms.resume.name} / ${formatFileSize(terms.resume.size)}`;
 });
+const hasExistingResumeForDraft = computed(() =>
+  Boolean(profile.value.resumeName && !pendingDeletedResume.value),
+);
+const draftValidationErrors = computed(() =>
+  validateProfileRegistrationInput(buildProfileRegistrationInput(), {
+    hasExistingResume: hasExistingResumeForDraft.value,
+  }),
+);
+const draftRequirementItems = computed(() => {
+  const errors = draftValidationErrors.value;
+  return [
+    {
+      label: "基本情報",
+      step: 1,
+      done: !errors.name && !errors.nameKana && !errors.email && !errors.phone && !errors.role,
+    },
+    {
+      label: "スキル詳細",
+      step: 2,
+      done: !errors.skills && !errors.years,
+    },
+    {
+      label: "稼働条件",
+      step: 3,
+      done:
+        !errors.desiredRate &&
+        !errors.startDate &&
+        !errors.workRate &&
+        !errors.remote &&
+        !errors.availability,
+    },
+    { label: "レジュメ", step: 3, done: !errors.resume },
+    { label: "面談候補", step: 4, done: !errors.meetingCandidates },
+    { label: "誓約同意", step: 4, done: !errors.pledgeAccepted },
+  ];
+});
+const totalRequirementCount = computed(() => draftRequirementItems.value.length);
+const completedRequirementCount = computed(
+  () => draftRequirementItems.value.filter((item) => item.done).length,
+);
+const pendingRequirementCount = computed(
+  () => totalRequirementCount.value - completedRequirementCount.value,
+);
+const draftCanApply = computed(() =>
+  draftRequirementItems.value.every((item) => item.done),
+);
+const progressPercent = computed(() =>
+  totalRequirementCount.value
+    ? Math.round(
+        (completedRequirementCount.value / totalRequirementCount.value) * 100,
+      )
+    : 0,
+);
+const firstPendingRequirement = computed(() =>
+  draftRequirementItems.value.find((item) => !item.done),
+);
+const progressKickerText = computed(() => {
+  if (canViewJobs.value) return "案件応募できます";
+  if (draftCanApply.value) return "登録すると応募できます";
+  return `案件応募まであと${pendingRequirementCount.value}項目`;
+});
+const progressTitle = computed(() => {
+  if (canViewJobs.value) return "入力条件がそろいました";
+  if (draftCanApply.value) return "最後に登録するだけです";
+  return "順番に入力すると応募可能になります";
+});
+const progressDescription = computed(() => {
+  if (canViewJobs.value)
+    return "案件検索画面から、気になる案件へ応募できます。";
+  if (draftCanApply.value)
+    return "右上の「登録する」を押すと、案件検索・応募に進めます。";
+  return `${completedRequirementCount.value}/${totalRequirementCount.value}項目が入力済みです。`;
+});
+const activeStepGuide = computed(() => stepGuide(state.value.wizardStep));
+const currentStepRequirements = computed(() =>
+  draftRequirementItems.value.filter(
+    (item) => item.step === state.value.wizardStep,
+  ),
+);
 
 watch(() => state.value.profile.id, hydrateForms, {
   immediate: true,
@@ -612,6 +789,10 @@ function hydrateForms() {
 function moveStep(step: number) {
   state.value.wizardStep = step;
   persist();
+}
+
+async function goToJobs() {
+  await setView("jobs");
 }
 
 async function resetProfileForm() {
@@ -733,6 +914,30 @@ function formatFileSize(bytes: number) {
   if (bytes >= 1024 * 1024) return `${Math.ceil(bytes / 1024 / 1024)}MB`;
 
   return `${Math.ceil(bytes / 1024)}KB`;
+}
+
+function stepGuide(step: number) {
+  return stepGuides[step - 1] || stepGuides[0];
+}
+
+function requirementsForStep(step: number) {
+  return draftRequirementItems.value.filter((item) => item.step === step);
+}
+
+function isStepComplete(step: number) {
+  const requirements = requirementsForStep(step);
+  return Boolean(requirements.length) && requirements.every((item) => item.done);
+}
+
+function isNextStep(step: number) {
+  return !canViewJobs.value && firstPendingRequirement.value?.step === step;
+}
+
+function stepStatusLabel(step: number) {
+  if (state.value.wizardStep === step) return "入力中";
+  if (isStepComplete(step)) return "完了";
+  if (isNextStep(step)) return "次に入力";
+  return "未入力あり";
 }
 
 </script>
@@ -1008,6 +1213,84 @@ textarea.control {
   margin-top: 5px;
 }
 
+.progressSummary {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid #bfd3ec;
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  background: #f6faff;
+}
+
+.progressReady {
+  border-color: #a9d9be;
+  border-left-color: #23a065;
+  background: #f4fbf7;
+}
+
+.progressKicker {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.progressReady .progressKicker {
+  color: #147348;
+}
+
+.progressSummary strong {
+  color: #10294f;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.progressSummary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.progressSummary button {
+  width: fit-content;
+}
+
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbe7f5;
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), #23a065);
+  transition: width 0.2s ease;
+}
+
+.nextAction {
+  justify-self: start;
+  min-height: 36px;
+  border: 1px solid #bfd3ec;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: #fff;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.nextAction:focus-visible {
+  outline: 3px solid rgba(29, 95, 211, 0.18);
+  outline-offset: 2px;
+}
+
 .stepper {
   display: grid;
   gap: 8px;
@@ -1017,11 +1300,15 @@ textarea.control {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  min-height: 58px;
   padding: 10px;
   border-radius: 6px;
   background: var(--primary-soft);
   border: 1px solid transparent;
   color: var(--muted);
+  text-align: left;
+  cursor: pointer;
 }
 
 .active {
@@ -1031,7 +1318,20 @@ textarea.control {
   font-weight: 800;
 }
 
+.completed:not(.active) {
+  border-color: #c9dfd1;
+  background: #f5fbf7;
+  color: #236044;
+}
+
+.nextStep:not(.active) {
+  border-color: #e4bd63;
+  background: #fff8e9;
+  color: #80560d;
+}
+
 .stepIndex {
+  flex: 0 0 auto;
   width: 26px;
   height: 26px;
   display: grid;
@@ -1045,6 +1345,124 @@ textarea.control {
 .active .stepIndex {
   background: var(--primary);
   color: #fff;
+}
+
+.completed:not(.active) .stepIndex {
+  background: #23a065;
+  color: #fff;
+}
+
+.nextStep:not(.active) .stepIndex {
+  background: #f1b944;
+  color: #10294f;
+}
+
+.stepMain {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.stepMain span {
+  overflow-wrap: anywhere;
+}
+
+.stepMain small {
+  color: currentColor;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  opacity: 0.78;
+}
+
+.stepStatus {
+  flex: 0 0 auto;
+  min-width: 62px;
+  border: 1px solid rgba(38, 63, 99, 0.16);
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: rgba(255, 255, 255, 0.78);
+  color: currentColor;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.stepGuide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.7fr);
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid #d2e0f1;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.stepGuide span {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.stepGuide h3 {
+  margin: 4px 0 6px;
+  color: #10294f;
+  font-size: 16px;
+}
+
+.stepGuide p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.stepChecklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepChecklist li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  max-width: 100%;
+  border: 1px solid #d2e0f1;
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #fff;
+  color: #263f63;
+  font-size: 12px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.stepChecklist li span {
+  flex: 0 0 auto;
+  color: inherit;
+  font-size: 11px;
+}
+
+.checkDone {
+  border-color: #b9ddc6;
+  background: #f1fbf5;
+  color: #236044;
+}
+
+.checkPending {
+  border-color: #e8c36e;
+  background: #fff9ed;
+  color: #80560d;
 }
 
 .card {
@@ -1138,6 +1556,23 @@ textarea.control {
 
   .actions button {
     width: 100%;
+  }
+
+  .progressSummary button,
+  .nextAction {
+    width: 100%;
+  }
+
+  .step {
+    align-items: flex-start;
+  }
+
+  .stepStatus {
+    min-width: 58px;
+  }
+
+  .stepGuide {
+    grid-template-columns: 1fr;
   }
 
   .dateRow {
