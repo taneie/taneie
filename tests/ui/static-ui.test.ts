@@ -154,6 +154,11 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(runtime, /label: "面談候補"[\s\S]*done: Boolean\(p\.meetingCandidates\.length\)/);
     assert.doesNotMatch(runtime, /label: "面談候補"[\s\S]*meetingRequests\.some/);
     assert.match(source, /validateProfileRegistrationInput\(input/);
+    assert.match(source, /canOpenJobsFromCurrentInput/);
+    assert.match(source, /canViewJobs\.value && draftCanApply\.value/);
+    assert.match(source, /\$style\.progressReady\]: draftCanApply/);
+    assert.doesNotMatch(source, /v-if="canViewJobs"[\s\S]*案件を探す/);
+    assert.doesNotMatch(source, /\$style\.progressReady\]: canViewJobs \|\| draftCanApply/);
     assert.match(source, /:error="validationErrors\.nameKana"/);
     assert.match(source, /:error="validationErrors\.email"/);
     assert.match(source, /:error="validationErrors\.phone"/);

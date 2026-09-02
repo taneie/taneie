@@ -8,7 +8,7 @@
         <div
           :class="[
             $style.progressSummary,
-            { [$style.progressReady]: canViewJobs || draftCanApply },
+            { [$style.progressReady]: draftCanApply },
           ]"
         >
           <span :class="$style.progressKicker">
@@ -30,7 +30,7 @@
             <span :style="{ width: `${progressPercent}%` }" />
           </div>
           <BaseButton
-            v-if="canViewJobs"
+            v-if="canOpenJobsFromCurrentInput"
             type="button"
             icon="search"
             @click="goToJobs"
@@ -761,6 +761,9 @@ const pendingRequirementCount = computed(
 const draftCanApply = computed(() =>
   draftRequirementItems.value.every((item) => item.done),
 );
+const canOpenJobsFromCurrentInput = computed(
+  () => canViewJobs.value && draftCanApply.value,
+);
 const progressPercent = computed(() =>
   totalRequirementCount.value
     ? Math.round(
@@ -772,17 +775,17 @@ const firstPendingRequirement = computed(() =>
   draftRequirementItems.value.find((item) => !item.done),
 );
 const progressKickerText = computed(() => {
-  if (canViewJobs.value) return "案件応募できます";
+  if (canOpenJobsFromCurrentInput.value) return "案件応募できます";
   if (draftCanApply.value) return "登録すると応募できます";
   return `案件応募まであと${pendingRequirementCount.value}項目`;
 });
 const progressTitle = computed(() => {
-  if (canViewJobs.value) return "入力条件がそろいました";
+  if (canOpenJobsFromCurrentInput.value) return "入力条件がそろいました";
   if (draftCanApply.value) return "最後に登録するだけです";
   return "順番に入力すると応募可能になります";
 });
 const progressDescription = computed(() => {
-  if (canViewJobs.value)
+  if (canOpenJobsFromCurrentInput.value)
     return "案件検索画面から、気になる案件へ応募できます。";
   if (draftCanApply.value)
     return "右上の「登録する」を押すと、案件検索・応募に進めます。";
@@ -1021,7 +1024,7 @@ function isStepComplete(step: number) {
 }
 
 function isNextStep(step: number) {
-  return !canViewJobs.value && firstPendingRequirement.value?.step === step;
+  return !draftCanApply.value && firstPendingRequirement.value?.step === step;
 }
 
 function stepStatusLabel(step: number) {
