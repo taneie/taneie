@@ -213,6 +213,22 @@ describe("UI可読性・レスポンシブスタイル", () => {
   });
 
   /**
+   * @testData 期限切れ応募を含む営業向け応募一覧とサマリ。
+   * @expected 期限切れ応募は営業画面の一覧・件数・選考中集計から除外される。
+   */
+  it("sales views exclude expired applications", () => {
+    const runtime = read("Frontend/composables/frichy/useFrichyRuntime.ts");
+    const dashboard = read("Frontend/components/pages/DashboardPage.vue");
+    const admin = read("Frontend/components/pages/AdminPage.vue");
+
+    assert.match(runtime, /const salesVisibleApplications = computed/);
+    assert.match(runtime, /!application\.isHiddenByExpiration/);
+    assert.match(dashboard, /salesVisibleApplications\.value\.filter/);
+    assert.match(admin, /:value="salesVisibleApplications\.length"/);
+    assert.match(admin, /return salesVisibleApplications\.value/);
+  });
+
+  /**
    * @testData 求職者の案件ページ、応募済み案件computed、検索結果一覧。
    * @expected 応募済み案件は検索結果とは別セクションで表示され、検索条件に依存しない。
    */

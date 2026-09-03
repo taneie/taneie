@@ -875,6 +875,13 @@ const currentFreelancerId = computed(
   () => currentUser.value?.freelancerId || state.value.profile.id,
 );
 
+const salesVisibleApplications = computed(() =>
+  state.value.applications.filter(
+    (application) =>
+      currentRole.value !== "sales" || !application.isHiddenByExpiration,
+  ),
+);
+
 const activeChatFreelancerId = computed(() => {
   if (currentRole.value === "freelancer") return currentFreelancerId.value;
   return (
@@ -883,7 +890,7 @@ const activeChatFreelancerId = computed(() => {
 });
 
 const activeFreelancerApplications = computed(() =>
-  state.value.applications.filter(
+  salesVisibleApplications.value.filter(
     (application) => application.freelancerId === activeChatFreelancerId.value,
   ),
 );
@@ -2104,7 +2111,12 @@ async function changeApplicationStatus(applicationId: string, status: string) {
   const item = state.value.applications.find(
     (application) => application.id === applicationId,
   );
-  if (!item || !statuses.includes(status as EditableApplicationStatus)) return;
+  if (
+    !item ||
+    item.isHiddenByExpiration ||
+    !statuses.includes(status as EditableApplicationStatus)
+  )
+    return;
   try {
     const updated = await apiRequest<Application>(
       `/applications/${applicationId}/status`,
@@ -3209,6 +3221,7 @@ export function useFrichyRuntime() {
     currentUser,
     currentRole,
     availableNavItems,
+    salesVisibleApplications,
     filteredJobs,
     appliedJobCards,
     profileRequirementItems,

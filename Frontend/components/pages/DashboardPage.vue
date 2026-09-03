@@ -215,6 +215,7 @@ import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
 
 const {
   state,
+  salesVisibleApplications,
   currentRole,
   setView,
   selectChatFreelancer,
@@ -262,7 +263,7 @@ const isCurrentSummaryMonth = computed(
   () => selectedSummaryMonth.value === currentSummaryMonth,
 );
 const summaryApplications = computed(() =>
-  state.value.applications.filter((application) =>
+  salesVisibleApplications.value.filter((application) =>
     isInSelectedSummaryMonth(application.appliedAt),
   ),
 );

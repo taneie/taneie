@@ -8,7 +8,7 @@
     <MetricCard label="案件" :value="state.jobs.length" caption="登録済み" />
     <MetricCard
       label="応募"
-      :value="state.applications.length"
+      :value="salesVisibleApplications.length"
       caption="全体"
     />
     <MetricCard label="成約" :value="closedApplications" caption="確定" />
@@ -170,6 +170,7 @@ import type { ApplicationStatus, JobInput } from "~/composables/frichy/types";
 
 const {
   state,
+  salesVisibleApplications,
   statuses,
   remoteOptions,
   adminMatchedJobs,
@@ -204,19 +205,19 @@ const completedApplicationStatuses: ApplicationStatus[] = ["成約", "見送り"
 
 const closedApplications = computed(
   () =>
-    state.value.applications.filter(
+    salesVisibleApplications.value.filter(
       (application) => application.status === "成約",
     ).length,
 );
 const rejectedApplications = computed(
   () =>
-    state.value.applications.filter(
+    salesVisibleApplications.value.filter(
       (application) => application.status === "見送り",
     ).length,
 );
 const filteredApplications = computed(() => {
-  if (!applicationStatusFilter.value) return state.value.applications;
-  return state.value.applications.filter(
+  if (!applicationStatusFilter.value) return salesVisibleApplications.value;
+  return salesVisibleApplications.value.filter(
     (application) => application.status === applicationStatusFilter.value,
   );
 });

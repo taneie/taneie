@@ -650,6 +650,25 @@ describe("APIプロフィール・案件フロー", () => {
     );
     assert.equal(hiddenApplicationPayload?.job, null);
 
+    const salesApplications = await server.request<Array<{ id: string }>>(
+      "/applications",
+      {},
+      sales.token,
+    );
+    assert.equal(
+      salesApplications.data.some((item) => item.id === application.data.id),
+      false,
+    );
+    const hiddenStatusUpdate = await server.request(
+      `/applications/${application.data.id}/status`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status: "選考中" }),
+      },
+      sales.token,
+    );
+    assert.equal(hiddenStatusUpdate.status, 404);
+
     await prisma.applicationJobSnapshot.update({
       where: { applicationId: application.data.id },
       data: { sourceCreatedAt: fiveMonthsAndOneDayAgo },

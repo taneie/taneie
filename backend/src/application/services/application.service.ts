@@ -17,7 +17,7 @@ export class ApplicationService {
   async list(context: AuthContext) {
     const where =
       context.role === "sales"
-        ? {}
+        ? { isHiddenByExpiration: false }
         : { freelancerProfile: { userId: context.userId } };
     const applications = await this.db.application.findMany({
       where,
@@ -133,6 +133,13 @@ export class ApplicationService {
     const current = await this.db.application.findUniqueOrThrow({
       where: { id },
     });
+    if (current.isHiddenByExpiration) {
+      throw new AppError(
+        404,
+        "応募が見つかりません。",
+        "APPLICATION_NOT_FOUND",
+      );
+    }
     await this.db.$transaction(async (tx) => {
       await tx.application.update({
         where: { id },
