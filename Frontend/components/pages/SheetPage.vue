@@ -24,6 +24,8 @@
             氏名・連絡先・固有社名を伏せた、クライアント提案用プロフィールです。
           </p>
           <div :class="$style.sheetGrid">
+            <div>氏名</div>
+            <div>{{ candidateInitials || "未登録" }}（イニシャル表記）</div>
             <div>職種</div>
             <div>{{ profile.role }}</div>
             <div>経験年数</div>
@@ -54,7 +56,7 @@
         <div :class="[$style.card, $style.stackSm]">
           <strong>匿名化対象</strong>
           <p>
-            氏名: {{ maskName(profile.name) }} / メール: ******** / 電話:
+            氏名: {{ candidateInitials || "未登録" }} / メール: ******** / 電話:
             ********
           </p>
           <p>
@@ -69,11 +71,15 @@
 
 <script setup lang="ts">
 import { useFrichyRuntime } from "~/composables/frichy/useFrichyRuntime";
+import { buildKanaInitials } from "~/composables/frichy/utils";
 import { computed } from "vue";
-const { state, splitCsv, maskName, downloadSheetPdf } =
+const { state, splitCsv, downloadSheetPdf } =
   useFrichyRuntime();
 
 const profile = computed(() => state.value.profile);
+const candidateInitials = computed(() =>
+  buildKanaInitials(profile.value.nameKana),
+);
 const mainSkills = computed(() =>
   [
     profile.value.languages,

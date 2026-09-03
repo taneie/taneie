@@ -39,6 +39,29 @@ const HIDDEN_JOB_SUMMARY_LABELS = new Set([
   "受信日時",
 ]);
 
+const KANA_INITIAL_GROUPS: Array<[string, string]> = [
+  ["あいうえおぁぃぅぇぉ", "A"],
+  ["かきくけこ", "K"],
+  ["がぎぐげご", "G"],
+  ["さしすせそ", "S"],
+  ["ざずぜぞ", "Z"],
+  ["じぢ", "J"],
+  ["たつてと", "T"],
+  ["ち", "C"],
+  ["だでど", "D"],
+  ["づ", "Z"],
+  ["なにぬねのん", "N"],
+  ["はひへほ", "H"],
+  ["ふ", "F"],
+  ["ばびぶべぼ", "B"],
+  ["ぱぴぷぺぽ", "P"],
+  ["まみむめも", "M"],
+  ["やゆよゃゅょ", "Y"],
+  ["らりるれろ", "R"],
+  ["わゐゑをゎ", "W"],
+  ["ゔ", "V"],
+];
+
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -161,6 +184,37 @@ export function maskName(name: string) {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "匿名";
   return `${parts.map((part) => part[0]).join(".")}.`;
+}
+
+export function buildKanaInitials(nameKana: string) {
+  return String(nameKana || "")
+    .normalize("NFKC")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => findKanaInitial(part))
+    .filter(Boolean)
+    .map((initial) => `${initial}.`)
+    .join("");
+}
+
+function findKanaInitial(value: string) {
+  for (const sourceCharacter of Array.from(value)) {
+    const character = katakanaToHiragana(sourceCharacter);
+    const group = KANA_INITIAL_GROUPS.find(([kana]) =>
+      kana.includes(character),
+    );
+    if (group) return group[1];
+    if (/^[a-z]$/i.test(sourceCharacter)) return sourceCharacter.toUpperCase();
+  }
+  return "";
+}
+
+function katakanaToHiragana(value: string) {
+  const code = value.codePointAt(0) || 0;
+  return code >= 0x30a1 && code <= 0x30f6
+    ? String.fromCodePoint(code - 0x60)
+    : value;
 }
 
 export function today() {

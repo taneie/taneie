@@ -51,6 +51,7 @@ import type {
 } from "./types";
 import {
   availabilityClass,
+  buildKanaInitials,
   categorizeSkills,
   clone,
   filterNewMeetingCandidates,
@@ -2613,7 +2614,7 @@ function renderAnonymousSheetCanvas(
   const labelWidth = 230;
   const bodyWidth = page.width - margin * 2;
   const valueWidth = bodyWidth - labelWidth;
-  const candidateInitial = buildCandidateInitials(profile.name) || "候補者";
+  const candidateInitial = buildKanaInitials(profile.nameKana) || "候補者";
 
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, page.width, page.height);
@@ -2737,19 +2738,8 @@ function renderAnonymousSheetCanvas(
 }
 
 function buildResumeSheetFilename(profile: Profile) {
-  const initial = buildCandidateInitials(profile.name) || "候補者";
-  return `職務経歴書_${sanitizeFilenamePart(initial)}.pdf`;
-}
-
-function buildCandidateInitials(name: string) {
-  const normalized = name.trim().replace(/\s+/g, " ");
-  if (!normalized) return "";
-  const parts = normalized.split(" ").filter(Boolean);
-  const initial =
-    parts.length >= 2
-      ? parts.map((part) => Array.from(part)[0]).join("")
-      : Array.from(parts[0] || "").slice(0, 2).join("");
-  return /^[a-z]+$/i.test(initial) ? initial.toUpperCase() : initial;
+  const initial = buildKanaInitials(profile.nameKana) || "候補者";
+  return `職務経歴書_${sanitizeFilenamePart(initial).replace(/\.+$/, "")}.pdf`;
 }
 
 function sanitizeFilenamePart(value: string) {

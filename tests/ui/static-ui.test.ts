@@ -436,7 +436,9 @@ describe("UIアクセシビリティ・ローディング体験", () => {
     assert.doesNotMatch(sheetPage, /publicId|匿名スキルシート\s*\//);
     assert.match(pdfBlock, /職務経歴書/);
     assert.match(pdfBlock, /作成日/);
-    assert.match(pdfBlock, /function buildCandidateInitials/);
+    assert.match(pdfBlock, /buildKanaInitials\(profile\.nameKana\)/);
+    assert.match(sheetPage, /buildKanaInitials\(profile\.value\.nameKana\)/);
+    assert.match(sheetPage, /candidateInitials \|\| "未登録"/);
     assert.doesNotMatch(pdfBlock, /publicId/);
     assert.doesNotMatch(pdfBlock, /Frichy/);
     assert.doesNotMatch(pdfBlock, /匿名スキルシート/);

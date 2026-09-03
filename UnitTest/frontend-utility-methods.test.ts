@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   availabilityClass,
   availabilityRank,
+  buildKanaInitials,
   categorizeSkills,
   clone,
   filterNewMeetingCandidates,
@@ -209,6 +210,17 @@ describe("フロントエンド共通ユーティリティ", () => {
     assert.equal(maskName("山田 太郎"), "山.太.");
     assert.equal(maskName("山田"), "山.");
     assert.equal(maskName("  "), "匿名");
+  });
+
+  /**
+   * @testData ひらがな・カタカナ・空白のふりがな。
+   * @expected 姓名の先頭音がローマ字イニシャルへ変換される。
+   */
+  it("buildKanaInitials converts furigana to roman initials", () => {
+    assert.equal(buildKanaInitials("やまだ たろう"), "Y.T.");
+    assert.equal(buildKanaInitials("ちば じゅん"), "C.J.");
+    assert.equal(buildKanaInitials("サイトウ ショウコ"), "S.S.");
+    assert.equal(buildKanaInitials("  "), "");
   });
 
   /**
