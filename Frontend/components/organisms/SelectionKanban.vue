@@ -38,8 +38,6 @@
           </select>
           <ApplicationFollowupForm
             :application-id="application.id"
-            :current-job-id="application.jobId"
-            :jobs="state.jobs"
             @submit="sendFollowup"
           />
         </div>
@@ -105,17 +103,10 @@ function isEditableApplicationStatus(status: Application["status"]) {
 
 async function sendFollowup(payload: {
   applicationId: string;
-  jobId: string;
   body: string;
   reset: () => void;
 }) {
-  if (
-    await sendApplicationFollowup(
-      payload.applicationId,
-      payload.jobId,
-      payload.body,
-    )
-  ) {
+  if (await sendApplicationFollowup(payload.applicationId, payload.body)) {
     payload.reset();
   }
 }

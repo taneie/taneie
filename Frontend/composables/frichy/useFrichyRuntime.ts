@@ -2135,7 +2135,6 @@ async function changeApplicationStatus(applicationId: string, status: string) {
 
 async function sendApplicationFollowup(
   applicationId: string,
-  introductionJobId: string,
   body: string,
 ) {
   if (currentRole.value !== "sales") {
@@ -2150,17 +2149,13 @@ async function sendApplicationFollowup(
 
   const trimmedBody = body.trim();
   const sourceJob = getJob(application.jobId);
-  const introductionJob = introductionJobId ? getJob(introductionJobId) : undefined;
-  if (!trimmedBody && !introductionJob) {
-    showToast("紹介案件または連絡内容を入力してください。");
+  if (!trimmedBody) {
+    showToast("連絡内容を入力してください。");
     return false;
   }
 
   const messageBody = [
     `${sourceJob?.title || "応募案件"}の選考ステータスは「${application.status}」です。`,
-    introductionJob
-      ? `別途ご紹介したい案件: ${introductionJob.title} / ${introductionJob.rateMin}〜${introductionJob.rateMax}万円 / ${introductionJob.remote}`
-      : "",
     trimmedBody,
   ]
     .filter(Boolean)

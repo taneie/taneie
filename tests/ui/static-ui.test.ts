@@ -229,6 +229,21 @@ describe("UI可読性・レスポンシブスタイル", () => {
   });
 
   /**
+   * @testData 営業管理の応募フォロー入力欄。
+   * @expected スカウトと重複する紹介案件選択はなく、連絡内容だけ送信できる。
+   */
+  it("application followup does not duplicate scout job selection", () => {
+    const form = read(
+      "Frontend/components/molecules/ApplicationFollowupForm.vue",
+    );
+    const kanban = read("Frontend/components/organisms/SelectionKanban.vue");
+
+    assert.doesNotMatch(form, /紹介したい案件|availableJobs|currentJobId/);
+    assert.match(form, /連絡内容/);
+    assert.doesNotMatch(kanban, /:current-job-id|:jobs=/);
+  });
+
+  /**
    * @testData 求職者の案件ページ、応募済み案件computed、検索結果一覧。
    * @expected 応募済み案件は検索結果とは別セクションで表示され、検索条件に依存しない。
    */
