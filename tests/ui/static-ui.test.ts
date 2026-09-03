@@ -210,6 +210,11 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(jobsPage, /案件面談/);
     assert.match(jobsPage, /結果/);
     assert.match(jobsPage, /applicationFlowNote\(item\.application\.status\)/);
+    assert.match(jobsPage, /aria-current="step\.current \? 'step' : undefined"/);
+    assert.match(jobsPage, /<small v-if="step\.current">現在<\/small>/);
+    assert.match(jobsPage, /\.appliedItem \+ \.appliedItem/);
+    assert.match(jobsPage, /flowSuccess/);
+    assert.match(jobsPage, /flowRejected/);
   });
 
   /**

@@ -66,9 +66,13 @@
                 :class="[
                   step.done ? $style.flowDone : '',
                   step.current ? $style.flowCurrent : '',
+                  step.tone === 'success' ? $style.flowSuccess : '',
+                  step.tone === 'rejected' ? $style.flowRejected : '',
                 ]"
+                :aria-current="step.current ? 'step' : undefined"
               >
                 <span>{{ step.label }}</span>
+                <small v-if="step.current">現在</small>
               </li>
             </ol>
             <p>{{ applicationFlowNote(item.application.status) }}</p>
@@ -274,12 +278,17 @@ function applicationStatusTone(status: string): StatusTone {
 
 function applicationFlowSteps(status: string) {
   const index = applicationFlowIndex(status);
+  const displayStatus = applicationDisplayStatus(status);
   return applicationFlowLabels.map((label, stepIndex) => ({
     label,
-    done:
-      stepIndex < index ||
-      (stepIndex === index && isFinalApplicationStatus(status)),
-    current: stepIndex === index && !isFinalApplicationStatus(status),
+    done: stepIndex < index,
+    current: stepIndex === index,
+    tone:
+      stepIndex === index && displayStatus === "成約"
+        ? "success"
+        : stepIndex === index && displayStatus === "見送り"
+          ? "rejected"
+          : "current",
   }));
 }
 
@@ -314,11 +323,6 @@ function expiredApplicationMessage(application: { hiddenReason?: string }) {
     application.hiddenReason ||
     "掲載から3か月経過したため閲覧できません。"
   );
-}
-
-function isFinalApplicationStatus(status: string) {
-  const displayStatus = applicationDisplayStatus(status);
-  return displayStatus === "成約" || displayStatus === "見送り";
 }
 
 function isBeforeInitialMeetingStatus(status: string) {
@@ -405,6 +409,12 @@ function isBeforeInitialMeetingStatus(status: string) {
   min-width: 0;
 }
 
+.appliedItem + .appliedItem {
+  margin-top: 8px;
+  border-top: 2px solid #b9cae2;
+  padding-top: 20px;
+}
+
 .applicationMeta {
   display: flex;
   align-items: center;
@@ -437,7 +447,7 @@ function isBeforeInitialMeetingStatus(status: string) {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 30px;
+  min-height: 46px;
   border: 1px solid #c6d5e8;
   border-radius: 6px;
   padding: 4px 6px;
@@ -449,6 +459,12 @@ function isBeforeInitialMeetingStatus(status: string) {
   overflow-wrap: anywhere;
 }
 
+.applicationProgress li small {
+  color: inherit;
+  font-size: 10px;
+  font-weight: 900;
+}
+
 .flowDone {
   border-color: #b9ddc6;
   background: #f1fbf5;
@@ -456,9 +472,24 @@ function isBeforeInitialMeetingStatus(status: string) {
 }
 
 .flowCurrent {
-  border-color: #e8c36e;
-  background: #fff9ed;
-  color: #80560d;
+  border-color: #1d5fd3;
+  background: #1d5fd3;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(29, 95, 211, 0.2);
+}
+
+.flowSuccess {
+  border-color: #1b8754;
+  background: #1b8754;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(27, 135, 84, 0.2);
+}
+
+.flowRejected {
+  border-color: #b73e56;
+  background: #b73e56;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(183, 62, 86, 0.2);
 }
 
 .applicationProgress p {
