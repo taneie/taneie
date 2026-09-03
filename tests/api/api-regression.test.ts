@@ -48,21 +48,33 @@ async function rememberProfile(profileId: string) {
   profileSnapshots.set(profileId, profile);
 }
 
+function monthsAndDaysAgo(months: number, days: number) {
+  const result = new Date();
+  const day = result.getUTCDate();
+  result.setUTCDate(1);
+  result.setUTCMonth(result.getUTCMonth() - months);
+  const lastDay = new Date(
+    Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  result.setUTCDate(Math.min(day, lastDay) - days);
+  return result;
+}
+
 async function cleanup() {
   for (const id of created.messageIds) {
-    await prisma.message.delete({ where: { id } }).catch(() => {});
+    await prisma.message.deleteMany({ where: { id } }).catch(() => {});
   }
   for (const id of created.meetingIds) {
-    await prisma.meetingRequest.delete({ where: { id } }).catch(() => {});
+    await prisma.meetingRequest.deleteMany({ where: { id } }).catch(() => {});
   }
   for (const id of created.contactInquiryIds) {
-    await prisma.contactInquiry.delete({ where: { id } }).catch(() => {});
+    await prisma.contactInquiry.deleteMany({ where: { id } }).catch(() => {});
   }
   for (const id of created.applicationIds) {
-    await prisma.application.delete({ where: { id } }).catch(() => {});
+    await prisma.application.deleteMany({ where: { id } }).catch(() => {});
   }
   for (const id of created.jobIds) {
-    await prisma.job.delete({ where: { id } }).catch(() => {});
+    await prisma.job.deleteMany({ where: { id } }).catch(() => {});
   }
   for (const [id, snapshot] of profileSnapshots) {
     await prisma.freelancerProfile
@@ -73,7 +85,7 @@ async function cleanup() {
       .catch(() => {});
   }
   for (const id of created.userIds) {
-    await prisma.user.delete({ where: { id } }).catch(() => {});
+    await prisma.user.deleteMany({ where: { id } }).catch(() => {});
   }
 }
 
@@ -122,6 +134,13 @@ describe("API疎通・認証フロー", () => {
     );
     assert.equal(freelancer.user.role, "freelancer");
     assert.ok(freelancer.user.freelancerId);
+    const profile = await server.request<{ initialMeetingCompleted: boolean }>(
+      "/profile/me",
+      {},
+      freelancer.token,
+    );
+    assert.equal(profile.status, 200);
+    assert.equal(profile.data.initialMeetingCompleted, true);
 
     const sales = await login(server, "sales@frichy.jp", "sales123");
     assert.equal(sales.user.role, "sales");
@@ -386,7 +405,7 @@ describe("APIプロフィール・案件フロー", () => {
     );
     created.applicationIds.add(application.data.id);
     assert.equal(application.status, 201);
-    assert.equal(application.data.status, "初回面談待ち");
+    assert.equal(application.data.status, "初回面談完了");
 
     const duplicate = await server.request(
       "/applications",
@@ -407,7 +426,7 @@ describe("APIプロフィール・案件フロー", () => {
       sales.token,
     );
     assert.equal(changed.status, 200);
-    assert.equal(changed.data.status, "初回面談待ち");
+    assert.equal(changed.data.status, "面談待ち");
 
     await prisma.job.delete({ where: { id: job.data.id } });
     const applicationsAfterJobDelete = await server.request<
@@ -508,17 +527,22 @@ describe("APIプロフィール・案件フロー", () => {
   });
 
   /**
-   * @testData 31日前のcreatedAtを持つ案件と、31日前のappliedAtを持つ応募。
-   * @expected 営業tokenで期限切れ削除APIを実行すると、30日経過した案件と応募が削除される。
+   * @testData 31日前/3か月超/5か月超/366日前の掲載日時を持つ応募済み案件。
+   * @expected 案件は30日で削除され、通常応募は3か月まで表示・3か月超で非表示・5か月超で削除、成約応募は365日まで本人のみ閲覧できる。
    */
-  it("sales can cleanup jobs and applications older than 30 days", async () => {
+  it("sales can cleanup expired jobs while retaining applied job history by age and status", async () => {
     const sales = await login(server, "sales@frichy.jp", "sales123");
     const freelancer = await login(
       server,
       "freelancer@example.com",
       "freelance123",
     );
-    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    const thirtyOneDaysAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    const threeMonthsAndOneDayAgo = monthsAndDaysAgo(3, 1);
+    const fiveMonthsAndOneDayAgo = monthsAndDaysAgo(5, 1);
+    const threeHundredSixtySixDaysAgo = new Date(
+      Date.now() - 366 * 24 * 60 * 60 * 1000,
+    );
 
     const job = await server.request<{ id: string }>(
       "/jobs",
@@ -549,30 +573,205 @@ describe("APIプロフィール・案件フロー", () => {
     created.applicationIds.add(application.data.id);
     assert.equal(application.status, 201);
 
-    await prisma.application.update({
-      where: { id: application.data.id },
-      data: { appliedAt: oldDate },
-    });
     await prisma.job.update({
       where: { id: job.data.id },
-      data: { createdAt: oldDate },
+      data: { createdAt: thirtyOneDaysAgo },
+    });
+    await prisma.applicationJobSnapshot.update({
+      where: { applicationId: application.data.id },
+      data: { sourceCreatedAt: thirtyOneDaysAgo },
     });
 
     const cleanup = await server.request<{
+      hiddenApplications: number;
       deletedApplications: number;
+      deletedExpiredApplications: number;
       deletedJobs: number;
       retentionDays: number;
+      applicationVisibilityMonths: number;
+      applicationRetentionMonths: number;
+      contractedApplicationRetentionDays: number;
     }>("/jobs/cleanup-expired", { method: "POST" }, sales.token);
 
     assert.equal(cleanup.status, 200);
     assert.equal(cleanup.data.retentionDays, 30);
-    assert.ok(cleanup.data.deletedApplications >= 1);
+    assert.equal(cleanup.data.applicationVisibilityMonths, 3);
+    assert.equal(cleanup.data.applicationRetentionMonths, 5);
+    assert.equal(cleanup.data.contractedApplicationRetentionDays, 365);
     assert.ok(cleanup.data.deletedJobs >= 1);
+    const retainedApplication = await prisma.application.findUnique({
+      where: { id: application.data.id },
+    });
+    assert.equal(retainedApplication?.isHiddenByExpiration, false);
+    assert.equal(retainedApplication?.jobId, null);
+    assert.equal(await prisma.job.findUnique({ where: { id: job.data.id } }), null);
+
+    const applicationsWithinThreeMonths = await server.request<
+      Array<{
+        id: string;
+        isHiddenByExpiration: boolean;
+        hiddenReason: string;
+        job: { title: string } | null;
+      }>
+    >("/applications", {}, freelancer.token);
+    const retainedApplicationPayload = applicationsWithinThreeMonths.data.find(
+      (item) => item.id === application.data.id,
+    );
+    assert.equal(retainedApplicationPayload?.isHiddenByExpiration, false);
+    assert.match(
+      retainedApplicationPayload?.job?.title || "",
+      /^期限切れ削除テスト/,
+    );
+
+    await prisma.applicationJobSnapshot.update({
+      where: { applicationId: application.data.id },
+      data: { sourceCreatedAt: threeMonthsAndOneDayAgo },
+    });
+    const cleanupAfterThreeMonths = await server.request<{
+      hiddenApplications: number;
+    }>("/jobs/cleanup-expired", { method: "POST" }, sales.token);
+    assert.equal(cleanupAfterThreeMonths.status, 200);
+    assert.ok(cleanupAfterThreeMonths.data.hiddenApplications >= 1);
+    const hiddenApplications = await server.request<
+      Array<{
+        id: string;
+        isHiddenByExpiration: boolean;
+        hiddenReason: string;
+        job: { title: string } | null;
+      }>
+    >("/applications", {}, freelancer.token);
+    const hiddenApplicationPayload = hiddenApplications.data.find(
+      (item) => item.id === application.data.id,
+    );
+    assert.equal(hiddenApplicationPayload?.isHiddenByExpiration, true);
+    assert.match(
+      hiddenApplicationPayload?.hiddenReason || "",
+      /掲載から3か月経過/,
+    );
+    assert.equal(hiddenApplicationPayload?.job, null);
+
+    await prisma.applicationJobSnapshot.update({
+      where: { applicationId: application.data.id },
+      data: { sourceCreatedAt: fiveMonthsAndOneDayAgo },
+    });
+    const cleanupAfterFiveMonths = await server.request<{
+      deletedExpiredApplications: number;
+    }>("/jobs/cleanup-expired", { method: "POST" }, sales.token);
+    assert.equal(cleanupAfterFiveMonths.status, 200);
+    assert.ok(cleanupAfterFiveMonths.data.deletedExpiredApplications >= 1);
     assert.equal(
       await prisma.application.findUnique({ where: { id: application.data.id } }),
       null,
     );
-    assert.equal(await prisma.job.findUnique({ where: { id: job.data.id } }), null);
+
+    const contractedJob = await server.request<{ id: string; title: string }>(
+      "/jobs",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          title: `成約保持テスト ${Date.now()}`,
+          client: "Cleanup Test Client",
+          rateMin: 700000,
+          rateMax: 900000,
+          remoteType: "フルリモート",
+          isPinned: false,
+        }),
+      },
+      sales.token,
+    );
+    created.jobIds.add(contractedJob.data.id);
+    assert.equal(contractedJob.status, 201);
+
+    const contractedApplication = await server.request<{ id: string }>(
+      "/applications",
+      {
+        method: "POST",
+        body: JSON.stringify({ jobId: contractedJob.data.id }),
+      },
+      freelancer.token,
+    );
+    created.applicationIds.add(contractedApplication.data.id);
+    assert.equal(contractedApplication.status, 201);
+
+    const contractedStatus = await server.request(
+      `/applications/${contractedApplication.data.id}/status`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status: "成約" }),
+      },
+      sales.token,
+    );
+    assert.equal(contractedStatus.status, 200);
+    await prisma.job.update({
+      where: { id: contractedJob.data.id },
+      data: { createdAt: fiveMonthsAndOneDayAgo },
+    });
+    await prisma.applicationJobSnapshot.update({
+      where: { applicationId: contractedApplication.data.id },
+      data: { sourceCreatedAt: fiveMonthsAndOneDayAgo },
+    });
+
+    await server.request("/jobs/cleanup-expired", { method: "POST" }, sales.token);
+    const retainedContractedApplication = await prisma.application.findUnique({
+      where: { id: contractedApplication.data.id },
+    });
+    assert.equal(retainedContractedApplication?.isHiddenByExpiration, false);
+    assert.equal(retainedContractedApplication?.jobId, null);
+    assert.equal(
+      await prisma.job.findUnique({ where: { id: contractedJob.data.id } }),
+      null,
+    );
+
+    const contractedJobForFreelancer = await server.request<{ title: string }>(
+      `/jobs/${contractedJob.data.id}`,
+      {},
+      freelancer.token,
+    );
+    assert.equal(contractedJobForFreelancer.status, 200);
+    assert.match(contractedJobForFreelancer.data.title, /^成約保持テスト/);
+
+    const contractedJobForSales = await server.request(
+      `/jobs/${contractedJob.data.id}`,
+      {},
+      sales.token,
+    );
+    expectErrorCode(contractedJobForSales, 404, "JOB_NOT_FOUND");
+
+    const freelancerApplicationsAfterContract = await server.request<
+      Array<{ id: string; job: { title: string } | null }>
+    >("/applications", {}, freelancer.token);
+    assert.match(
+      freelancerApplicationsAfterContract.data.find(
+        (item) => item.id === contractedApplication.data.id,
+      )?.job?.title || "",
+      /^成約保持テスト/,
+    );
+
+    const salesApplicationsAfterContract = await server.request<
+      Array<{ id: string; job: { title: string } | null }>
+    >("/applications", {}, sales.token);
+    assert.equal(
+      salesApplicationsAfterContract.data.find(
+        (item) => item.id === contractedApplication.data.id,
+      )?.job,
+      null,
+    );
+
+    await prisma.applicationJobSnapshot.update({
+      where: { applicationId: contractedApplication.data.id },
+      data: { sourceCreatedAt: threeHundredSixtySixDaysAgo },
+    });
+    const cleanupAfterOneYear = await server.request<{
+      deletedContractedApplications: number;
+    }>("/jobs/cleanup-expired", { method: "POST" }, sales.token);
+    assert.equal(cleanupAfterOneYear.status, 200);
+    assert.ok(cleanupAfterOneYear.data.deletedContractedApplications >= 1);
+    assert.equal(
+      await prisma.application.findUnique({
+        where: { id: contractedApplication.data.id },
+      }),
+      null,
+    );
   });
 });
 

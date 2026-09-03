@@ -196,6 +196,8 @@ describe("応募・メッセージMapper", () => {
       freelancerProfileId: "profile-id",
       status: "screening",
       appliedAt: new Date("2026-08-01T00:00:00.000Z"),
+      isHiddenByExpiration: false,
+      hiddenAt: null,
       updatedAt: new Date("2026-08-02T00:00:00.000Z"),
       job: {
         id: "job-id",
@@ -255,6 +257,8 @@ describe("応募・メッセージMapper", () => {
 
     assert.equal(application.status, "初回面談待ち");
     assert.equal(application.job.title, "案件");
+    assert.equal(application.isHiddenByExpiration, false);
+    assert.equal(application.hiddenReason, "");
     assert.equal(application.freelancer.name, "山田 太郎");
 
     const message = mapMessage({

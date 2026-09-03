@@ -44,6 +44,7 @@ export interface Account {
   password: string;
   role: Role;
   name: string;
+  nameKana?: string;
   startView: ViewKey;
   freelancerId?: string;
 }
@@ -140,7 +141,10 @@ export interface Application {
   freelancerId: string;
   status: ApplicationStatus;
   appliedAt: string;
-  job?: Job;
+  isHiddenByExpiration: boolean;
+  hiddenAt: string;
+  hiddenReason: string;
+  job?: Job | null;
   freelancer?: Freelancer;
 }
 

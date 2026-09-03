@@ -59,8 +59,9 @@ export const demoAccounts: Account[] = [
     password: "freelance123",
     role: "freelancer",
     name: "山田 太郎",
+    nameKana: "やまだ たろう",
     startView: "jobs",
-    freelancerId: "fr-current",
+    freelancerId: "fr-001",
   },
   {
     email: "sales@frichy.jp",

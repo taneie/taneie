@@ -24,7 +24,11 @@ export class ApplicationService {
       include: applicationInclude,
       orderBy: { appliedAt: "desc" },
     });
-    return applications.map(mapApplication);
+    return applications.map((application) =>
+      mapApplication(application, {
+        canViewExpiredContractedJob: context.role === "freelancer",
+      }),
+    );
   }
 
   async apply(jobId: string, userId: string) {
@@ -45,64 +49,72 @@ export class ApplicationService {
       .filter((item) => item.requirementType === "nice")
       .map((item) => item.skill.name);
 
-    const application = await this.db.application
-      .create({
-        data: {
-          jobId,
-          sourceJobId: jobId,
-          freelancerProfileId: profile.id,
-          status: profile.initialMeetingCompleted
-            ? "initial_meeting_completed"
-            : "screening",
-          histories: {
-            create: {
-              toStatus: profile.initialMeetingCompleted
-                ? "initial_meeting_completed"
-                : "screening",
-              changedBy: userId,
-            },
+    const status = profile.initialMeetingCompleted
+      ? "initial_meeting_completed"
+      : "screening";
+    let applicationId: string;
+    try {
+      applicationId = await this.db.$transaction(async (tx) => {
+        const created = await tx.application.create({
+          data: {
+            jobId,
+            sourceJobId: jobId,
+            freelancerProfileId: profile.id,
+            status,
           },
-          jobSnapshot: {
-            create: {
-              title: job.title,
-              clientName: job.client?.name || "未設定",
-              summary: job.summary,
-              requiredSkills,
-              niceSkills,
-              rateMin: job.rateMin,
-              rateMax: job.rateMax,
-              unitPrice: job.unitPrice,
-              settlementLower: job.settlementLower,
-              settlementUpper: job.settlementUpper,
-              location: job.location,
-              startPeriod: job.startPeriod,
-              remoteRatio: job.remoteRatio,
-              foreignerAvailability: job.foreignerAvailability,
-              ageLimit: job.ageLimit,
-              receivedAt: job.externalReceivedAt,
-              receivedAtMs: job.externalReceivedAtMs,
-              remoteType: job.remoteType,
-              isPinned: job.isPinned,
-              isActive: job.isActive,
-              sourceCreatedAt: job.createdAt,
-            },
+        });
+        await tx.applicationStatusHistory.create({
+          data: {
+            applicationId: created.id,
+            toStatus: status,
+            changedBy: userId,
           },
-        },
-        include: applicationInclude,
-      })
-      .catch((error: unknown) => {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2002"
-        ) {
-          throw new AppError(
-            409,
-            "この案件にはすでに応募済みです。",
-            "APPLICATION_ALREADY_EXISTS",
-          );
-        }
-        throw error;
+        });
+        await tx.applicationJobSnapshot.create({
+          data: {
+            applicationId: created.id,
+            title: job.title,
+            clientName: job.client?.name || "未設定",
+            summary: job.summary,
+            requiredSkills,
+            niceSkills,
+            rateMin: job.rateMin,
+            rateMax: job.rateMax,
+            unitPrice: job.unitPrice,
+            settlementLower: job.settlementLower,
+            settlementUpper: job.settlementUpper,
+            location: job.location,
+            startPeriod: job.startPeriod,
+            remoteRatio: job.remoteRatio,
+            foreignerAvailability: job.foreignerAvailability,
+            ageLimit: job.ageLimit,
+            receivedAt: job.externalReceivedAt,
+            receivedAtMs: job.externalReceivedAtMs,
+            remoteType: job.remoteType,
+            isPinned: job.isPinned,
+            isActive: job.isActive,
+            sourceCreatedAt: job.createdAt,
+          },
+        });
+        return created.id;
       });
+    } catch (error: unknown) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new AppError(
+          409,
+          "この案件にはすでに応募済みです。",
+          "APPLICATION_ALREADY_EXISTS",
+        );
+      }
+      throw error;
+    }
+    const application = await this.db.application.findUniqueOrThrow({
+      where: { id: applicationId },
+      include: applicationInclude,
+    });
     return mapApplication(application);
   }
 
@@ -121,19 +133,28 @@ export class ApplicationService {
     const current = await this.db.application.findUniqueOrThrow({
       where: { id },
     });
-    const application = await this.db.application.update({
-      where: { id },
-      data: {
-        status: status as never,
-        histories: {
-          create: {
-            fromStatus: current.status,
-            toStatus: status as never,
-            changedBy,
-            note,
-          },
+    await this.db.$transaction(async (tx) => {
+      await tx.application.update({
+        where: { id },
+        data: {
+          status: status as never,
+          ...(status === "contracted"
+            ? { isHiddenByExpiration: false, hiddenAt: null }
+            : {}),
         },
-      },
+      });
+      await tx.applicationStatusHistory.create({
+        data: {
+          applicationId: id,
+          fromStatus: current.status,
+          toStatus: status as never,
+          changedBy,
+          note,
+        },
+      });
+    });
+    const application = await this.db.application.findUniqueOrThrow({
+      where: { id },
       include: applicationInclude,
     });
     const mapped = mapApplication(application);

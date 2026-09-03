@@ -65,9 +65,25 @@ describe("プロフィールサービス", () => {
       },
     ]);
   });
+
+  /**
+   * @testData 初回面談が完了済みのプロフィールへ、同じ完了状態を再指定する更新。
+   * @expected 選考中の応募ステータスを初回面談完了へ戻さない。
+   */
+  it("updateInitialMeetingCompleted keeps application status on an idempotent update", async () => {
+    const { service, getApplicationUpdateManyArgs } = createProfileService(true);
+
+    await service.updateInitialMeetingCompleted(
+      "profile-test",
+      true,
+      "sales-test",
+    );
+
+    assert.equal(getApplicationUpdateManyArgs(), undefined);
+  });
 });
 
-function createProfileService() {
+function createProfileService(initialMeetingCompleted = false) {
   let upsertArgs: any;
   let applicationUpdateManyArgs: any;
   let statusHistoryCreateManyArgs: any;
@@ -84,8 +100,8 @@ function createProfileService() {
     availabilityStatus: null,
     availabilityNote: null,
     pledgedAt: null,
-    initialMeetingCompleted: false,
-    initialMeetingCompletedAt: null,
+    initialMeetingCompleted,
+    initialMeetingCompletedAt: initialMeetingCompleted ? new Date() : null,
     lastUpdatedOn: null,
     createdAt: new Date("2026-08-01T00:00:00.000Z"),
     updatedAt: new Date("2026-08-01T00:00:00.000Z"),
@@ -113,11 +129,13 @@ function createProfileService() {
         return profileRecord;
       },
       findUniqueOrThrow: async () => profileRecord,
-      update: async (args: any) => ({
-        ...profileRecord,
-        initialMeetingCompleted: args.data.initialMeetingCompleted,
-        initialMeetingCompletedAt: args.data.initialMeetingCompletedAt,
-      }),
+      update: async (args: any) => {
+        Object.assign(profileRecord, {
+          initialMeetingCompleted: args.data.initialMeetingCompleted,
+          initialMeetingCompletedAt: args.data.initialMeetingCompletedAt,
+        });
+        return profileRecord;
+      },
     },
     user: {
       update: async () => ({}),

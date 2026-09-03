@@ -151,7 +151,7 @@ describe("UI可読性・レスポンシブスタイル", () => {
     );
     assert.match(runtime, /validateProfileRegistration\(values, candidates\)/);
     assert.match(runtime, /function applyProfileRegistrationDraft\(/);
-    assert.match(runtime, /label: "面談候補"[\s\S]*done: Boolean\(p\.meetingCandidates\.length\)/);
+    assert.match(runtime, /done: Boolean\(p\.initialMeetingCompleted \|\| p\.meetingCandidates\.length\)/);
     assert.doesNotMatch(runtime, /label: "面談候補"[\s\S]*meetingRequests\.some/);
     assert.match(source, /validateProfileRegistrationInput\(input/);
     assert.match(source, /canOpenJobsFromCurrentInput/);
@@ -224,8 +224,12 @@ describe("UI可読性・レスポンシブスタイル", () => {
     assert.match(jobsPage, /v-for="item in appliedJobCards"/);
     assert.match(jobsPage, /{{ item\.application\.appliedAt }} 応募/);
     assert.match(jobsPage, /applicationDisplayStatus\(item\.application\.status\)/);
+    assert.match(jobsPage, /item\.application\.isHiddenByExpiration/);
+    assert.match(jobsPage, /掲載から3か月経過したため閲覧できません。/);
+    assert.match(jobsPage, /v-else-if="item\.job"/);
     assert.match(runtime, /const appliedJobCards = computed/);
     assert.match(runtime, /application\.freelancerId === currentFreelancerId\.value/);
+    assert.match(runtime, /item\.job \|\| item\.application\.isHiddenByExpiration/);
   });
 });
 

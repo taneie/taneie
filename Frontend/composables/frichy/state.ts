@@ -1,6 +1,13 @@
 import type { Profile, FrichyState } from "./types";
 
 export function createSeedState(): FrichyState {
+  const recentApplicationDate = dateFromNow({ months: -1 });
+  const expiredApplicationDate = dateFromNow({ months: -4 });
+  const hiddenAt = dateFromNow(0);
+  const meetingCandidateA = dateTimeFromNow({ years: 3 }, "10:00");
+  const meetingCandidateB = dateTimeFromNow({ years: 3, days: 1 }, "15:00");
+  const initialMeetingCompletedAt = dateTimeFromNow({ days: -7 }, "11:00");
+
   return {
     auth: null,
     authMode: "login",
@@ -24,6 +31,8 @@ export function createSeedState(): FrichyState {
         lastUpdated: "2026-06-04",
         resumeId: "resume-demo-yamada",
         resumeName: "職務経歴書_山田太郎.pdf",
+        initialMeetingCompleted: true,
+        initialMeetingCompletedAt,
       },
       {
         id: "fr-002",
@@ -101,7 +110,7 @@ export function createSeedState(): FrichyState {
         receivedAtMs: null,
         remote: "フルリモート",
         sortFlag: true,
-        active: true,
+        active: false,
       },
       {
         id: "job-003",
@@ -134,14 +143,20 @@ export function createSeedState(): FrichyState {
         jobId: "job-001",
         freelancerId: "fr-001",
         status: "面談待ち",
-        appliedAt: "2026-06-04",
+        appliedAt: recentApplicationDate,
+        isHiddenByExpiration: false,
+        hiddenAt: "",
+        hiddenReason: "",
       },
       {
         id: "app-002",
         jobId: "job-002",
-        freelancerId: "fr-002",
+        freelancerId: "fr-001",
         status: "選考中",
-        appliedAt: "2026-06-03",
+        appliedAt: expiredApplicationDate,
+        isHiddenByExpiration: true,
+        hiddenAt,
+        hiddenReason: "掲載から3か月経過したため閲覧できません。",
       },
     ],
     messages: [
@@ -160,7 +175,7 @@ export function createSeedState(): FrichyState {
         freelancerId: "fr-001",
         from: "山田 太郎",
         to: "営業",
-        body: "6月10日午前で調整可能です。職務経歴書も更新しました。",
+        body: "3年後の面談候補日午前で調整可能です。職務経歴書も更新しました。",
         at: "2026-06-04 11:36",
         readAt: "2026-06-04 11:36",
         channel: "freelancer",
@@ -170,19 +185,66 @@ export function createSeedState(): FrichyState {
       {
         id: "meet-001",
         freelancerId: "fr-001",
-        candidate: "2026-06-10 10:00",
+        applicationId: "app-001",
+        jobId: "job-001",
+        candidate: meetingCandidateA,
         status: "候補",
       },
       {
         id: "meet-002",
         freelancerId: "fr-001",
-        candidate: "2026-06-11 15:00",
+        applicationId: "app-001",
+        jobId: "job-001",
+        candidate: meetingCandidateB,
         status: "候補",
       },
     ],
     contactInquiries: [],
     aliveChecks: [],
   };
+}
+
+function dateFromNow(
+  offset: number | { months?: number; days?: number },
+) {
+  const date = new Date();
+  if (typeof offset === "number") {
+    date.setDate(date.getDate() + offset);
+  } else {
+    const day = date.getDate();
+    date.setDate(1);
+    date.setMonth(date.getMonth() + (offset.months || 0));
+    const lastDay = new Date(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      0,
+    ).getDate();
+    date.setDate(Math.min(day, lastDay));
+    date.setDate(date.getDate() + (offset.days || 0));
+  }
+  return formatDate(date);
+}
+
+function dateTimeFromNow(
+  offset: { years?: number; days?: number },
+  time: string,
+) {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() + (offset.years || 0));
+  date.setDate(date.getDate() + (offset.days || 0));
+  return `${formatDate(date)} ${time}`;
+}
+
+function formatDate(date: Date) {
+  return [
+    date.getFullYear(),
+    padDatePart(date.getMonth() + 1),
+    padDatePart(date.getDate()),
+  ].join("-");
+}
+
+function padDatePart(value: number) {
+  return String(value).padStart(2, "0");
 }
 
 export function blankProfile(id = "fr-current"): Profile {

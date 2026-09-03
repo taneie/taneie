@@ -663,7 +663,7 @@ gcloud scheduler jobs run frichy-external-project-import \
 
 ### 12.8 期限切れ案件・応募の自動削除
 
-`POST /api/jobs/cleanup-expired` は、実行時点から30日より前の `applications.applied_at` と `jobs.created_at` を削除する。
+`POST /api/jobs/cleanup-expired` は、掲載から30日を超えた案件本体を削除する。応募済み案件はスナップショットで3か月まで本人へ表示し、3か月超で期限切れ表示、5か月超で応募レコードを削除する。成約した応募は例外として掲載から365日まで本人のみ閲覧できる。
 Cloud Scheduler job `frichy-job-cleanup-expired` は、GitHub Actions `Deploy Cloud Run` のデプロイ後に作成または更新され、JST 21:00 に毎日実行される。
 
 手動実行する場合:

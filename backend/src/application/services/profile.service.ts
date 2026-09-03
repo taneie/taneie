@@ -112,19 +112,30 @@ export class ProfileService {
     completed: boolean,
     changedBy?: string,
   ) {
-    const profile = await this.db.freelancerProfile.update({
+    const current = await this.db.freelancerProfile.findUniqueOrThrow({
+      where: { id: freelancerProfileId },
+      include: freelancerInclude,
+    });
+    if (current.initialMeetingCompleted === completed) {
+      return mapFreelancer(current);
+    }
+
+    await this.db.freelancerProfile.update({
       where: { id: freelancerProfileId },
       data: {
         initialMeetingCompleted: completed,
         initialMeetingCompletedAt: completed ? new Date() : null,
       },
-      include: freelancerInclude,
     });
     await this.syncApplicationStatusAfterInitialMeeting(
       freelancerProfileId,
       completed,
       changedBy,
     );
+    const profile = await this.db.freelancerProfile.findUniqueOrThrow({
+      where: { id: freelancerProfileId },
+      include: freelancerInclude,
+    });
     return mapFreelancer(profile);
   }
 

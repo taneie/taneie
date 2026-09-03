@@ -1,9 +1,10 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { AppError, type AuthContext } from "../../domain/types.js";
 import { labelToRemoteType } from "../../domain/types.js";
-import { mapJob } from "../mappers.js";
+import { mapApplicationSnapshot, mapJob } from "../mappers.js";
 import { ExternalProjectImportService } from "./external-project-import.service.js";
 import {
+  applicationInclude,
   assertFreelancerCanViewJobs,
   jobInclude,
   type JobInput,
@@ -14,6 +15,10 @@ import {
 
 const DEFAULT_JOB_LIMIT = 10;
 const JOB_RETENTION_DAYS = 30;
+const APPLICATION_VISIBILITY_MONTHS = 3;
+const APPLICATION_RETENTION_MONTHS = 5;
+const CONTRACTED_APPLICATION_RETENTION_DAYS = 365;
+const DAY_MS = 24 * 60 * 60 * 1000;
 type FreelancerMatchProfile = {
   roleTitle: string | null;
   desiredRate: number | null;
@@ -155,11 +160,19 @@ export class JobService {
       where,
       include: jobInclude,
     });
-    if (!job) {
-      throw new AppError(404, "案件が見つかりません。", "JOB_NOT_FOUND");
+    if (job) {
+      return mapJob(job);
     }
 
-    return mapJob(job);
+    const contractedSnapshot = await this.findViewableContractedSnapshot(
+      context,
+      id,
+    );
+    if (contractedSnapshot) {
+      return contractedSnapshot;
+    }
+
+    throw new AppError(404, "案件が見つかりません。", "JOB_NOT_FOUND");
   }
 
   async create(input: JobInput, createdBy: string) {
@@ -175,32 +188,44 @@ export class JobService {
     );
     const nice = await upsertSkills(this.db, input.nice || [], "other");
 
-    const job = await this.db.job.create({
-      data: {
-        clientId: client.id,
-        title: input.title,
-        summary: input.summary || "",
-        rateMin: input.rateMin,
-        rateMax: input.rateMax,
-        marginRate: input.marginRate ?? 0,
-        streamType: "other",
-        remoteType: input.remoteType,
-        isPinned: input.isPinned,
-        isActive: true,
-        createdBy,
-        skills: {
-          create: [
-            ...required.map((skill) => ({
-              skillId: skill.id,
-              requirementType: "required" as const,
-            })),
-            ...nice.map((skill) => ({
-              skillId: skill.id,
-              requirementType: "nice" as const,
-            })),
-          ],
+    const skillCreates = [
+      ...required.map((skill) => ({
+        skillId: skill.id,
+        requirementType: "required" as const,
+      })),
+      ...nice.map((skill) => ({
+        skillId: skill.id,
+        requirementType: "nice" as const,
+      })),
+    ];
+    const createdJobId = await this.db.$transaction(async (tx) => {
+      const created = await tx.job.create({
+        data: {
+          clientId: client.id,
+          title: input.title,
+          summary: input.summary || "",
+          rateMin: input.rateMin,
+          rateMax: input.rateMax,
+          marginRate: input.marginRate ?? 0,
+          streamType: "other",
+          remoteType: input.remoteType,
+          isPinned: input.isPinned,
+          isActive: true,
+          createdBy,
         },
-      },
+      });
+      if (skillCreates.length) {
+        await tx.jobSkill.createMany({
+          data: skillCreates.map((skill) => ({
+            jobId: created.id,
+            ...skill,
+          })),
+        });
+      }
+      return created.id;
+    });
+    const job = await this.db.job.findUniqueOrThrow({
+      where: { id: createdJobId },
       include: jobInclude,
     });
     return mapJob(job);
@@ -223,23 +248,124 @@ export class JobService {
   }
 
   async cleanupExpiredJobs(now = new Date()) {
-    const cutoff = new Date(now.getTime() - JOB_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+    const jobCutoff = daysBefore(now, JOB_RETENTION_DAYS);
+    const applicationVisibilityCutoff = monthsBefore(
+      now,
+      APPLICATION_VISIBILITY_MONTHS,
+    );
+    const applicationCutoff = monthsBefore(now, APPLICATION_RETENTION_MONTHS);
+    const contractedApplicationCutoff = daysBefore(
+      now,
+      CONTRACTED_APPLICATION_RETENTION_DAYS,
+    );
 
-    const [applications, jobs] = await this.db.$transaction([
-      this.db.application.deleteMany({
-        where: { appliedAt: { lt: cutoff } },
-      }),
-      this.db.job.deleteMany({
-        where: { createdAt: { lt: cutoff } },
-      }),
-    ]);
+    const {
+      hiddenApplications,
+      expiredApplications,
+      contractedApplications,
+      jobs,
+    } = await this.db.$transaction(async (tx) => {
+      const expiredApplications = await tx.application.deleteMany({
+        where: {
+          status: { not: "contracted" },
+          ...this.applicationSourcePublishedBefore(applicationCutoff),
+        },
+      });
+      const contractedApplications = await tx.application.deleteMany({
+        where: {
+          status: "contracted",
+          ...this.applicationSourcePublishedBefore(
+            contractedApplicationCutoff,
+          ),
+        },
+      });
+      const hiddenApplications = await tx.application.updateMany({
+        where: {
+          status: { not: "contracted" },
+          isHiddenByExpiration: false,
+          ...this.applicationSourcePublishedBefore(
+            applicationVisibilityCutoff,
+          ),
+        },
+        data: {
+          isHiddenByExpiration: true,
+          hiddenAt: now,
+        },
+      });
+      const jobs = await tx.job.deleteMany({
+        where: { createdAt: { lt: jobCutoff } },
+      });
+      return {
+        hiddenApplications,
+        expiredApplications,
+        contractedApplications,
+        jobs,
+      };
+    });
 
     return {
-      cutoff: cutoff.toISOString(),
+      cutoff: jobCutoff.toISOString(),
       retentionDays: JOB_RETENTION_DAYS,
-      deletedApplications: applications.count,
+      applicationVisibilityCutoff: applicationVisibilityCutoff.toISOString(),
+      applicationVisibilityMonths: APPLICATION_VISIBILITY_MONTHS,
+      applicationCutoff: applicationCutoff.toISOString(),
+      applicationRetentionMonths: APPLICATION_RETENTION_MONTHS,
+      contractedApplicationCutoff: contractedApplicationCutoff.toISOString(),
+      contractedApplicationRetentionDays: CONTRACTED_APPLICATION_RETENTION_DAYS,
+      hiddenApplications: hiddenApplications.count,
+      deletedApplications:
+        expiredApplications.count + contractedApplications.count,
+      deletedExpiredApplications: expiredApplications.count,
+      deletedContractedApplications: contractedApplications.count,
       deletedJobs: jobs.count,
     };
+  }
+
+  private applicationSourcePublishedBefore(
+    cutoff: Date,
+  ): Prisma.ApplicationWhereInput {
+    return {
+      OR: [
+        {
+          jobSnapshot: {
+            is: { sourceCreatedAt: { lt: cutoff } },
+          },
+        },
+        {
+          job: {
+            is: { createdAt: { lt: cutoff } },
+          },
+        },
+      ],
+    };
+  }
+
+  private async findViewableContractedSnapshot(
+    context: AuthContext | undefined,
+    sourceJobId: string,
+    now = new Date(),
+  ) {
+    if (context?.role !== "freelancer") return null;
+
+    const cutoff = daysBefore(now, CONTRACTED_APPLICATION_RETENTION_DAYS);
+    const application = await this.db.application.findFirst({
+      where: {
+        sourceJobId,
+        status: "contracted",
+        freelancerProfile: { userId: context.userId },
+        jobSnapshot: { is: { sourceCreatedAt: { gte: cutoff } } },
+      },
+      include: applicationInclude,
+    });
+
+    if (application?.job) return mapJob(application.job);
+    if (application?.jobSnapshot) {
+      return mapApplicationSnapshot(
+        application.jobSnapshot,
+        application.sourceJobId,
+      );
+    }
+    return null;
   }
 
   private buildScoutableJobWhere(
@@ -416,6 +542,22 @@ function remoteMatches(profileRemote: string | null, jobRemote: string) {
   if (profileRemote === "hybrid") return jobRemote === "full_remote";
   if (profileRemote === "onsite") return true;
   return false;
+}
+
+function daysBefore(date: Date, days: number) {
+  return new Date(date.getTime() - days * DAY_MS);
+}
+
+function monthsBefore(date: Date, months: number) {
+  const result = new Date(date);
+  const day = result.getUTCDate();
+  result.setUTCDate(1);
+  result.setUTCMonth(result.getUTCMonth() - months);
+  const lastDay = new Date(
+    Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  result.setUTCDate(Math.min(day, lastDay));
+  return result;
 }
 
 function roleMatchesJob(

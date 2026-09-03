@@ -304,5 +304,11 @@ describe("プロフィール登録バリデーション", () => {
       pastCandidate.meetingCandidates,
       "初回面談の候補日は現在以降の日時を入力してください。",
     );
+
+    const completedInitialMeeting = validateProfileRegistrationInput(
+      registrationInput({ meetingCandidates: [] }),
+      { hasExistingResume: true, initialMeetingCompleted: true },
+    );
+    assert.equal(completedInitialMeeting.meetingCandidates, undefined);
   });
 });

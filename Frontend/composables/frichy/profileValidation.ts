@@ -57,7 +57,10 @@ export const profileRegistrationErrorSteps: Record<
 
 export function validateProfileRegistrationInput(
   values: ProfileRegistrationInput,
-  options: { hasExistingResume?: boolean } = {},
+  options: {
+    hasExistingResume?: boolean;
+    initialMeetingCompleted?: boolean;
+  } = {},
 ): ProfileRegistrationValidationErrors {
   const errors: ProfileRegistrationValidationErrors = {};
   if (!values.basic.name.trim()) errors.name = "お名前を入力してください。";
@@ -120,10 +123,11 @@ export function validateProfileRegistrationInput(
   if (!options.hasExistingResume && !values.terms.resume?.name)
     errors.resume = "レジュメを登録してください。";
   const candidates = profileRegistrationCandidates(values);
-  if (!candidates.length)
+  if (!options.initialMeetingCompleted && !candidates.length)
     errors.meetingCandidates =
       "初回面談の候補日を1つ以上入力してください。";
   else if (
+    !options.initialMeetingCompleted &&
     candidates.some((candidate) => !isFutureProfileMeetingCandidate(candidate))
   )
     errors.meetingCandidates =

@@ -14,6 +14,7 @@ const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
 
 const demoEmails = ["sales@frichy.jp", "freelancer@example.com"];
 const demoFreelancerPublicCode = "tf-demo-yamada";
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 async function resetDemoFreelancerProfile() {
   const profile = await prisma.freelancerProfile.findUnique({
@@ -41,6 +42,7 @@ async function upsertSeedUser(input: {
   passwordHash: string;
   role: "freelancer" | "sales";
   name: string;
+  nameKana?: string;
   phone?: string;
 }) {
   const emailHash = piiHash(input.email);
@@ -50,6 +52,7 @@ async function upsertSeedUser(input: {
     passwordHash: input.passwordHash,
     role: input.role,
     name: encryptText(input.name),
+    nameKana: input.nameKana ? encryptText(input.nameKana) : null,
     phone: input.phone ? encryptText(input.phone) : null,
     isActive: true,
   };
@@ -95,7 +98,34 @@ async function upsertSeedUser(input: {
   return prisma.user.create({ data: encryptedData });
 }
 
+function daysBefore(date: Date, days: number) {
+  return new Date(date.getTime() - days * DAY_MS);
+}
+
+function monthsBefore(date: Date, months: number) {
+  const result = new Date(date);
+  const day = result.getUTCDate();
+  result.setUTCDate(1);
+  result.setUTCMonth(result.getUTCMonth() - months);
+  const lastDay = new Date(
+    Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  result.setUTCDate(Math.min(day, lastDay));
+  return result;
+}
+
+function yearsAfter(date: Date, years: number, hour: number) {
+  const result = new Date(date);
+  result.setUTCFullYear(result.getUTCFullYear() + years);
+  result.setUTCHours(hour, 0, 0, 0);
+  return result;
+}
+
 async function main() {
+  const now = new Date();
+  const recentApplicationDate = monthsBefore(now, 1);
+  const expiredApplicationDate = monthsBefore(now, 4);
+  const initialMeetingCompletedAt = daysBefore(now, 7);
   const [freelancerPassword, salesPassword] = await Promise.all([
     bcrypt.hash("freelance123", 12),
     bcrypt.hash("sales123", 12),
@@ -115,6 +145,7 @@ async function main() {
     passwordHash: freelancerPassword,
     role: "freelancer",
     name: "山田 太郎",
+    nameKana: "やまだ たろう",
     phone: "090-0000-0000",
   });
 
@@ -139,6 +170,8 @@ async function main() {
       availabilityStatus: "scheduled",
       availabilityNote: null,
       pledgedAt: new Date("2026-06-04T09:00:00+09:00"),
+      initialMeetingCompleted: true,
+      initialMeetingCompletedAt,
       lastUpdatedOn: new Date("2026-06-04"),
     },
     create: {
@@ -153,6 +186,8 @@ async function main() {
       availabilityStatus: "scheduled",
       availabilityNote: null,
       pledgedAt: new Date("2026-06-04T09:00:00+09:00"),
+      initialMeetingCompleted: true,
+      initialMeetingCompletedAt,
       lastUpdatedOn: new Date("2026-06-04"),
     },
   });
@@ -258,6 +293,7 @@ async function main() {
           isPinned: true,
           isActive: true,
           createdBy: sales.id,
+          createdAt: recentApplicationDate,
         },
       })
     : await prisma.job.create({
@@ -274,6 +310,7 @@ async function main() {
           isPinned: true,
           isActive: true,
           createdBy: sales.id,
+          createdAt: recentApplicationDate,
         },
       });
 
@@ -601,12 +638,21 @@ async function main() {
         freelancerProfileId: profile.id,
       },
     },
-    update: { jobId: job.id, status: "meeting_pending" },
+    update: {
+      jobId: job.id,
+      status: "meeting_pending",
+      appliedAt: recentApplicationDate,
+      isHiddenByExpiration: false,
+      hiddenAt: null,
+    },
     create: {
       jobId: job.id,
       sourceJobId: job.id,
       freelancerProfileId: profile.id,
       status: "meeting_pending",
+      appliedAt: recentApplicationDate,
+      isHiddenByExpiration: false,
+      hiddenAt: null,
     },
   });
 
@@ -633,6 +679,60 @@ async function main() {
     create: { applicationId: application.id, ...snapshotData },
   });
 
+  const expiredDemoJob = await prisma.job.findFirstOrThrow({
+    where: { title: "人材マッチングSaaSのフロント改善" },
+    include: { client: true, skills: { include: { skill: true } } },
+  });
+  await prisma.job.update({
+    where: { id: expiredDemoJob.id },
+    data: {
+      isActive: false,
+      createdAt: expiredApplicationDate,
+    },
+  });
+  const expiredApplication = await prisma.application.upsert({
+    where: {
+      sourceJobId_freelancerProfileId: {
+        sourceJobId: expiredDemoJob.id,
+        freelancerProfileId: profile.id,
+      },
+    },
+    update: {
+      jobId: null,
+      status: "screening",
+      appliedAt: expiredApplicationDate,
+      isHiddenByExpiration: true,
+      hiddenAt: now,
+    },
+    create: {
+      jobId: null,
+      sourceJobId: expiredDemoJob.id,
+      freelancerProfileId: profile.id,
+      status: "screening",
+      appliedAt: expiredApplicationDate,
+      isHiddenByExpiration: true,
+      hiddenAt: now,
+    },
+  });
+  const expiredSnapshotData = {
+    title: expiredDemoJob.title,
+    clientName: expiredDemoJob.client?.name || "未設定",
+    summary: expiredDemoJob.summary,
+    requiredSkills: expiredDemoJob.skills.filter((item) => item.requirementType === "required").map((item) => item.skill.name),
+    niceSkills: expiredDemoJob.skills.filter((item) => item.requirementType === "nice").map((item) => item.skill.name),
+    rateMin: expiredDemoJob.rateMin,
+    rateMax: expiredDemoJob.rateMax,
+    remoteType: expiredDemoJob.remoteType,
+    isPinned: expiredDemoJob.isPinned,
+    isActive: false,
+    sourceCreatedAt: expiredApplicationDate,
+  };
+  await prisma.applicationJobSnapshot.upsert({
+    where: { applicationId: expiredApplication.id },
+    update: expiredSnapshotData,
+    create: { applicationId: expiredApplication.id, ...expiredSnapshotData },
+  });
+
   await prisma.meetingRequest.deleteMany({
     where: { applicationId: application.id },
   });
@@ -641,14 +741,14 @@ async function main() {
       {
         freelancerProfileId: profile.id,
         applicationId: application.id,
-        candidateAt: new Date("2026-06-10T10:00:00+09:00"),
+        candidateAt: yearsAfter(now, 3, 1),
         status: "candidate",
         createdBy: freelancer.id,
       },
       {
         freelancerProfileId: profile.id,
         applicationId: application.id,
-        candidateAt: new Date("2026-06-11T15:00:00+09:00"),
+        candidateAt: yearsAfter(new Date(now.getTime() + DAY_MS), 3, 6),
         status: "candidate",
         createdBy: freelancer.id,
       },
@@ -677,7 +777,7 @@ async function main() {
         jobId: job.id,
         messageType: "chat",
         body: encryptText(
-          "6月10日午前で調整可能です。職務経歴書も更新しました。",
+          "3年後の候補日午前で調整可能です。職務経歴書も更新しました。",
         ),
         sentAt: new Date("2026-06-04T11:36:00+09:00"),
         readAt: new Date("2026-06-04T11:36:00+09:00"),

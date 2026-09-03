@@ -73,7 +73,15 @@
             </ol>
             <p>{{ applicationFlowNote(item.application.status) }}</p>
           </div>
+          <div
+            v-if="item.application.isHiddenByExpiration"
+            :class="$style.expiredApplication"
+          >
+            <strong>掲載終了</strong>
+            <p>{{ expiredApplicationMessage(item.application) }}</p>
+          </div>
           <JobCard
+            v-else-if="item.job"
             :job="item.job"
             :role="currentRole"
             applied
@@ -301,6 +309,13 @@ function applicationFlowNote(status: string) {
   return "営業担当が状況を確認しています。";
 }
 
+function expiredApplicationMessage(application: { hiddenReason?: string }) {
+  return (
+    application.hiddenReason ||
+    "掲載から3か月経過したため閲覧できません。"
+  );
+}
+
 function isFinalApplicationStatus(status: string) {
   const displayStatus = applicationDisplayStatus(status);
   return displayStatus === "成約" || displayStatus === "見送り";
@@ -449,6 +464,31 @@ function isBeforeInitialMeetingStatus(status: string) {
 .applicationProgress p {
   margin: 0;
   color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.expiredApplication {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #e6cf94;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #725110;
+}
+
+.expiredApplication strong,
+.expiredApplication p {
+  margin: 0;
+}
+
+.expiredApplication strong {
+  font-size: 13px;
+}
+
+.expiredApplication p {
   font-size: 12px;
   font-weight: 700;
   line-height: 1.6;

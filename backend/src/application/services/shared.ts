@@ -114,15 +114,17 @@ export async function upsertSkills(
   const uniqueNames = [
     ...new Set(names.map((name) => name.trim()).filter(Boolean)),
   ];
-  return Promise.all(
-    uniqueNames.map((name) =>
-      db.skill.upsert({
+  const skills = [];
+  for (const name of uniqueNames) {
+    skills.push(
+      await db.skill.upsert({
         where: { name_category: { name, category } },
         update: {},
         create: { name, category },
       }),
-    ),
-  );
+    );
+  }
+  return skills;
 }
 
 export function toAuthUser(user: {

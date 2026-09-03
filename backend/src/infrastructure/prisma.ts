@@ -8,7 +8,7 @@ const databaseUrl =
 
 export const prisma = new PrismaClient({
   adapter: new PrismaPg(databaseUrl),
-  log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  log: process.env.NODE_ENV === "development" ? ["warn"] : [],
 });
 
 export async function closePrisma() {

@@ -721,6 +721,7 @@ const hasExistingResumeForDraft = computed(() =>
 const draftValidationErrors = computed(() =>
   validateProfileRegistrationInput(buildProfileRegistrationInput(), {
     hasExistingResume: hasExistingResumeForDraft.value,
+    initialMeetingCompleted: profile.value.initialMeetingCompleted,
   }),
 );
 const draftRequirementItems = computed(() => {
@@ -962,6 +963,7 @@ async function registerProfile() {
     hasExistingResume: Boolean(
       profile.value.resumeName && !pendingDeletedResume.value,
     ),
+    initialMeetingCompleted: profile.value.initialMeetingCompleted,
   });
   setValidationErrors(errors);
   if (hasProfileRegistrationValidationErrors(errors)) {

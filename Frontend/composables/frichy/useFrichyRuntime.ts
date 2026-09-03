@@ -329,6 +329,9 @@ function normalizeApplications(applications: Application[]): Application[] {
       application.status === "初回面談前"
         ? "初回面談待ち"
         : application.status,
+    isHiddenByExpiration: Boolean(application.isHiddenByExpiration),
+    hiddenAt: application.hiddenAt || "",
+    hiddenReason: application.hiddenReason || "",
   }));
 }
 
@@ -756,7 +759,9 @@ const availableNavItems = computed(() => {
 
 const filteredJobs = computed(() => {
   if (currentRole.value === "freelancer" && !canViewJobs.value) return [];
-  return state.value.jobs;
+  return currentRole.value === "freelancer"
+    ? state.value.jobs.filter((job) => job.active)
+    : state.value.jobs;
 });
 
 const profileRequirementItems = computed(() => {
@@ -802,7 +807,7 @@ const profileRequirementItems = computed(() => {
     {
       label: "面談候補",
       step: 4,
-      done: Boolean(p.meetingCandidates.length),
+      done: Boolean(p.initialMeetingCompleted || p.meetingCandidates.length),
     },
     { label: "誓約同意", step: 4, done: Boolean(p.pledgeAccepted || p.pledgedAt) },
   ];
@@ -819,11 +824,11 @@ const appliedJobCards = computed(() =>
     .filter((application) => application.freelancerId === currentFreelancerId.value)
     .map((application) => ({
       application,
-      job: getJob(application.jobId) || application.job,
+      job: getJob(application.jobId) || application.job || null,
     }))
     .filter(
-      (item): item is { application: Application; job: Job } =>
-        Boolean(item.job),
+      (item): item is { application: Application; job: Job | null } =>
+        Boolean(item.job || item.application.isHiddenByExpiration),
     ),
 );
 
@@ -1196,11 +1201,45 @@ function syncDemoProfileFromAuth() {
 
   const profileId =
     demoAccount.freelancerId || auth.freelancerId || state.value.profile.id;
+  const meetingCandidates = meetingCandidatesForProfile(profileId);
   state.value.profile = {
     ...state.value.profile,
     id: profileId,
     name: state.value.profile.name || demoAccount.name,
+    nameKana: state.value.profile.nameKana || demoAccount.nameKana || "",
     email: state.value.profile.email || demoAccount.email,
+    phone: state.value.profile.phone || "090-0000-0000",
+    role: state.value.profile.role || "バックエンドエンジニア",
+    languages: state.value.profile.languages || "Java, TypeScript",
+    db: state.value.profile.db || "PostgreSQL",
+    frameworks: state.value.profile.frameworks || "Spring Boot, React",
+    years: state.value.profile.years || "6",
+    skillExperiences: Object.keys(state.value.profile.skillExperiences).length
+      ? state.value.profile.skillExperiences
+      : {
+          Java: "4",
+          TypeScript: "4",
+          PostgreSQL: "4",
+          "Spring Boot": "4",
+          React: "4",
+        },
+    desiredRate: state.value.profile.desiredRate || "85",
+    startDate: state.value.profile.startDate || today(),
+    workRate: state.value.profile.workRate || "週5",
+    remote: state.value.profile.remote || "フルリモート",
+    availability: state.value.profile.availability || "稼働可能開始日",
+    resumeId: state.value.profile.resumeId || "resume-demo-yamada",
+    resumeName: state.value.profile.resumeName || "職務経歴書_山田太郎.pdf",
+    resumeType: state.value.profile.resumeType || "application/pdf",
+    resumeSize: state.value.profile.resumeSize || "384KB",
+    meetingCandidates: state.value.profile.meetingCandidates.length
+      ? state.value.profile.meetingCandidates
+      : meetingCandidates,
+    pledgeAccepted: true,
+    pledgedAt: state.value.profile.pledgedAt || today(),
+    initialMeetingCompleted: true,
+    initialMeetingCompletedAt:
+      state.value.profile.initialMeetingCompletedAt || today(),
     lastUpdated: state.value.profile.lastUpdated || today(),
   };
   state.value.selectedFreelancerId = profileId;
@@ -1632,13 +1671,14 @@ function validateProfileRegistration(
   ) {
     return showProfileRegistrationError("レジュメを登録してください。", 3);
   }
-  if (!candidates.length) {
+  if (!state.value.profile.initialMeetingCompleted && !candidates.length) {
     return showProfileRegistrationError(
       "初回面談の候補日を1つ以上入力してください。",
       4,
     );
   }
   if (
+    !state.value.profile.initialMeetingCompleted &&
     candidates.some((candidate) => !isFutureProfileMeetingCandidate(candidate))
   ) {
     return showProfileRegistrationError(
@@ -3024,7 +3064,10 @@ async function openScoutJob(jobId: string) {
 
 function meetingCandidatesForProfile(profileId: string) {
   return state.value.meetingRequests
-    .filter((meeting) => meeting.freelancerId === profileId)
+    .filter(
+      (meeting) =>
+        meeting.freelancerId === profileId && !meeting.applicationId,
+    )
     .map((meeting) => formatJstDateTime(meeting.candidate))
     .filter(Boolean);
 }

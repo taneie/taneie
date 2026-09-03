@@ -26,4 +26,54 @@ describe("フロントエンド初期状態", () => {
 
     assert.equal(unread.length, 0);
   });
+
+  /**
+   * @testData seed stateの求職者デモ応募と面談候補。
+   * @expected 3か月以内と3〜5か月の応募があり、初回面談完了後の案件面談候補は3年後になる。
+   */
+  it("createSeedState includes current and expired applied jobs for freelancer demo", () => {
+    const state = createSeedState();
+    const freelancerApplications = state.applications.filter(
+      (application) => application.freelancerId === "fr-001",
+    );
+    const meetingYears = state.meetingRequests
+      .filter((meeting) => meeting.freelancerId === "fr-001")
+      .map((meeting) => Number(meeting.candidate.slice(0, 4)));
+    const threeYearsLater = new Date().getFullYear() + 3;
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const fiveMonthsAgo = new Date();
+    fiveMonthsAgo.setMonth(fiveMonthsAgo.getMonth() - 5);
+    const demoFreelancer = state.freelancers.find(
+      (freelancer) => freelancer.id === "fr-001",
+    );
+    const currentApplication = freelancerApplications.find(
+      (application) => !application.isHiddenByExpiration,
+    );
+    const hiddenApplication = freelancerApplications.find(
+      (application) => application.isHiddenByExpiration,
+    );
+
+    assert.ok(currentApplication);
+    assert.ok(
+      new Date(currentApplication.appliedAt).getTime() >
+        threeMonthsAgo.getTime(),
+    );
+    assert.ok(hiddenApplication);
+    assert.ok(
+      new Date(hiddenApplication.appliedAt).getTime() <
+        threeMonthsAgo.getTime(),
+    );
+    assert.ok(
+      new Date(hiddenApplication.appliedAt).getTime() >
+        fiveMonthsAgo.getTime(),
+    );
+    assert.equal(demoFreelancer?.initialMeetingCompleted, true);
+    assert.ok(
+      state.meetingRequests.every(
+        (meeting) => meeting.applicationId === currentApplication.id,
+      ),
+    );
+    assert.deepEqual([...new Set(meetingYears)], [threeYearsLater]);
+  });
 });

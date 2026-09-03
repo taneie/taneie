@@ -305,6 +305,8 @@ model Application {
   freelancerProfileId String            @map("freelancer_profile_id") @db.Uuid
   status              ApplicationStatus @default(screening)
   appliedAt           DateTime          @default(now()) @map("applied_at") @db.Timestamptz(6)
+  isHiddenByExpiration Boolean           @default(false) @map("is_hidden_by_expiration")
+  hiddenAt            DateTime?         @map("hidden_at") @db.Timestamptz(6)
   updatedAt           DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   job               Job?                       @relation(fields: [jobId], references: [id], onDelete: SetNull)
@@ -316,6 +318,7 @@ model Application {
 
   @@unique([sourceJobId, freelancerProfileId])
   @@index([status])
+  @@index([isHiddenByExpiration])
   @@map("applications")
 }
 

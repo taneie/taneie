@@ -31,12 +31,18 @@ type ApplicationWithRelations = Application & {
   jobSnapshot: ApplicationJobSnapshot | null;
   freelancerProfile: FreelancerWithRelations;
 };
+type ApplicationMapOptions = {
+  canViewExpiredContractedJob?: boolean;
+};
 
 function snapshotSkills(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
-function mapApplicationJobSnapshot(snapshot: ApplicationJobSnapshot, sourceJobId: string) {
+export function mapApplicationSnapshot(
+  snapshot: ApplicationJobSnapshot,
+  sourceJobId: string,
+) {
   return {
     id: sourceJobId,
     title: snapshot.title,
@@ -167,11 +173,21 @@ export function mapFreelancer(profile: FreelancerWithRelations) {
   };
 }
 
-export function mapApplication(application: ApplicationWithRelations) {
-  const job = application.job
+export function mapApplication(
+  application: ApplicationWithRelations,
+  options: ApplicationMapOptions = {},
+) {
+  const isContracted = application.status === "contracted";
+  const isHiddenByExpiration =
+    !isContracted && application.isHiddenByExpiration;
+  const hideContractedSnapshot =
+    isContracted && !application.job && !options.canViewExpiredContractedJob;
+  const job = isHiddenByExpiration || hideContractedSnapshot
+    ? null
+    : application.job
     ? mapJob(application.job)
     : application.jobSnapshot
-      ? mapApplicationJobSnapshot(application.jobSnapshot, application.sourceJobId)
+      ? mapApplicationSnapshot(application.jobSnapshot, application.sourceJobId)
       : null;
 
   return {
@@ -183,6 +199,11 @@ export function mapApplication(application: ApplicationWithRelations) {
       application.freelancerProfile.initialMeetingCompleted,
     ),
     appliedAt: application.appliedAt.toISOString().slice(0, 10),
+    isHiddenByExpiration,
+    hiddenAt: application.hiddenAt?.toISOString() || "",
+    hiddenReason: isHiddenByExpiration
+      ? "掲載から3か月経過したため閲覧できません。"
+      : "",
     job,
     freelancer: mapFreelancer(application.freelancerProfile),
   };
